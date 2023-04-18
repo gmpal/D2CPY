@@ -5,7 +5,7 @@ import networkx as nx
 import random
 import multiprocessing as mp
 
-class simulatedDAG:
+class SimulatedDAG:
     """
     An class to store a list of DAGs and associated observations.
 
@@ -85,11 +85,20 @@ class simulatedDAG:
     def sample_in_range(self, values): 
         if isinstance(values, list) and len(values) == 2:
             return random.sample(range(values[0], values[1]+1), 1)[0]
-        elif isinstance(values, int):
+        #elif numeric 
+        elif isinstance(values, int) or isinstance(values, float):
             return values
         else:
             raise ValueError("Invalid values")
     
+    def sample_from_list(self, values):
+        if isinstance(values, list):
+            return random.sample(values, 1)[0]
+        elif isinstance(values, int) or isinstance(values, float):
+            return values
+        else:
+            raise ValueError("Invalid values")
+        
     def generate(self):
         if self.n_jobs > 1: 
             # TODO: parallelize
@@ -107,14 +116,14 @@ class simulatedDAG:
             random.seed(self.seed + current_DAG)
 
             
-            quantize_current_DAG = self.quantize #TODO: check the case of tuple: what does it mean to have a tuple here?
+            quantize_current_DAG = self.sample_from_list(self.quantize)
             observations_number_current_DAG = self.sample_in_range(self.observations_number)
             nodes_number_current_DAG = self.sample_in_range(self.nodes_number) #TODO: check why there is a max 3, and if it is necessary 
             noise_std_current_DAG = self.sample_in_range(self.noise_std)
 
             if random.uniform(0, 1) < 0.5:
-                functionType_current_DAG = self.FUNCTION_TYPE_DICT[self.sample_in_range(self.functionType)]
-                additive_current_DAG = self.additive #TODO: check the case of tuple: what does it mean to have a tuple here?
+                functionType_current_DAG = self.FUNCTION_TYPE_DICT[self.sample_from_list(self.functionType)]
+                additive_current_DAG = self.sample_from_list(self.additive)
                 
                 sdn_ii = self.noise_std #TODO: why ii ?
 
@@ -124,7 +133,7 @@ class simulatedDAG:
                 HH = []
 
                 #TODO: incoherence with respect to the docstring! What happens with the previous values of functionType? 
-                for functionType_i in functionType:
+                for functionType_i in self.functionType:
                     if functionType_i == "linear":
                         H = lambda: H_Rn(1)
                     elif functionType_i == "quadratic":
@@ -134,6 +143,20 @@ class simulatedDAG:
                     elif functionType_i == "kernel":
                         H = lambda: H_kernel()
                     HH.append(H)
+
+                counter_2 = 0
+                while True:
+                    V = range(1, max(4, nodes_number_current_DAG - counter_2))
+
+                    maxpar_pc_current_DAG = self.sample_from_list(self.maxpar_pc) # TODO: parallel maxima and minima: check why and how 
+
+                    maxpar = round(maxpar_pc_i * noNodes)
+
+                    wgt = np.random.uniform(low=0.85, high=1, size=1)[0]
+
+                    netwDAG = random_dag(V, max_parents=maxpar, weights=wgt)
+
+                
 
 
             else: 
