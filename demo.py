@@ -6,7 +6,7 @@ import networkx as nx
 from sklearn import datasets, linear_model
 
 import numpy as np
-from D2C import simulatedDAG
+from d2c import simulatedDAG
 
 np.random.seed(0)
 
