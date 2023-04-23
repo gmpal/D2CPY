@@ -5,6 +5,8 @@ import networkx as nx
 import random
 import multiprocessing as mp
 
+from utils import *
+
 class SimulatedDAG:
     """
     An class to store a list of DAGs and associated observations.
@@ -133,16 +135,14 @@ class SimulatedDAG:
                 HH = []
 
                 #TODO: incoherence with respect to the docstring! What happens with the previous values of functionType? 
-                for functionType_i in self.functionType:
-                    if functionType_i == "linear":
-                        H = lambda: H_Rn(1)
-                    elif functionType_i == "quadratic":
-                        H = lambda: H_Rn(2)
-                    elif functionType_i == "sigmoid":
-                        H = lambda: H_sigmoid(1)
-                    elif functionType_i == "kernel":
-                        H = lambda: H_kernel()
-                    HH.append(H)
+                H_dict = {
+                    "linear": H_Rn(1),
+                    "quadratic": H_Rn(2),
+                    "sigmoid": H_sigmoid(1),
+                    "kernel": H_kernel(),
+                }
+
+                HH = [H_dict[functionType_i] for functionType_i in self.functionType]
 
                 counter_2 = 0
                 while True:
@@ -154,7 +154,7 @@ class SimulatedDAG:
 
                     wgt = np.random.uniform(low=0.85, high=1, size=1)[0]
 
-                    netwDAG = random_dag(V, max_parents=maxpar, weights=wgt)
+                    netwDAG = generate_random_DAG(V, max_parents=maxpar, weights=wgt) #TODO: check if my implementation is coherent with gRbase (weights missing)
 
                 
 

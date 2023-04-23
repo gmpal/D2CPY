@@ -29,7 +29,7 @@ def gendataDAG(N, n, sdw=0.1):
         trueDAG = nx.from_numpy_matrix(bn)
     else:
         trueDAG = nx.random_k_out_graph(n, k=2, alpha=0.3)
-        errDist = np.random.choice(["mix", "cauchy", "t4", "mixt3"])
+        errDist = np.random.choice(["mix", "cauchy", "t 4", "mixt3"])
         observedData = (rbnpy.rmvDAG(N, trueDAG.to_numpy_matrix(), 
                                      errDist=errDist, mix=0.3)
                         + np.random.normal(size=(N,n), scale=sdw))
@@ -132,21 +132,50 @@ def quantization(x, nbin=1):
 
 
 
-def H_sigmoid(n=2):
+def H_sigmoid(n: int = 2) -> np.vectorize:
+    """Returns a vectorized sigmoid function with a random weight vector of length n+1.
+
+    Args:
+        n: An integer specifying the length of the weight vector. Default is 2.
+
+    Returns:
+        A numpy vectorized function that applies a sigmoid function to the dot product of the input and the weight vector.
+
+    """
     a = np.random.uniform(-1, 1, size=n+1)
     def f(x):
         X = x**(np.arange(n+1))
         return expit(np.mean(X * a)) * 2 - 1
     return np.vectorize(f)
 
-def H_Rn(n):
+def H_Rn(n: int) -> np.vectorize:
+    """Returns a vectorized polynomial function with a random weight vector of length n+1.
+
+    Args:
+        n: An integer specifying the length of the weight vector.
+
+    Returns:
+        A numpy vectorized function that applies a polynomial function to the dot product of the input and the weight vector.
+
+    """
     a = np.random.uniform(-1, 1, size=n+1)
     def f(x):
         X = x**(np.arange(n+1))
         return np.sum(X * a)
     return np.vectorize(f)
 
-def kernel_fct(X, knl=None, lambda_=0.1):
+def kernel_fct(X: np.ndarray, knl: Nystroem = None, lambda_: float = 0.1) -> np.ndarray:
+    """Returns the predicted values of a kernel regression model.
+
+    Args:
+        X: A numpy array of shape (n_samples, n_features) containing the input data.
+        knl: A Nystroem object specifying the kernel approximation. If None, a new Nystroem object is created.
+        lambda_: A float specifying the regularization strength.
+
+    Returns:
+        A numpy array of shape (n_samples,) containing the predicted values.
+
+    """
     N = X.shape[0]
     Y = np.random.normal(size=N)
     if knl is None:
@@ -156,7 +185,16 @@ def kernel_fct(X, knl=None, lambda_=0.1):
     Yhat = kr.predict(K)
     return Yhat
 
-def H_kernel(knl=None):
+def H_kernel(knl: Nystroem = None) -> np.vectorize:
+    """Returns a vectorized kernel regression function.
+
+    Args:
+        knl: A Nystroem object specifying the kernel approximation. If None, a new Nystroem object is created.
+
+    Returns:
+        A numpy vectorized function that applies a kernel regression model to the input.
+
+    """
     def f(x):
         return kernel_fct(x, knl=knl)
     return np.vectorize(f)
@@ -729,3 +767,53 @@ def genTS(nn, NN, sd=0.5, num=1):
 
                
 
+def genSTAR(nn, NN, sd=0.5, num=1):
+    #TODO: implement
+    pass
+
+
+
+
+
+
+
+
+
+
+#####################my functions 
+
+import networkx as nx
+import random
+
+def generate_random_DAG(V, maxpar):
+    """
+    Generates a random directed acyclic graph (DAG) with V nodes and a maximum of maxpar parents per node.
+    
+    Args:
+        V (int): The number of nodes in the DAG.
+        maxpar (int): The maximum number of parents per node.
+    
+    Returns:
+        nx.DiGraph: The generated DAG as a directed graph object.
+    """
+    # Set the seed for reproducibility
+    random.seed(42)
+
+    # Create an empty DAG
+    DAG = nx.DiGraph()
+
+    # Add nodes to the DAG
+    for i in range(V):
+        DAG.add_node(i)
+
+    # Add edges to the DAG
+    for i in range(1, V):
+        parents = random.sample(range(i), min(i, maxpar))
+        for j in parents:
+            DAG.add_edge(j, i)
+
+    # Check if the DAG is acyclic
+    if not nx.is_directed_acyclic_graph(DAG):
+        raise ValueError("Generated graph is not acyclic")
+    
+    return DAG

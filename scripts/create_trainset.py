@@ -1,13 +1,10 @@
-# TODO: this file is redundant 
-
-from temp_methods import is_mb, is_parent, is_child, is_descendant, is_ancestor, make_model
-import random 
-import numpy as np 
-
-from simulatedDAG import SimulatedDAG
-from simulatedTS import SimulatedTS
+import random
+import numpy as np
+from classes.simulatedDAG import SimulatedDAG
 from d2c_descriptor import D2Cdescriptor
 from d2c import D2C
+
+from temp_methods import is_mb, is_parent, is_child, is_descendant, is_ancestor, make_model
 
 def is_what(iDAG, i, j, type):
     if type == "is_mb":
@@ -45,11 +42,7 @@ rep = 1 #TODO: rename and understand
 while iteration_counter < number_DAGS: #TODO: check < or <=
     random.seed(iteration_counter)
 
-    if rep%2 == 0:
-        train_DAG = SimulatedDAG() #TODO: check default parameters 
-    else:
-        train_DAG = SimulatedTS()
-
+    train_DAG = SimulatedDAG() #TODO: check default parameters 
     descriptor = D2Cdescriptor()
     d2c = D2C()
 
