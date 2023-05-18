@@ -1,11 +1,17 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
 from d2c.simulatedDAGs import SimulatedDAGs
 from d2c.D2C import D2C
-import pandas as pd
-import time
+
+
+# In[2]:
+
 
 N_JOBS = 1
-
-# Usage example
 ndag = 10
 n = 10
 no_nodes = 10
@@ -15,21 +21,32 @@ seed = 1
 sdn = 0.1
 verbose = True
 
-if __name__ == "__main__":
-    start = time.time()
-    simulated_dags = SimulatedDAGs(ndag, n, no_nodes, function_types, quantize, seed, sdn, verbose, n_jobs=N_JOBS)
-    simulated_dags.generate_dags()
-    simulated_dags.simulate_observations()
 
-    # Create an instance of the D2C class
-    d2c = D2C(simulated_dags, n_jobs=N_JOBS)
+# In[3]:
 
-    # Initialize the D2C instance
-    d2c.initialize()
 
-    # Access the generated X and Y values
-    data = pd.concat([d2c.X,d2c.Y], axis=1)
-    
-    # Print the time taken rounded to 2 decimal places
-    end = time.time()
-    print("Time taken: " + str(round(end - start, 2)) + " seconds")
+simulated_dags = SimulatedDAGs(ndag, n, no_nodes, function_types, quantize, seed, sdn, verbose, n_jobs=N_JOBS)
+simulated_dags.generate_dags()
+simulated_dags.simulate_observations()
+
+
+# In[4]:
+
+
+d2c = D2C(simulated_dags, n_jobs=N_JOBS)
+d2c.initialize()
+
+
+# In[7]:
+
+
+dataframe = d2c.get_df()
+dataframe
+
+
+# In[9]:
+
+
+score = d2c.get_score(metric="f1")
+score
+
