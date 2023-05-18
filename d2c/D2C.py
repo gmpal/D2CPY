@@ -146,8 +146,7 @@ class D2C:
         Parameters:
             model (RandomForestClassifier): The machine learning model to evaluate.
             test_size (float): The proportion of the data to use for testing.
-            metric (str): The evaluation metric to use (default is "accuracy").
-                Valid metrics are: 'accuracy', 'f1', 'precision', 'recall', 'auc'.
+            metric (str): The evaluation metric to use (default is "accuracy"). Valid metrics are: 'accuracy', 'f1', 'precision', 'recall', 'auc'.
 
         Returns:
             float: The score of the model using the specified metric.
