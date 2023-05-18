@@ -31,3 +31,4 @@ exclude_patterns = ['../temp/*']
 html_theme = 'alabaster'
 html_static_path = ['_static']
 html_logo = 'd2c.png'
+html_favicon = 'd2c.ico'
