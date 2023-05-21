@@ -106,8 +106,8 @@ class D2C:
 
         Args:
             D (pd.DataFrame): The data matrix.
-            ca (int): Column index of the first variable.
-            ef (int): Column index of the second variable.
+            ca (int): Column index of the cause variable.
+            ef (int): Column index of the effect variable.
 
         Returns:
             dict: Dictionary containing the computed descriptors.

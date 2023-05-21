@@ -4,17 +4,14 @@
 from d2c import SimulatedDAGs, D2C
 
 N_JOBS = 1
-ndag = 1
-n = 10
-no_nodes = 10
-function_types = ["linear", "quadratic", "sigmoid"]
-quantize = True
-seed = 1
-sdn = 0.1
-verbose = True
+
+n_dags = 1
+n_observations = 10
+n_nodes = 10
+
 if __name__ == "__main__":
 
-    simulated_dags = SimulatedDAGs(ndag, n, no_nodes, function_types, quantize, seed, sdn, verbose, n_jobs=N_JOBS)
+    simulated_dags = SimulatedDAGs(n_dags, n_observations, n_nodes, n_jobs=N_JOBS)
     simulated_dags.generate_dags()
     simulated_dags.simulate_observations()
     d2c = D2C(simulated_dags, n_jobs=N_JOBS)
