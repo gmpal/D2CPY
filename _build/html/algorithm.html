@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Usage &#8212; D2CPY - from Dependency to Causality</title>
+    <title>D2C Algorithm &#8212; D2CPY - from Dependency to Causality</title>
   
   
   
@@ -61,12 +61,14 @@ const thebe_selector_input = "pre"
 const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="_static/sphinx-thebe.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'main';</script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'algorithm';</script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="SimulatedDAG" href="simulatedDAGs_introduction.html" />
-    <link rel="prev" title="D2C Algorithm" href="algorithm.html" />
+    <link rel="next" title="Usage" href="main.html" />
+    <link rel="prev" title="Installation" href="install.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -159,8 +161,8 @@ const thebe_selector_output = ".output, .cell_output"
         </ul>
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="algorithm.html">The D2C Algorithm</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Usage</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">The D2C Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main.html">Usage</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="simulatedDAGs_introduction.html">Simulated DAGs</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="simulatedDAGs_examples.html">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulatedDAGs_implementation.html">Implementation</a></li>
@@ -244,7 +246,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="https://github.com/gmpal/D2CPY/issues/new?title=Issue%20on%20page%20%2Fmain.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gmpal/D2CPY/issues/new?title=Issue%20on%20page%20%2Falgorithm.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -274,7 +276,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="_sources/main.ipynb" target="_blank"
+      <li><a href="_sources/algorithm.md" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -284,7 +286,7 @@ const thebe_selector_output = ".output, .cell_output"
 <span class="btn__icon-container">
   <i class="fas fa-file"></i>
   </span>
-<span class="btn__text-container">.ipynb</span>
+<span class="btn__text-container">.md</span>
 </a>
 </li>
       
@@ -343,7 +345,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -354,11 +358,19 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Usage</h1>
+    <h1>D2C Algorithm</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#d2c-algorithm-steps">D2C Algorithm Steps</a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -368,155 +380,50 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="usage">
-<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h1>
-<p>First, let’s import the necessary modules and classes:</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">d2c.simulatedDAGs</span> <span class="kn">import</span> <span class="n">SimulatedDAGs</span>
-<span class="kn">from</span> <span class="nn">d2c.D2C</span> <span class="kn">import</span> <span class="n">D2C</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>Next, let’s set the values for the essential parameters:</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">N_JOBS</span> <span class="o">=</span> <span class="mi">1</span>
-
-<span class="n">n_dags</span> <span class="o">=</span> <span class="mi">3</span>
-<span class="n">n_observations</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="n">n_nodes</span> <span class="o">=</span> <span class="mi">5</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>We can now create our simulated DAGs by instantiating the <code class="docutils literal notranslate"><span class="pre">SimulatedDAGs</span></code> object and calling the <code class="docutils literal notranslate"><span class="pre">generate_dags()</span></code> method.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulated_dags</span> <span class="o">=</span> <span class="n">SimulatedDAGs</span><span class="p">(</span><span class="n">n_dags</span><span class="p">,</span> <span class="n">n_observations</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">N_JOBS</span><span class="p">)</span>
-<span class="n">simulated_dags</span><span class="o">.</span><span class="n">generate_dags</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>Once the DAGs have been created, we can create observations that respect the structure of the DAGs (i.e. the causal relationships between variables that have a <code class="docutils literal notranslate"><span class="pre">parent</span> <span class="pre">-&gt;</span> <span class="pre">child</span></code> connection in the graph is manifested by creating the <code class="docutils literal notranslate"><span class="pre">child</span></code> variable as a function of the <code class="docutils literal notranslate"><span class="pre">parent(s)</span></code> variables.)</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulated_dags</span><span class="o">.</span><span class="n">simulate_observations</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>Let’s take a look at one of the generated DAGs using the <code class="docutils literal notranslate"><span class="pre">plot_DAG()</span></code> method. We choose the DAG with index <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulated_dags</span><span class="o">.</span><span class="n">plot_DAG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>c:\ProgramData\Anaconda3\envs\d2c\lib\site-packages\tqdm\auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-  from .autonotebook import tqdm as notebook_tqdm
-</pre></div>
-</div>
-<div class="output text_html">
-        <iframe
-            width="100%"
-            height="600px"
-            src="example.html"
-            frameborder="0"
-            allowfullscreen
-            
-        ></iframe>
-        </div></div>
-</div>
-<p>We have DAGs and corresponding observations now. We can proceed by initializing our <code class="docutils literal notranslate"><span class="pre">D2C</span></code> object that will allow us to compute the descriptors.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">d2c</span> <span class="o">=</span> <span class="n">D2C</span><span class="p">(</span><span class="n">simulated_dags</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">N_JOBS</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>We can calculate the descriptors with the line <code class="docutils literal notranslate"><span class="pre">d2c.initialize()</span></code>. The object also offers a method <code class="docutils literal notranslate"><span class="pre">load_descriptors()</span></code> to load the descriptors that have been previously computed and stored into a file, to avoid repeating the computation.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#d2c.initialize()</span>
-<span class="n">d2c</span><span class="o">.</span><span class="n">load_descriptors</span><span class="p">(</span><span class="s1">&#39;dataframe.csv&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>We can take a look at the descriptors. Let’s retrieve the dataframe from the D2C object using the <code class="docutils literal notranslate"><span class="pre">get_df()</span></code> and print it.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">get_df</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>           effca         effef    comcau  delta  delta2  delta.i1  delta.i2  \
-0  -3.804025e-01 -5.383843e-16  0.523419    0.0     0.0       0.0       0.0   
-1  -4.167655e-16 -3.309026e-16  0.553142    0.0     0.0       0.0       0.0   
-2  -1.978560e-01  1.228531e-16  0.390718    0.0     0.0       0.0       0.0   
-3   4.903286e-16  3.767090e-16  0.378265    0.0     0.0       0.0       0.0   
-4   2.392275e-17 -2.183022e-16  0.374566    0.0     0.0       0.0       0.0   
-..           ...           ...       ...    ...     ...       ...       ...   
-75  5.814993e-16  7.119274e-16  0.000000    0.0     0.0       0.0       0.0   
-76 -2.289586e-15  1.677865e-01  0.044729    0.0     0.0       0.0       0.0   
-77  6.041618e-17 -2.289586e-15  0.048053    0.0     0.0       0.0       0.0   
-78  1.381802e-15  1.200624e-01  0.009393    0.0     0.0       0.0       0.0   
-79  5.987691e-17 -5.920579e-15  0.002223    0.0     0.0       0.0       0.0   
-
-    delta.i3  delta.i4  delta.i5  ...   Int3.j3   Int3.j4   Int3.j5   Int3.j6  \
-0        0.0       0.0       0.0  ... -0.145397 -0.096300  0.055183  0.146073   
-1        0.0       0.0       0.0  ... -0.109930 -0.025366  0.022509  0.051234   
-2        0.0       0.0       0.0  ... -0.145397 -0.096300  0.055183  0.146073   
-3        0.0       0.0       0.0  ... -0.313118 -0.308452 -0.100640  0.024047   
-4        0.0       0.0       0.0  ... -0.109930 -0.025366  0.022509  0.051234   
-..       ...       ...       ...  ...       ...       ...       ...       ...   
-75       0.0       0.0       0.0  ... -0.181069 -0.028576 -0.020534 -0.015708   
-76       0.0       0.0       0.0  ... -0.378125 -0.262598 -0.163918 -0.104710   
-77       0.0       0.0       0.0  ... -0.181069 -0.028576 -0.020534 -0.015708   
-78       0.0       0.0       0.0  ... -0.309139 -0.283412 -0.148795 -0.068025   
-79       0.0       0.0       0.0  ... -0.181069 -0.028576 -0.020534 -0.015708   
-
-     Int3.j7  gini.delta  gini.delta2  gini.ca.ef  gini.ef.ca  0  
-0   0.176369    0.001397          0.0    0.433073    0.485387  1  
-1   0.060809    0.000000          0.0    0.485387    0.433073  0  
-2   0.176369    0.000000          0.0    0.066080    0.084099  1  
-3   0.065610    0.000000          0.0    0.084099    0.066080  0  
-4   0.060809    0.000000          0.0    0.000000    0.000000  1  
-..       ...         ...          ...         ...         ... ..  
-75 -0.014100    0.000000          0.0    0.035346    0.022033  0  
-76 -0.084974    0.000000          0.0    0.000000    0.002778  1  
-77 -0.014100    0.000000          0.0    0.002778    0.000000  0  
-78 -0.041102    0.000000          0.0    0.327927    0.351744  1  
-79 -0.014100    0.000000          0.0    0.351744    0.327927  0  
-
-[80 rows x 82 columns]
-</pre></div>
-</div>
-</div>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">D2C</span></code> object offers a method <code class="docutils literal notranslate"><span class="pre">get_score()</span></code> to quickly assess the ability of using these descriptors to perform causal discovery. In fact, descriptors for <code class="docutils literal notranslate"><span class="pre">child</span> <span class="pre">-&gt;</span> <span class="pre">parent</span></code> edges are also computed, but their label is set to zero. Therefore, we can perform a standard classification task on this dataframe. By default, this method uses a <code class="docutils literal notranslate"><span class="pre">RandomForestClassifier()</span></code>.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the score of a Random Forest Classifier</span>
-<span class="n">score</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">get_score</span><span class="p">(</span><span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;accuracy&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The accuracy of the model is: </span><span class="si">{</span><span class="n">score</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The accuracy of the model is: 0.5625
-</pre></div>
-</div>
-</div>
-</div>
+  <section class="tex2jax_ignore mathjax_ignore" id="d2c-algorithm">
+<h1>D2C Algorithm<a class="headerlink" href="#d2c-algorithm" title="Permalink to this heading">#</a></h1>
+<p>The D2C algorithm is designed to predict the existence of a causal link between two variables in a multivariate setting. It works by:</p>
+<ol class="arabic simple">
+<li><p>Creating a set of features of the relationship between the members of the Markov Blankets of the two variables.</p></li>
+<li><p>Using a classifier (e.g., a Random Forest) to learn a mapping between the features and the presence of a causal link.</p></li>
+</ol>
+<p>Two sets of features are used to summarize the relationship between the two Markov blankets. The first set of features accounts for the presence (or the position if the Markov Blanket is obtained by ranking) of the terms of Mj in Mi and vice versa. The second set of features is based on the distributions of the asymmetric descriptors with a set of quantiles.</p>
+<section id="d2c-algorithm-steps">
+<h2>D2C Algorithm Steps<a class="headerlink" href="#d2c-algorithm-steps" title="Permalink to this heading">#</a></h2>
+<p>For each pair of measured variables <code class="docutils literal notranslate"><span class="pre">z_i</span></code> and <code class="docutils literal notranslate"><span class="pre">z_j</span></code>,</p>
+<ol class="arabic simple">
+<li><p>Infers from data the two Markov Blankets (e.g., by using state-of-the-art approaches) <code class="docutils literal notranslate"><span class="pre">M_i</span></code> and <code class="docutils literal notranslate"><span class="pre">M_j</span></code> and the subsets <code class="docutils literal notranslate"><span class="pre">M_i</span> <span class="pre">\</span> <span class="pre">z_j</span></code> and <code class="docutils literal notranslate"><span class="pre">M_j</span> <span class="pre">\</span> <span class="pre">z_i</span></code>. Most existing algorithms associate a ranking with the Markov Blanket such that the most strongly relevant variables are ranked before.</p></li>
+<li><p>Computes a set of (conditional) mutual information terms describing the dependency between <code class="docutils literal notranslate"><span class="pre">z_i</span></code> and <code class="docutils literal notranslate"><span class="pre">z_j</span></code></p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[
+I=\left[I\left(\mathbf{z}_i ; \mathbf{z}_j\right), I\left(\mathbf{z}_i ; \mathbf{z}_j \mid \mathbf{M}_j \backslash \mathbf{z}_i\right), I\left(\mathbf{z}_i ; \mathbf{z}_j \mid \mathbf{M}_i \backslash \mathbf{z}_j\right)\right]
+\]</div>
+<ol class="arabic simple" start="3">
+<li><p>Computes the positions <code class="docutils literal notranslate"><span class="pre">P_i^(k_i)</span></code> of the members <code class="docutils literal notranslate"><span class="pre">m^(k_i)</span></code> of <code class="docutils literal notranslate"><span class="pre">M_i</span> <span class="pre">\</span> <span class="pre">z_j</span></code> in the ranking associated to <code class="docutils literal notranslate"><span class="pre">M_j</span> <span class="pre">\</span> <span class="pre">z_i</span></code> and the positions <code class="docutils literal notranslate"><span class="pre">P_j^(k_j)</span></code> of the terms <code class="docutils literal notranslate"><span class="pre">m^(k_j)</span></code> in the ranking associated to <code class="docutils literal notranslate"><span class="pre">M_i</span> <span class="pre">\</span> <span class="pre">z_j</span></code>. In case of the absence of a term of <code class="docutils literal notranslate"><span class="pre">M_i</span></code> in <code class="docutils literal notranslate"><span class="pre">M_j</span></code>, the position is set to <code class="docutils literal notranslate"><span class="pre">K_j+1</span></code> (respectively <code class="docutils literal notranslate"><span class="pre">K_i+1</span></code>).</p></li>
+<li><p>Computes the populations based on the asymmetric descriptors:</p></li>
+</ol>
+<p>(a) <span class="math notranslate nohighlight">\(D_1(i, j)=\left\{I\left(\mathbf{z}_i ; \mathbf{m}_j^{\left(k_j\right)} \mid \mathbf{z}_j\right), k_j=1, \ldots, K_j\right\}\)</span> <br>
+(b) <span class="math notranslate nohighlight">\(D_1(j, i)=\left\{I\left(\mathbf{z}_j ; \mathbf{m}_i^{\left(k_i\right)} \mid \mathbf{z}_i\right), k_i=1, \ldots, K_i\right\}\)</span> <br>
+(c) <span class="math notranslate nohighlight">\(D_2(i, j)=\left\{I\left(\mathrm{~m}_i^{\left(k_i\right)} ; \mathbf{m}_j^{\left(k_j\right)} \mid \mathbf{z}_j\right), k_i=1, \ldots, K_i, k_j=1, \ldots, K_j\right\}\)</span> <br>
+(d) <span class="math notranslate nohighlight">\(D_2(j, i)=\left\{I\left(\mathbf{m}_j^{\left(k_j\right)} ; \mathbf{m}_i^{\left(k_i\right)} \mid \mathbf{z}_i\right), k_i=1, \ldots, K_i, k_j=1, \ldots, K_j\right\}\)</span> <br>
+(e) <span class="math notranslate nohighlight">\(D_3(i, j)=\left\{I\left(\mathrm{z}_i ; \mathbf{m}_j^{\left(k_j\right)}\right), k_j=1, \ldots, K_j\right\}\)</span> <br>
+(f) <span class="math notranslate nohighlight">\(D_3(j, i)=\left\{I\left(\mathbf{z}_j, \mathbf{m}_i^{\left(k_i\right)}\right), k_i=1, \ldots, K_i\right\}\)</span></p>
+<ol class="arabic simple" start="5">
+<li><p>Creates a vector of descriptors</p></li>
+</ol>
+<div class="math notranslate nohighlight">
+\[\begin{split}
+\begin{aligned}
+&amp; x=\left[I, \mathcal{Q}\left(\hat{P}_i\right), \mathcal{Q}\left(\hat{P}_j\right), \mathcal{Q}\left(\hat{D}_1(i, j)\right), \mathcal{Q}\left(\hat{D}_1(j, i)\right),\right. \\
+&amp; \left.\mathcal{Q}\left(\hat{D}_2(i, j)\right), \mathcal{Q}\left(\hat{D}_2(j, i)\right), \mathcal{Q}\left(\hat{D}_3(i, j)\right), \mathcal{Q}\left(\hat{D}_3(j, i)\right)\right]
+\end{aligned}
+\end{split}\]</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">P_hat_i</span></code> and <code class="docutils literal notranslate"><span class="pre">P_hat_j</span></code> are the empirical distributions of the populations <code class="docutils literal notranslate"><span class="pre">{P_i^(k_i)}</span></code> and <code class="docutils literal notranslate"><span class="pre">{P_j^(k_j)}</span></code>, <code class="docutils literal notranslate"><span class="pre">D_hat_h(i,</span> <span class="pre">j)</span></code> denotes the empirical distribution of the corresponding population <code class="docutils literal notranslate"><span class="pre">D_h(i,</span> <span class="pre">j)</span></code>, and <code class="docutils literal notranslate"><span class="pre">Q</span></code> returns a set of sample quantiles of a distribution (in the experiments we set the quantiles to <code class="docutils literal notranslate"><span class="pre">0.1,0.25,0.5,0.75,0.9</span></code>).</p>
+<p>The vector <code class="docutils literal notranslate"><span class="pre">x</span></code> can then be derived from observational data and used to create a vector of descriptors to be used in a supervised learning paradigm.</p>
+<p>The rationale of the algorithm is that the asymmetries between <code class="docutils literal notranslate"><span class="pre">M_i</span></code> and <code class="docutils literal notranslate"><span class="pre">M_j</span></code> induce an asymmetry on the distributions <code class="docutils literal notranslate"><span class="pre">P^</span></code> and <code class="docutils literal notranslate"><span class="pre">D^</span></code>, and that the quantiles of those distributions provide information about the directionality of the causal link (zi ! zj or zj ! zi). These distributions would be more informative if we were able to rank the terms of the Markov Blankets by prioritizing the direct causes (i.e., the terms <code class="docutils literal notranslate"><span class="pre">c_i</span></code> and <code class="docutils literal notranslate"><span class="pre">c_j</span></code>).</p>
+<p>In the experiments, we derive the information terms as differences between (conditional) entropy terms, which are estimated by a Lazy Learning regression algorithm under the assumption of Gaussian noise. The (conditional) mutual information terms are then obtained by using the relations (1) and (3).</p>
+</section>
 </section>
 
     <script type="text/x-thebe-config">
@@ -551,20 +458,20 @@ document.write(`
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="algorithm.html"
+       href="install.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">D2C Algorithm</p>
+        <p class="prev-next-title">Installation</p>
       </div>
     </a>
     <a class="right-next"
-       href="simulatedDAGs_introduction.html"
+       href="main.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">SimulatedDAG</p>
+        <p class="prev-next-title">Usage</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -577,6 +484,20 @@ document.write(`
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#d2c-algorithm-steps">D2C Algorithm Steps</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

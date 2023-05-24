@@ -4,15 +4,33 @@
 format: jb-book
 root: README
 chapters:
+- file: install
+  title: Installation
+
+- file: algorithm
+  title: The D2C Algorithm
 
 - file: main
   title: Usage
-- file: simulatedDAGs
+
+- file: simulatedDAGs_introduction
   title: Simulated DAGs
-- file: D2C
-  title: D2C Chapter
+  sections:
+  - file: simulatedDAGs_examples
+    title: Examples
+  - file: simulatedDAGs_implementation
+    title: Implementation
+
+- file: D2C_introduction
+  title: D2C
+  sections:
+  - file: D2C_examples
+    title: Examples
+  - file: D2C_implementation
+    title: Implementation
+
 - file: bibliography
   title: Bibliography
+
 - file: about
   title: About
-  
