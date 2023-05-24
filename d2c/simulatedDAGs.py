@@ -1,7 +1,6 @@
 import numpy as np
 import networkx as nx
 from networkx.algorithms.dag import is_directed_acyclic_graph
-# from multiprocessing import Pool
 import pandas as pd
 import random
 
@@ -52,13 +51,7 @@ class SimulatedDAGs:
 
     def generate_dags(self) -> None:
         """Generates ndag number of DAGs."""
-        results = [self._generate_single_dag(i) for i in range(self.n_dags)]
-        # if self.n_jobs == 1:
-        #     results = [self._generate_single_dag(i) for i in range(self.n_dags)]
-        # else:
-        #     with Pool(processes=self.n_jobs) as pool:
-        #         results = pool.map(self._generate_single_dag, range(self.n_dags))
-        self.list_DAGs = results
+        self.list_DAGs = [self._generate_single_dag(i) for i in range(self.n_dags)]
 
     def _generate_single_dag(self, index: int) -> nx.DiGraph:
         """
@@ -86,20 +79,13 @@ class SimulatedDAGs:
 
         for edge in G.edges:
             G.edges[edge]['weight'] = np.random.uniform(low=0, high=1) #TODO: check weight implementation
-            # G.edges[edge]['H'] = random.choice(self.function_types)
             G.edges[edge]['H'] = 'linear' #TODO: implement other functions
 
         return G
 
     def simulate_observations(self) -> None:
         """Simulates observations for all the DAGs."""
-        results = [self._simulate_single_dag_observations(dag) for dag in self.list_DAGs]
-        # if self.n_jobs == 1:
-        #     results = [self._simulate_single_dag_observations(dag) for dag in self.list_DAGs]
-        # else:
-        #     with Pool(processes=self.n_jobs) as pool:
-        #         results = pool.map(self._simulate_single_dag_observations, self.list_DAGs)
-        self.list_observations = results
+        self.list_observations = [self._simulate_single_dag_observations(dag) for dag in self.list_DAGs]
 
     def _simulate_single_dag_observations(self, dag: nx.DiGraph) -> pd.DataFrame:
         """

@@ -60,6 +60,12 @@ class D2C:
         self.X = pd.concat([pd.DataFrame(X) for X in X_list], axis=0)
         self.Y = pd.concat([pd.DataFrame(Y) for Y in Y_list], axis=0)
 
+    def load_descriptors(self, filename='dataframe.csv'):
+        descriptors = pd.read_csv(filename)
+        self.X = descriptors.iloc[:,:-1]
+        self.Y = descriptors.iloc[:,-1]
+        #TODO: handle multivariate case
+
     def _compute_descriptors_for_edge_pairs(self, DAG_index: Any) -> Tuple[list, list]:
         """
         Compute descriptors in parallel for a given observation.
