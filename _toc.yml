@@ -29,6 +29,9 @@ chapters:
   - file: D2C_implementation
     title: Implementation
 
+- file: utils
+  title: Additional functions
+
 - file: bibliography
   title: Bibliography
 
