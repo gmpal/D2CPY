@@ -12,6 +12,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score, GroupKFold
 
 from d2c.simulatedDAGs import SimulatedDAGs
 from d2c.utils import *
@@ -290,9 +291,10 @@ class D2C:
             namesx += ["Int3.j" + str(i+1) for i in range(len(pq))]
             namesx += ["gini.delta","gini.delta2","gini.ca.ef","gini.ef.ca"]
 
-            keys = namesx
+            keys = ['graph_id'] + namesx
+
             
-            values = [effca, effef, comcau, delta, delta2]
+            values = [DAG_index,effca, effef, comcau, delta, delta2]
             values.extend(np.quantile(delta_i, q=pq, axis=0).flatten()) 
             values.extend(np.quantile(delta2_i, q=pq, axis=0).flatten()) 
             values.extend([ca_ef, ef_ca])
@@ -316,6 +318,17 @@ class D2C:
             print("Descriptors for DAG", DAG_index, "edge pair", ca, ef, "computed")
             return dictionary
 
+    def load_descriptors(self, path: str) -> None:
+        """
+        Load descriptors from a CSV file.
+
+        Parameters:
+            path (str): The path to the CSV file.
+
+        """
+        df = pd.read_csv(path)
+        self.X = df.iloc[:, :-1]
+        self.Y = df.iloc[:, -1]
 
     def get_df(self) -> pd.DataFrame:
         """
@@ -325,50 +338,37 @@ class D2C:
             pd.DataFrame: The concatenated DataFrame of X and Y.
 
         """
-        return pd.concat([self.X,self.Y], axis=1)
+        concatenated_df = pd.concat([self.X,self.Y], axis=1)
+        concatenated_df.columns = concatenated_df.columns[:len(concatenated_df.columns)-1].tolist() + ["is_causal"]
+        return concatenated_df
     
-
-    def get_score(self, model: RandomForestClassifier = RandomForestClassifier(), test_size: float = 0.2, metric: str = "accuracy") -> Union[float, None]:
+    def save_df(self, path: str) -> None:
         """
-        Get the score of a machine learning model using the specified metric.
+        Save the concatenated DataFrame of X and Y to a CSV file.
 
         Parameters:
-            model (RandomForestClassifier): The machine learning model to evaluate.
-            test_size (float): The proportion of the data to use for testing.
-            metric (str): The evaluation metric to use (default is "accuracy"). Valid metrics are: 'accuracy', 'f1', 'precision', 'recall', 'auc'.
-
-        Returns:
-            float: The score of the model using the specified metric.
-        
-        Raises:
-            ValueError: If an invalid metric is provided.
+            path (str): The path to the CSV file.
 
         """
-        data = self.X
-        labels = self.Y
+        concatenated_df = self.get_df()
+        concatenated_df.to_csv(path, index=False)
 
-        # Split the data into training and testing sets
-        X_train, X_test, y_train, y_test = train_test_split(data, labels, train_size=1-test_size, test_size=test_size, random_state=self.random_state)
+    def get_score(self, model: RandomForestClassifier = RandomForestClassifier(), n_splits: int = 10, metric: str = "accuracy") -> Union[float, None]:
 
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
+        
+        dataframe = self.get_df()
+        X = dataframe.drop(columns=['graph_id', 'is_causal'])
+        y = dataframe['is_causal']
+        groups = dataframe['graph_id']
 
-        # Create an instance of the Random Forest classifier
-        model = RandomForestClassifier(n_jobs=self.n_jobs, random_state=self.random_state)
+        rf_classifier = model
 
-        # Train the model
-        model.fit(X_train, y_train)
+        group_kfold = GroupKFold(n_splits=n_splits)  # You can change the number of splits (e.g., 5-fold cross-validation)
 
-        # Get the accuracy of the model
-        if metric == "accuracy":
-            return model.score(X_test, y_test)
-        elif metric == "f1":
-            return f1_score(y_test, model.predict(X_test))
-        elif metric == "precision":
-            return precision_score(y_test, model.predict(X_test))
-        elif metric == "recall":
-            return recall_score(y_test, model.predict(X_test))
-        elif metric == "auc":
-            return roc_auc_score(y_test, model.predict(X_test))
-        else:
-            raise ValueError("Invalid metric. Valid metrics are: 'accuracy', 'f1', 'precision', 'recall'")
+        # Perform cross-validation
+        cv_scores = cross_val_score(rf_classifier, X, y, cv=group_kfold, groups=groups, scoring=metric)
+
+        mean_f1 = cv_scores.mean()
+        return mean_f1
+
+        
