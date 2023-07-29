@@ -71,6 +71,7 @@ class D2C:
 
         for edge_pair in edge_pairs:
             parent, child = edge_pair[0], edge_pair[1]
+            print("Computing descriptors for DAG", DAG_index, "edge pair", parent, child)
             descriptor = self._compute_descriptors(DAG_index, parent, child)
             X.append(descriptor)
             Y.append(1)  # Label edge as "is.child"
