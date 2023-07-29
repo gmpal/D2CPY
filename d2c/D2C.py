@@ -10,7 +10,7 @@ from numpy.linalg import inv, pinv
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score, accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_score, GroupKFold
 
@@ -370,5 +370,44 @@ class D2C:
 
         mean_f1 = cv_scores.mean()
         return mean_f1
+
+        
+    def test(self, model: RandomForestClassifier = RandomForestClassifier(), metric:str = 'accuracy', test_df: pd.DataFrame = None): 
+        """
+        Test the performance of a D2C model on another D2C object.
+
+        Parameters:
+            d2c (D2C): The D2C object to test.
+            metric (str): The metric to use for evaluation. Defaults to 'accuracy'.
+
+        Returns:
+            float: The score of the model.
+
+        """
+        dataframe = self.get_df()
+        X_train = dataframe.drop(columns=['graph_id', 'is_causal'])
+        y_train = dataframe['is_causal']
+        
+        X_test = test_df.drop(columns=['graph_id', 'is_causal'])
+        y_test = test_df['is_causal']
+
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+
+        if metric == 'accuracy':
+            return accuracy_score(y_test, y_pred)
+        elif metric == 'f1':
+            return f1_score(y_test, y_pred)
+        elif metric == 'precision':
+            return precision_score(y_test, y_pred)
+        elif metric == 'recall':
+            return recall_score(y_test, y_pred)
+        elif metric == 'roc_auc':
+            return roc_auc_score(y_test, y_pred)
+        else:
+            raise ValueError("Metric not supported")
+        
+
+
 
         
