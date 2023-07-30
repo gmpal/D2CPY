@@ -291,10 +291,11 @@ class D2C:
             namesx += ["Int3.j" + str(i+1) for i in range(len(pq))]
             namesx += ["gini.delta","gini.delta2","gini.ca.ef","gini.ef.ca"]
 
-            keys = ['graph_id'] + namesx
+            keys = ['graph_id','edge_source','edge_dest'] + namesx
 
             
-            values = [DAG_index,effca, effef, comcau, delta, delta2]
+            values = [DAG_index, ca, ef]
+            values.extend([effca, effef, comcau, delta, delta2])
             values.extend(np.quantile(delta_i, q=pq, axis=0).flatten()) 
             values.extend(np.quantile(delta2_i, q=pq, axis=0).flatten()) 
             values.extend([ca_ef, ef_ca])
@@ -372,9 +373,9 @@ class D2C:
         return mean_f1
 
         
-    def test(self, model: RandomForestClassifier = RandomForestClassifier(), metric:str = 'accuracy', test_df: pd.DataFrame = None): 
+    def test(self, model: RandomForestClassifier = RandomForestClassifier(), metric:str = 'accuracy', test_df: pd.DataFrame = None, reconstruct: bool = False): 
         """
-        Test the performance of a D2C model on another D2C object.
+        Test the performance of a D2C model on a Pandas Datafrane of descriptors from another D2C object.
 
         Parameters:
             d2c (D2C): The D2C object to test.
@@ -385,29 +386,35 @@ class D2C:
 
         """
         dataframe = self.get_df()
-        X_train = dataframe.drop(columns=['graph_id', 'is_causal'])
+        X_train = dataframe.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
         y_train = dataframe['is_causal']
         
-        X_test = test_df.drop(columns=['graph_id', 'is_causal'])
+        X_test = test_df.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
         y_test = test_df['is_causal']
 
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
 
+        G = None
+        if reconstruct: 
+            # Assuming df is your DataFrame
+            G = nx.DiGraph()  # Creates a directed graph
+
+            for index, row in pd.concat([X_test, y_test], axis=1).iterrows():
+                if row['is_causal']:
+                    G.add_edge(row['edge_source'], row['edge_dest'])
+            
         if metric == 'accuracy':
-            return accuracy_score(y_test, y_pred)
+            score = accuracy_score(y_test, y_pred)
         elif metric == 'f1':
-            return f1_score(y_test, y_pred)
+            score =  f1_score(y_test, y_pred)
         elif metric == 'precision':
-            return precision_score(y_test, y_pred)
+            score =  precision_score(y_test, y_pred)
         elif metric == 'recall':
-            return recall_score(y_test, y_pred)
+            score =  recall_score(y_test, y_pred)
         elif metric == 'roc_auc':
-            return roc_auc_score(y_test, y_pred)
+            score =  roc_auc_score(y_test, y_pred)
         else:
             raise ValueError("Metric not supported")
         
-
-
-
-        
+        return score, G

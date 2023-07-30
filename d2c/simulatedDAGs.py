@@ -137,5 +137,34 @@ class SimulatedDAGs:
 
         return data
     
+    def plot_DAG(self, DAG_index):
+        from causalnex.structure import StructureModel
+        from causalnex.plots import plot_structure, NODE_STYLE, EDGE_STYLE
 
-   
+        # Let's plot the first DAG for example
+        dag = self.list_DAGs[DAG_index]
+
+        # Convert NetworkX DiGraph to causalnex StructureModel
+        sm = StructureModel()
+        sm.add_edges_from(dag.edges())
+
+        viz = plot_structure(
+            sm,
+            all_node_attributes=NODE_STYLE.WEAK,
+            all_edge_attributes=EDGE_STYLE.WEAK,
+        )
+
+        html = viz.generate_html()
+        with open("example.html", mode='w', encoding='utf-8') as fp:
+                fp.write(html)
+
+        from IPython.display import display, IFrame, HTML
+        return IFrame("example.html", width=viz.width, height=viz.height)
+
+    def get_observations(self) -> List[pd.DataFrame]:
+        """Returns the simulated observations."""
+        return self.list_observations
+
+    def get_dags(self) -> List[nx.DiGraph]:
+        """Returns the generated DAGs."""
+        return self.list_DAGs
