@@ -17,6 +17,8 @@ from sklearn.model_selection import cross_val_score, GroupKFold
 from d2c.simulatedDAGs import SimulatedDAGs
 from d2c.utils import *
 
+from datetime import datetime
+
 
 class D2C:
     def __init__(self, simulatedDAGs: SimulatedDAGs, rev: bool = True, verbose=False, random_state: int = 42, n_jobs: int = 1) -> None:
@@ -72,7 +74,7 @@ class D2C:
 
         for edge_pair in edge_pairs:
             parent, child = edge_pair[0], edge_pair[1]
-            print("Computing descriptors for DAG", DAG_index, "edge pair", parent, child)
+            print(datetime.now().strftime('%H:%M:%S'), "Computing descriptors for DAG", DAG_index, "edge pair", parent, child)
             descriptor = self._compute_descriptors(DAG_index, parent, child)
             X.append(descriptor)
             Y.append(1)  # Label edge as "is.child"
@@ -100,7 +102,7 @@ class D2C:
         if dependency_type == "is.child":
             for parent_node, child_node in self.DAGs[DAG_index].edges:
                 edge_pairs.append((parent_node, child_node))
-        print("Edge pairs for DAG", DAG_index, "computed:", edge_pairs)
+        print(datetime.now().strftime('%H:%M:%S'), "Edge pairs for DAG", DAG_index, "computed:", edge_pairs)
         return edge_pairs
 
     
@@ -163,16 +165,16 @@ class D2C:
         # intersection of the Markov Blanket of ca and ef
         common_causes = MBca.intersection(MBef)
         if self.verbose: 
-            print("common_causes: ", common_causes)
+            print(datetime.now().strftime('%H:%M:%S'), "common_causes: ", common_causes)
         # Creation of the Markov Blanket of ca (denoted MBca) and ef (MBef)
         if n > (ns+1):
 
-            if self.verbose: print("Computing Markov Blanket")
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "Computing Markov Blanket")
             # MBca
             ind = list(set(np.arange(n)) - {ca})
 
             if self.verbose: 
-                print("About to rankrho")
+                print(datetime.now().strftime('%H:%M:%S'), "About to rankrho")
 
             ind = rankrho(D.iloc[:,ind],D.iloc[:,ca],nmax=min(len(ind),5*ns),verbose=self.verbose) - 1 #python starts from 0
             if self.verbose: print('Ind:',ind)
@@ -181,35 +183,35 @@ class D2C:
             if boot == "mrmr":
                 mrmr = mRMR(D.iloc[:,ind],D.iloc[:,ca],nmax=ns,verbose=self.verbose)
                 MBca = ind[mrmr]  
-                if self.verbose: print("MBca: ", MBca)
+                if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "MBca: ", MBca)
             # MBef
             ind2 = list(set(np.arange(n)) - {ef})
             ind2 = rankrho(D.iloc[:,ind2],D.iloc[:,ef],nmax=min(len(ind2),5*ns),verbose=self.verbose)  
             if boot == "mrmr":
                 MBef = ind2[mRMR(D.iloc[:,ind2],D.iloc[:,ef],nmax=ns,verbose=self.verbose)]  
-                if self.verbose: print("MBef: ", MBef)
+                if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "MBef: ", MBef)
     
         if acc:
             comcau = 1
 
             if len(common_causes) > 0:
-                if self.verbose: print("common_causes: ", common_causes)
+                if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "common_causes: ", common_causes)
                 comcau = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, list(common_causes)], lin=lin,verbose=self.verbose) 
 
             effca = coeff(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, MBef], verbose=self.verbose)
             effef = coeff(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:, MBca], verbose=self.verbose)
 
-            if self.verbose: print("effca: ", effca, "effef: ", effef)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "effca: ", effca, "effef: ", effef)
 
             ca_ef = normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], lin=lin,verbose=self.verbose) 
             ef_ca = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], lin=lin,verbose=self.verbose) 
 
-            if self.verbose: print("ca_ef: ", ca_ef, "ef_ca: ", ef_ca)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "ca_ef: ", ca_ef, "ef_ca: ", ef_ca)
 
             delta = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, MBef], lin=lin,verbose=self.verbose) 
             delta2 = normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:, MBca], lin=lin,verbose=self.verbose) 
 
-            if self.verbose: print("delta: ", delta, "delta2: ", delta2)    
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "delta: ", delta, "delta2: ", delta2)    
 
 
             delta_i = []  
@@ -222,29 +224,29 @@ class D2C:
             for array in arrays_m_plus_MBef:
                 delta2_i.append(normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:,  array], lin=lin,verbose=self.verbose))
 
-            if self.verbose: print("delta_i: ", delta_i, "delta2_i: ", delta2_i)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "delta_i: ", delta_i, "delta2_i: ", delta2_i)
 
             I1_i = [normalized_conditional_information(D.iloc[:, MBef[j]], D.iloc[:, ca], lin=lin,verbose=self.verbose) for j in range(len(MBef))]
             I1_j = [normalized_conditional_information(D.iloc[:, MBca[j]], D.iloc[:, ef], lin=lin,verbose=self.verbose) for j in range(len(MBca))]
 
-            if self.verbose: print("I1_i: ", I1_i, "I1_j: ", I1_j)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "I1_i: ", I1_i, "I1_j: ", I1_j)
 
             I2_i = [normalized_conditional_information(D.iloc[:, ca], D.iloc[:, MBef[j]], D.iloc[:, ef], lin=lin,verbose=self.verbose) for j in range(len(MBef))]
             I2_j = [normalized_conditional_information(D.iloc[:, ef], D.iloc[:, MBca[j]], D.iloc[:, ca], lin=lin,verbose=self.verbose) for j in range(len(MBca))]
 
-            if self.verbose: print("I2_i: ", I2_i, "I2_j: ", I2_j)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "I2_i: ", I2_i, "I2_j: ", I2_j)
 
             # Randomly select maxs pairs
             IJ = np.array(np.meshgrid(np.arange(len(MBca)), np.arange(len(MBef)))).T.reshape(-1,2)
             np.random.shuffle(IJ)
             IJ = IJ[:min(maxs, len(IJ))]
 
-            if self.verbose: print("IJ: ", IJ)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "IJ: ", IJ)
 
             I3_i = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ca], lin=lin,verbose=self.verbose) for i, j in IJ]
             I3_j = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ef], lin=lin,verbose=self.verbose) for i, j in IJ]
 
-            if self.verbose: print("I3_i: ", I3_i, "I3_j: ", I3_j)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "I3_i: ", I3_i, "I3_j: ", I3_j)
 
             IJ = np.array([(i, j) for i in range(len(MBca)) for j in range(i+1, len(MBca))])
             np.random.shuffle(IJ)
@@ -252,7 +254,7 @@ class D2C:
 
             Int3_i = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca], lin=lin,verbose=self.verbose) - normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], lin=lin,verbose=self.verbose) for i, j in IJ]
 
-            if self.verbose: print("Int3_i: ", Int3_i)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "Int3_i: ", Int3_i)
 
             IJ = np.array([(i, j) for i in range(len(MBef)) for j in range(i+1, len(MBef))])
             np.random.shuffle(IJ)
@@ -260,22 +262,22 @@ class D2C:
 
             Int3_j = [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef], lin=lin,verbose=self.verbose) - normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], lin=lin,verbose=self.verbose) for i, j in IJ]
 
-            if self.verbose: print("Int3_j: ", Int3_j)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "Int3_j: ", Int3_j)
 
             E_ef = ecdf(D.iloc[:, ef],verbose=self.verbose)(D.iloc[:, ef]) 
             E_ca = ecdf(D.iloc[:, ca],verbose=self.verbose)(D.iloc[:, ca])
 
-            if self.verbose: print("E_ef: ", E_ef, "E_ca: ", E_ca)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "E_ef: ", E_ef, "E_ca: ", E_ca)
 
             gini_ca_ef = normalized_conditional_information(D.iloc[:, ca], pd.DataFrame(E_ef), lin=lin,verbose=self.verbose)
             gini_ef_ca = normalized_conditional_information(D.iloc[:, ef], pd.DataFrame(E_ca), lin=lin,verbose=self.verbose)
 
-            if self.verbose: print("gini_ca_ef: ", gini_ca_ef, "gini_ef_ca: ", gini_ef_ca)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "gini_ca_ef: ", gini_ca_ef, "gini_ef_ca: ", gini_ef_ca)
 
             gini_delta = normalized_conditional_information(D.iloc[:, ef], pd.DataFrame(E_ca), D.iloc[:, MBef], lin=lin,verbose=self.verbose)
             gini_delta2 = normalized_conditional_information(D.iloc[:, ca], pd.DataFrame(E_ef), D.iloc[:, MBca], lin=lin,verbose=self.verbose)
 
-            if self.verbose: print("gini_delta: ", gini_delta, "gini_delta2: ", gini_delta2)
+            if self.verbose: print(datetime.now().strftime('%H:%M:%S'), "gini_delta: ", gini_delta, "gini_delta2: ", gini_delta2)
 
             namesx = ["effca","effef","comcau","delta","delta2"]
             namesx += ["delta.i" + str(i+1) for i in range(len(pq))]
@@ -316,7 +318,7 @@ class D2C:
             #     if np.isnan(dictionary[key]):
             #         dictionary[key] = 0
             
-            print("Descriptors for DAG", DAG_index, "edge pair", ca, ef, "computed")
+            print(datetime.now().strftime('%H:%M:%S'), "Descriptors for DAG", DAG_index, "edge pair", ca, ef, "computed")
             return dictionary
 
     def load_descriptors(self, path: str) -> None:

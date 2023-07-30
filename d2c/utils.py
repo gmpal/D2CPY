@@ -16,6 +16,9 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
 import numpy as np
 
+from datetime import datetime
+
+COUNTER = 0
 
 
 def normalized_conditional_information(y, x1, x2=None, lin=True, verbose=True):
@@ -23,18 +26,11 @@ def normalized_conditional_information(y, x1, x2=None, lin=True, verbose=True):
         Normalized conditional information of x1 to y given x2
         I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
         """
-        if verbose: print('normalized_conditional_information')
-
         if x2 is None:  # I(x1;y)= (H(y)-H(y | x1))/H(y)
-            if verbose: print('x2 is None')
             entropy_y_given_x1 = normalized_prediction(x1, y, verbose=verbose)
             return max(0, 1 - entropy_y_given_x1)
-
-        if verbose: print('x2 is not None')
         entropy_y_given_x2 = normalized_prediction(x2, y, verbose=verbose)
-        x1_x2 = pd.concat([x1, x2],axis=1)
-        entropy_y_given_x1_x2 = normalized_prediction(x1_x2, y, verbose=verbose)
-        if verbose: print('entropy_y_given_x2: ', entropy_y_given_x2)
+        entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y, verbose=verbose)
         return max(0, entropy_y_given_x2 - entropy_y_given_x1_x2 ) / (entropy_y_given_x2 + 0.01)
 
 def normalized_prediction(X, Y, lin=True, verbose=True):
@@ -42,70 +38,66 @@ def normalized_prediction(X, Y, lin=True, verbose=True):
     Normalized mean squared error of the dependency
     """
 
-    if verbose: print('normalized_prediction')
     if isinstance(X, pd.Series):
         X = pd.DataFrame(X)
-    if verbose: print(X.shape)    
     N, n = X.shape
 
     if n > 1: # TODO: check the case if all columns are constant, return 1
-        if verbose: print('n > 1')
         X = np.delete(X, np.where(np.std(X, axis=0) < 0.01)[0], axis=1) # if there is any constant column, remove it
         X = np.delete(X, np.where(np.isnan(np.sum(X, axis=0)))[0], axis=1) # if there is any nan, remove it
     else:
-        if verbose: print('n <= 1')
         if np.any(np.isnan(X)): return 1 # TODO: check this
             
     XX = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
 
     if N < 5 or np.any(np.isnan(XX)): 
-        if verbose: print('N < 5 or np.any(np.isnan(XX))')
         return np.var(Y)
     if lin: 
-        if verbose: print('lin')
-        return max(1e-3, ridge_regression(XX, Y)['MSE_loo'] / (1e-3 + np.var(Y)))
+        return max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), XX, Y, scoring='neg_mean_squared_error', cv=5)) / (1e-3 + np.var(Y)))
 
     #TODO: implement the nonlinear case
 
+############################################################################################################
+#######   COMMENTED OUT FOR NOW because it is compacted in the above function  ############################
+# ############################################################################################################
+# def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3):
+#     """
+#     Perform ridge regression and returns the trained model, predictions, and metrics.
 
+#     Args:
+#         X_train (np.ndarray): The training design matrix.
+#         Y_train (np.ndarray): The training response vector.
+#         X_test (np.ndarray, optional): The test design matrix. Defaults to None.
+#         lambda_val (float, optional): The regularization parameter. Defaults to 1e-3.
 
-def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3):
-    """
-    Perform ridge regression and returns the trained model, predictions, and metrics.
+#     Returns:
+#         dict: Dictionary containing the trained model, predictions, and computed metrics.
+#     """
 
-    Args:
-        X_train (np.ndarray): The training design matrix.
-        Y_train (np.ndarray): The training response vector.
-        X_test (np.ndarray, optional): The test design matrix. Defaults to None.
-        lambda_val (float, optional): The regularization parameter. Defaults to 1e-3.
+#     model = Ridge(alpha=lambda_val)
+#     model.fit(X_train, Y_train)
 
-    Returns:
-        dict: Dictionary containing the trained model, predictions, and computed metrics.
-    """
-    model = Ridge(alpha=lambda_val)
-    model.fit(X_train, Y_train)
+#     Y_train_hat = model.predict(X_train)
+#     e_train = Y_train - Y_train_hat
+#     MSE_emp = mean_squared_error(Y_train, Y_train_hat)
+#     NMSE = MSE_emp / (np.var(Y_train)**2)
 
-    Y_train_hat = model.predict(X_train)
-    e_train = Y_train - Y_train_hat
-    MSE_emp = mean_squared_error(Y_train, Y_train_hat)
-    NMSE = MSE_emp / (np.var(Y_train)**2)
+#     e_loo = cross_val_score(model, X_train, Y_train, scoring='neg_mean_squared_error', cv=len(X_train))
+#     MSE_loo = -np.mean(e_loo)
 
-    e_loo = cross_val_score(model, X_train, Y_train, scoring='neg_mean_squared_error', cv=len(X_train))
-    MSE_loo = -np.mean(e_loo)
+#     Y_test_hat = None
+#     if X_test is not None:
+#         Y_test_hat = model.predict(X_test)
 
-    Y_test_hat = None
-    if X_test is not None:
-        Y_test_hat = model.predict(X_test)
-
-    return {
-        'e_train': e_train,
-        'MSE_emp': MSE_emp,
-        'NMSE': NMSE,
-        'MSE_loo': MSE_loo,
-        'Y_train_hat': Y_train_hat,
-        'Y_test_hat': Y_test_hat,
-        'model': model,
-    }
+#     return {
+#         'e_train': e_train,
+#         'MSE_emp': MSE_emp,
+#         'NMSE': NMSE,
+#         'MSE_loo': MSE_loo,
+#         'Y_train_hat': Y_train_hat,
+#         'Y_test_hat': Y_test_hat,
+#         'model': model,
+#     }
 
 
 
@@ -128,7 +120,7 @@ def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3):
 #             dict: Dictionary containing the computed metrics.
 
 #     """
-#     if verbose: print('ridge_regression')
+#     if verbose: print(datetime.now().strftime('%H:%M:%S'),'ridge_regression')
 
 #     n = X_train.shape[1]  # Number of predictors
 #     p = n + 1
@@ -138,7 +130,7 @@ def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3):
 #     XX = np.c_[np.ones((N, 1)), X_train]
 
 #     if lambda_val < 0:
-#         if verbose: print('lambda_val < 0')
+#         if verbose: print(datetime.now().strftime('%H:%M:%S'),'lambda_val < 0')
 #         min_MSE_loo = np.inf
 #         for lambda_current in np.arange(1e-3, 5, 0.5):
 #             H1 = pinv(XX.T @ XX + lambda_current * np.eye(p))
@@ -162,10 +154,10 @@ def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3):
 #     e_loo = e / (1 - np.diag(H))
 #     MSE_loo = np.mean(e_loo**2)
 #     NMSE = np.mean(e_loo**2) / (np.var(Y_train)**2)
-#     if verbose: print('NMSE: ', NMSE)
+#     if verbose: print(datetime.now().strftime('%H:%M:%S'),'NMSE: ', NMSE)
 #     Y_hat_ts = None
 #     if X_test is not None:
-#         if verbose: print('X_test is not None')
+#         if verbose: print(datetime.now().strftime('%H:%M:%S'),'X_test is not None')
 #         N_ts = X_test.shape[0]
 #         if np.isscalar(X_test) and n > 1:
 #             Y_hat_ts = np.r_[1, X_test] @ beta_hat
@@ -189,7 +181,7 @@ def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3):
 
 def column_based_correlation(X,Y,verbose=True):
     #TODO: multidimensional Y 
-    if verbose: print('column_based_correlation')
+    if verbose: print(datetime.now().strftime('%H:%M:%S'),'column_based_correlation')
     columns_of_X = X.shape[1]  # Number of columns in X
 
     correlation_vector = np.zeros(columns_of_X)  # Initialize correlation vector
@@ -210,13 +202,13 @@ def co2i(X,Y, verbose=True):
     if isinstance(Y, pd.Series):
         Y = pd.DataFrame(Y)
 
-    if verbose: print('co2i')
+    if verbose: print(datetime.now().strftime('%H:%M:%S'),'co2i')
 
     correlation_vector = column_based_correlation(X,Y, verbose=verbose)
     corr_sq = np.square(correlation_vector)
 
     I = -0.5 * np.log(1 - corr_sq)
-    if verbose: print('I: ', I)
+    if verbose: print(datetime.now().strftime('%H:%M:%S'),'I: ', I)
 
     return I
 
@@ -261,14 +253,14 @@ def rankrho(X, Y, nmax=5, regr=False, verbose=True):
         # The third column of X has the highest mutual information with Y, followed by the second column.
 
     """
-    if verbose: print('rankrho')
+    if verbose: print(datetime.now().strftime('%H:%M:%S'),'rankrho')
     # Number of columns in X and Y
     n = X.shape[1]
     # m = Y.shape[1] #TODO: handle the multivariate case
     N = X.shape[0]
 
     if np.var(Y) < 0.01:
-        if verbose: print('np.var(Y) < 0.01')
+        if verbose: print(datetime.now().strftime('%H:%M:%S'),'np.var(Y) < 0.01')
         return list(range(1, nmax + 1))
     
     # Scaling X
@@ -277,11 +269,11 @@ def rankrho(X, Y, nmax=5, regr=False, verbose=True):
     Iy = np.zeros(n)
 
     if not regr:
-        if verbose: print('not regr')
+        if verbose: print(datetime.now().strftime('%H:%M:%S'),'not regr')
         Iy = co2i(X, Y, verbose=verbose)
-        if verbose: print(Iy)
+        if verbose: print(datetime.now().strftime('%H:%M:%S'),Iy)
     else:
-        if verbose: print('regr')
+        if verbose: print(datetime.now().strftime('%H:%M:%S'),'regr')
         for i in range(n):
             Iy[i] = abs(ridge_regression(X[:, i], Y)['beta_hat'][1])
 
@@ -293,19 +285,19 @@ def rankrho(X, Y, nmax=5, regr=False, verbose=True):
 
 def mRMR(X, Y, nmax, verbose=True):
 
-    if verbose: print('mRMR')
+    if verbose: print(datetime.now().strftime('%H:%M:%S'),'mRMR')
     num_features = X.shape[1]
     
     # Calculate mutual information between each feature in X and Y
     mi_XY = mutual_info_regression(X, Y)
-    if verbose: print("mi_XY: ", mi_XY)
+    if verbose: print(datetime.now().strftime('%H:%M:%S'),"mi_XY: ", mi_XY)
 
     # Start with the feature with maximum MI with Y
     indices = [np.argmax(mi_XY)]
     
     for _ in range(nmax - 1):
         remaining_indices = list(set(range(num_features)) - set(indices))
-        if verbose: print("remaining_indices: ", remaining_indices)
+        if verbose: print(datetime.now().strftime('%H:%M:%S'),"remaining_indices: ", remaining_indices)
         mi_XX = np.zeros(len(remaining_indices))
         
         # Calculate mutual information between selected features and remaining features
@@ -314,7 +306,7 @@ def mRMR(X, Y, nmax, verbose=True):
         
         # Calculate MRMR score for each remaining feature
         mrmr_scores = mi_XY[remaining_indices] - np.mean(mi_XX)
-        if verbose: print("mrmr_scores: ", mrmr_scores)
+        if verbose: print(datetime.now().strftime('%H:%M:%S'),"mrmr_scores: ", mrmr_scores)
         # Select feature with maximum MRMR score
         indices.append(remaining_indices[np.argmax(mrmr_scores)])
     
@@ -331,11 +323,11 @@ def mRMR(X, Y, nmax, verbose=True):
 #     that have the highest relevance to the target variable while minimizing redundancy among the 
 #     selected features.
 #     """
-#     if verbose: print('mRMR')
+#     if verbose: print(datetime.now().strftime('%H:%M:%S'),'mRMR')
 #     n_columns = X.shape[1]
     
 #     if categ and Y.dtype == 'object':
-#         if verbose: print('Categorical Y')
+#         if verbose: print(datetime.now().strftime('%H:%M:%S'),'Categorical Y')
 #         relevance = np.zeros(n_columns)
 #         redundancy = np.zeros((n_columns, n_columns))
         
@@ -345,45 +337,45 @@ def mRMR(X, Y, nmax, verbose=True):
 #                                    mutual_info_score(X[:, j], X[:, i])])
 #             relevance[i] = mutual_info_score(X[:, i], Y)
 #     else:
-#         if verbose: print('Continuous Y')
+#         if verbose: print(datetime.now().strftime('%H:%M:%S'),'Continuous Y')
 #         #scale X
 #         X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
         
         
 #         relevance = co2i(X, Y) 
-#         if verbose: print("relevance: ", relevance)
+#         if verbose: print(datetime.now().strftime('%H:%M:%S'),"relevance: ", relevance)
         
 #         redundancy = np.zeros((n_columns, n_columns))
 #         for i in range(n_columns):
 #             redundancy[i] = co2i(X, X.iloc[:,i]) #TODO: check this
         
-#         if verbose: print("redundancy: ", redundancy)
+#         if verbose: print(datetime.now().strftime('%H:%M:%S'),"redundancy: ", redundancy)
     
 #     subs = [np.argmax(relevance)]
-#     if verbose: print("subs: ", subs)
+#     if verbose: print(datetime.now().strftime('%H:%M:%S'),"subs: ", subs)
 
 #     for j in range(len(subs), min(n_columns - 1, nmax)):
-#         if verbose: print(" Looping through " , j)
+#         if verbose: print(datetime.now().strftime('%H:%M:%S')," Looping through " , j)
 #         mrmr = np.full(n_columns, -np.inf)
         
 #         if len(subs) < (n_columns - 1):
-#             if verbose: print("  len(subs) < (n - 1)")
+#             if verbose: print(datetime.now().strftime('%H:%M:%S'),"  len(subs) < (n - 1)")
 #             if len(subs) > 1:
 #                 mrmr[subs] = relevance[subs] + lam * np.mean(-redundancy[subs][:, np.setdiff1d(range(n_columns), subs)], axis=1)
 #             else:
 #                 mrmr[subs] = relevance[subs] + lam * (-redundancy[subs][:, np.setdiff1d(range(n_columns), subs)])
 #         else:
-#             if verbose: print("  len(subs) > (n - 1)")
+#             if verbose: print(datetime.now().strftime('%H:%M:%S'),"  len(subs) > (n - 1)")
 #             mrmr[subs] = np.inf
         
 #         s = np.argmax(mrmr)
 #         sortmrmr = np.argsort(mrmr)[::-1][len(subs):]
 #         allfs = np.concatenate((subs, sortmrmr))
 #         subs = np.concatenate((subs, [s]))
-#         if verbose: print("  subs: ", subs)
+#         if verbose: print(datetime.now().strftime('%H:%M:%S'),"  subs: ", subs)
     
 #     if back:
-#         if verbose: print("Backward selection")
+#         if verbose: print(datetime.now().strftime('%H:%M:%S'),"Backward selection")
 #         nsubs = []
 #         while len(subs) > 1:
 #             pd = np.zeros(len(subs))
@@ -406,7 +398,7 @@ def mRMR(X, Y, nmax, verbose=True):
 
 
 def ecdf(data, verbose=True):
-    if verbose: print('ecdf')
+    if verbose: print(datetime.now().strftime('%H:%M:%S'),'ecdf')
     def _ecdf(x):
         return percentileofscore(data, x) / 100
     return _ecdf
@@ -416,7 +408,7 @@ def ecdf(data, verbose=True):
 
 
 def coeff(y, x1, x2=None, verbose=True):
-    if verbose: print('coeff')
+    if verbose: print(datetime.now().strftime('%H:%M:%S'),'coeff')
     if x2 is not None:
         X = np.column_stack((x1, x2))
     else:
