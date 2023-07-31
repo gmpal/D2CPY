@@ -419,3 +419,17 @@ def coeff(y, x1, x2=None, verbose=True):
     model.fit(X, y)
 
     return model.coef_[0]  # return the coefficient of x1
+
+
+
+
+
+
+
+def print_DAG(self, dag):
+    print("#"*20)
+    for node, attr in dag.nodes(data=True):
+        print(f"Node {node} has attributes {attr}")
+    for edge_source, edge_dest, attrs in dag.edges(data=True):
+        print(f"Edge {edge_source} -> {edge_dest} has attributes {attrs}")
+    print("#"*20)

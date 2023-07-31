@@ -5,7 +5,6 @@ from networkx.algorithms.dag import is_directed_acyclic_graph
 import pandas as pd
 import random
 
-from scipy.special import expit
 
 
 from typing import List
@@ -31,17 +30,23 @@ class SimulatedTimeSeries:
         self.n_observations = n_observations
         self.n_variables = n_variables
         self.random_state = random_state
+        self.list_time_series = []
+        self.list_initial_dags = []
+        self.list_updated_dags = []
+
+        #TODO: implement multiprocessing
 
         np.random.seed(self.random_state)
-        self.list_time_series = []
 
     def generate_time_series(self):
         """
         Generates n_series number of time series.
         """
         for _ in range(self.n_series):
-            series = self._generate_single_time_series()
-            self.list_time_series.append(series)
+            data, initial_DAG, updated_DAG = self._generate_single_time_series()
+            self.list_time_series.append(data)
+            self.list_initial_dags.append(initial_DAG)
+            self.list_updated_dags.append(updated_DAG)
 
     def _generate_single_time_series(self):
         """
@@ -59,16 +64,9 @@ class SimulatedTimeSeries:
         for t in range(1, self.n_observations):
             data = self._generate_timestep_observations(updated_DAG, data, t)
             # data = pd.concat([data, timestep_data])
-        return data
+        return data, initial_DAG, updated_DAG
 
-    def print_DAG(self, dag):
-        print("#"*20)
-        for node, attr in dag.nodes(data=True):
-            print(f"Node {node} has attributes {attr}")
-        for edge_source, edge_dest, attrs in dag.edges(data=True):
-            print(f"Edge {edge_source} -> {edge_dest} has attributes {attrs}")
-        print("#"*20)
-    
+
     def _generate_single_dag(self, index: int) -> nx.DiGraph:
         """
         Generates a single directed acyclic graph (DAG).
@@ -203,13 +201,21 @@ class SimulatedTimeSeries:
 
 
 
-    def get_time_series(self) -> List[pd.DataFrame]:
+    def get_observations(self) -> List[pd.DataFrame]:
         """
         Returns the generated time series.
         """
         return self.list_time_series
 
-
+    def get_dags(self) -> List[nx.DiGraph]:
+        """
+        Returns the generated DAGs.
+        #TODO: the main problem here is the following 
+        Should the DAGs contain the past nodes or not?
+        How does this impact D2C?
+        The assumption now is that the DAGs do not contain the past nodes.
+        """
+        return self.list_initial_dags
 
 
 def main():

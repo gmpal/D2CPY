@@ -21,7 +21,7 @@ from datetime import datetime
 
 
 class D2C:
-    def __init__(self, simulatedDAGs: SimulatedDAGs, rev: bool = True, verbose=False, random_state: int = 42, n_jobs: int = 1) -> None:
+    def __init__(self, dags, observations, rev: bool = True, verbose=False, random_state: int = 42, n_jobs: int = 1) -> None:
         """
         Class for D2C analysis.
 
@@ -30,14 +30,15 @@ class D2C:
         asymmetric descriptors from the observations associated with each DAG.
 
         Args:
+        #TODO: CORRECT
             simulatedDAGs (SimulatedDAGs): An instance of the SimulatedDAGs class.
             rev (bool, optional): Whether to consider reverse edges. Defaults to True.
             n_jobs (int, optional): Number of parallel jobs. Defaults to 1.
             random_state (int, optional): Random seed. Defaults to 42.
         """
-        self.DAGs_index = np.arange(len(simulatedDAGs.list_DAGs))
-        self.DAGs = simulatedDAGs.list_DAGs
-        self.observations_from_DAGs = simulatedDAGs.list_observations
+        self.DAGs_index = np.arange(len(dags))
+        self.DAGs = dags
+        self.observations_from_DAGs = observations
         self.rev = rev
         self.X = None
         self.Y = None
@@ -178,12 +179,14 @@ class D2C:
         I3_i = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ca], lin=lin,verbose=self.verbose) for i, j in IJ]
         I3_j = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ef], lin=lin,verbose=self.verbose) for i, j in IJ]
 
-        IJ = np.random.shuffle(np.array([(i, j) for i in range(len(MBca)) for j in range(i+1, len(MBca))]))
+        IJ = np.array([(i, j) for i in range(len(MBca)) for j in range(i+1, len(MBca))])
+        np.random.shuffle(IJ)
         IJ = IJ[:min(maxs, len(IJ))]
 
         Int3_i = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca], lin=lin,verbose=self.verbose) - normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], lin=lin,verbose=self.verbose) for i, j in IJ]
 
-        IJ = np.random.shuffle(np.array([(i, j) for i in range(len(MBef)) for j in range(i+1, len(MBef))]))
+        IJ = np.array([(i, j) for i in range(len(MBef)) for j in range(i+1, len(MBef))])
+        np.random.shuffle(IJ)
         IJ = IJ[:min(maxs, len(IJ))]
 
         Int3_j = [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef], lin=lin,verbose=self.verbose) - normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], lin=lin,verbose=self.verbose) for i, j in IJ]
@@ -323,8 +326,8 @@ class D2C:
         if reconstruct: 
             # Assuming df is your DataFrame
             G = nx.DiGraph()  # Creates a directed graph
-
-            for index, row in pd.concat([X_test, y_test], axis=1).iterrows():
+            test_df['is_causal'] = y_pred
+            for index, row in test_df.iterrows():
                 if row['is_causal']:
                     G.add_edge(row['edge_source'], row['edge_dest'])
             
