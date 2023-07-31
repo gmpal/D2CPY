@@ -17,5 +17,5 @@ if __name__ == "__main__":
     d2c.initialize()
 
 
-    dataframe = d2c.get_df()
+    dataframe = d2c.get_decsriptors_df()
     dataframe.to_csv('dataframe.csv', index=False)

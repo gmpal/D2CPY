@@ -44,7 +44,7 @@ class TestD2C(unittest.TestCase):
 
     # test that the function returns a pandas DataFrame.
     def test_get_df(self):
-        df = self.D2C.get_df()
+        df = self.D2C.get_decsriptors_df()
         self.assertIsInstance(df, pd.DataFrame)
 
     # mock the RandomForestClassifier object and ensure that the function returns a score between 0 and 1.
