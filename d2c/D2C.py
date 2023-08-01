@@ -37,14 +37,27 @@ class D2C:
             random_state (int, optional): Random seed. Defaults to 42.
         """
         self.DAGs_index = np.arange(len(dags))
-        self.DAGs = dags
-        self.observations_from_DAGs = observations
+        self.DAGs = dags #it's a LIST
+        self.observations_from_DAGs = observations #it's a LIST  
         self.rev = rev
         self.X = None
         self.Y = None
         self.verbose = verbose
         self.n_jobs = n_jobs
         self.random_state = random_state
+
+    def compute_descriptors_no_dags(self):
+
+        #TODO: this assumes to receive a list, but it should handle single observations better
+        num_nodes = self.observations_from_DAGs[0].shape[1]
+        pairs = []
+        X = []
+        for i in range(num_nodes):
+            for j in range(num_nodes):
+                if i != j:
+                    pairs.append((i,j))
+                    X.append(self._compute_descriptors(0, i, j))
+        return X
 
     def initialize(self) -> None:
         """
@@ -184,13 +197,18 @@ class D2C:
         IJ = IJ[:min(maxs, len(IJ))]
 
         Int3_i = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca], lin=lin,verbose=self.verbose) - normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], lin=lin,verbose=self.verbose) for i, j in IJ]
+        if len(Int3_i) == 0:
+            Int3_i = [0]
+            #TODO: verify why this happens
 
         IJ = np.array([(i, j) for i in range(len(MBef)) for j in range(i+1, len(MBef))])
         np.random.shuffle(IJ)
         IJ = IJ[:min(maxs, len(IJ))]
 
         Int3_j = [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef], lin=lin,verbose=self.verbose) - normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], lin=lin,verbose=self.verbose) for i, j in IJ]
-
+        if len(Int3_j) == 0:
+            Int3_j = [0]
+            #TODO: verify why this happens
         E_ef = ecdf(D.iloc[:, ef],verbose=self.verbose)(D.iloc[:, ef]) 
         E_ca = ecdf(D.iloc[:, ca],verbose=self.verbose)(D.iloc[:, ca])
 
