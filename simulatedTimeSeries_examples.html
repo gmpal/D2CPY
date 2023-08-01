@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Usage &#8212; D2CPY</title>
+    <title>Examples &#8212; D2CPY</title>
   
   
   
@@ -61,12 +61,12 @@ const thebe_selector_input = "pre"
 const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="_static/sphinx-thebe.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'main';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'simulatedTimeSeries_examples';</script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="SimulatedDAG" href="simulatedDAGs_introduction.html" />
-    <link rel="prev" title="D2C Algorithm" href="algorithm.html" />
+    <link rel="next" title="Attributes:" href="simulatedTimeSeries_implementation.html" />
+    <link rel="prev" title="SimulatedTimeSeries" href="simulatedTimeSeries_introduction.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -160,14 +160,14 @@ const thebe_selector_output = ".output, .cell_output"
         <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="algorithm.html">The D2C Algorithm</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main.html">Usage</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="simulatedDAGs_introduction.html">Simulated DAGs</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="simulatedDAGs_examples.html">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulatedDAGs_implementation.html">Implementation</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="simulatedTimeSeries_introduction.html">Simulated TimeSeries</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="simulatedTimeSeries_examples.html">Examples</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="simulatedTimeSeries_introduction.html">Simulated TimeSeries</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulatedTimeSeries_implementation.html">Attributes:</a></li>
 
 </ul>
@@ -251,7 +251,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="https://github.com/gmpal/D2CPY/issues/new?title=Issue%20on%20page%20%2Fmain.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gmpal/D2CPY/issues/new?title=Issue%20on%20page%20%2FsimulatedTimeSeries_examples.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -281,7 +281,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="_sources/main.ipynb" target="_blank"
+      <li><a href="_sources/simulatedTimeSeries_examples.ipynb" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -350,7 +350,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
 </div></div>
       
     </div>
@@ -361,11 +363,20 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Usage</h1>
+    <h1>Examples</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#true-graph">True graph</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reconstructed-graph">Reconstructed graph</a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -375,9 +386,8 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="usage">
-<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this heading">#</a></h1>
-<p>First, let’s import the necessary modules and classes:</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h1>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
@@ -388,163 +398,140 @@ document.write(`
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">d2c.simulatedDAGs</span> <span class="kn">import</span> <span class="n">SimulatedDAGs</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">d2c.simulatedTimeSeries</span> <span class="kn">import</span> <span class="n">SimulatedTimeSeries</span>
 <span class="kn">from</span> <span class="nn">d2c.D2C</span> <span class="kn">import</span> <span class="n">D2C</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 </pre></div>
 </div>
 </div>
 </div>
-<p>Next, let’s set the values for the essential parameters:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">N_JOBS</span> <span class="o">=</span> <span class="mi">1</span>
-
-<span class="n">n_dags</span> <span class="o">=</span> <span class="mi">3</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">n_series</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="n">n_observations</span> <span class="o">=</span> <span class="mi">100</span>
-<span class="n">n_nodes</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">n_variables</span> <span class="o">=</span> <span class="mi">4</span>
 </pre></div>
 </div>
 </div>
 </div>
-<p>We can now create our simulated DAGs by instantiating the <code class="docutils literal notranslate"><span class="pre">SimulatedDAGs</span></code> object and calling the <code class="docutils literal notranslate"><span class="pre">generate_dags()</span></code> method.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulated_dags</span> <span class="o">=</span> <span class="n">SimulatedDAGs</span><span class="p">(</span><span class="n">n_dags</span><span class="p">,</span> <span class="n">n_observations</span><span class="p">,</span> <span class="n">n_nodes</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">N_JOBS</span><span class="p">)</span>
-<span class="n">simulated_dags</span><span class="o">.</span><span class="n">generate_dags</span><span class="p">()</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulated_timeseries</span> <span class="o">=</span> <span class="n">SimulatedTimeSeries</span><span class="p">(</span><span class="n">n_series</span><span class="p">,</span> <span class="n">n_observations</span><span class="p">,</span> <span class="n">n_variables</span><span class="p">)</span>
+<span class="n">simulated_timeseries</span><span class="o">.</span><span class="n">generate_time_series</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 </div>
-<p>Once the DAGs have been created, we can create observations that respect the structure of the DAGs (i.e. the causal relationships between variables that have a <code class="docutils literal notranslate"><span class="pre">parent</span> <span class="pre">-&gt;</span> <span class="pre">child</span></code> connection in the graph is manifested by creating the <code class="docutils literal notranslate"><span class="pre">child</span></code> variable as a function of the <code class="docutils literal notranslate"><span class="pre">parent(s)</span></code> variables.)</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulated_dags</span><span class="o">.</span><span class="n">simulate_observations</span><span class="p">()</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">all_DAGs</span> <span class="o">=</span> <span class="n">simulated_timeseries</span><span class="o">.</span><span class="n">get_dags</span><span class="p">()</span>
+<span class="n">training_DAGs</span> <span class="o">=</span> <span class="n">all_DAGs</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">testing_DAGs</span> <span class="o">=</span> <span class="n">all_DAGs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="n">all_observations</span> <span class="o">=</span> <span class="n">simulated_timeseries</span><span class="o">.</span><span class="n">get_observations</span><span class="p">()</span>
+<span class="n">training_observations</span> <span class="o">=</span> <span class="n">all_observations</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">testing_observations</span> <span class="o">=</span> <span class="n">all_observations</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
 </div>
-<p>Let’s take a look at one of the generated DAGs using the <code class="docutils literal notranslate"><span class="pre">plot_DAG()</span></code> method. We choose the DAG with index <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulated_dags</span><span class="o">.</span><span class="n">plot_DAG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">d2c</span> <span class="o">=</span> <span class="n">D2C</span><span class="p">(</span><span class="n">training_DAGs</span><span class="p">,</span><span class="n">training_observations</span><span class="p">)</span>
+<span class="c1"># d2c.initialize()</span>
+<span class="n">d2c</span><span class="o">.</span><span class="n">load_descriptors_df</span><span class="p">(</span><span class="s1">&#39;timeseries.csv&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">d2c_test</span> <span class="o">=</span> <span class="n">D2C</span><span class="p">([</span><span class="n">testing_DAGs</span><span class="p">],[</span><span class="n">testing_observations</span><span class="p">])</span>
+<span class="n">d2c_test</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>c:\ProgramData\Anaconda3\envs\d2c\lib\site-packages\tqdm\auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-  from .autonotebook import tqdm as notebook_tqdm
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:05 Descriptors for DAG 0 edge pair 1 0 computed
 </pre></div>
 </div>
-<div class="output text_html">
-        <iframe
-            width="100%"
-            height="600px"
-            src="example.html"
-            frameborder="0"
-            allowfullscreen
-            
-        ></iframe>
-        </div></div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:06 Descriptors for DAG 0 edge pair 0 1 computed
+</pre></div>
 </div>
-<p>We have DAGs and corresponding observations now. We can proceed by initializing our <code class="docutils literal notranslate"><span class="pre">D2C</span></code> object that will allow us to compute the descriptors.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">d2c</span> <span class="o">=</span> <span class="n">D2C</span><span class="p">(</span><span class="n">simulated_dags</span><span class="o">.</span><span class="n">get_dags</span><span class="p">(),</span> <span class="n">simulated_dags</span><span class="o">.</span><span class="n">get_observations</span><span class="p">(),</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">N_JOBS</span><span class="p">)</span>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:07 Descriptors for DAG 0 edge pair 2 0 computed
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:08 Descriptors for DAG 0 edge pair 0 2 computed
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:09 Descriptors for DAG 0 edge pair 2 1 computed
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:10 Descriptors for DAG 0 edge pair 1 2 computed
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:11 Descriptors for DAG 0 edge pair 3 0 computed
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:12 Descriptors for DAG 0 edge pair 0 3 computed
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:14 Descriptors for DAG 0 edge pair 3 1 computed
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:15 Descriptors for DAG 0 edge pair 1 3 computed
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:16 Descriptors for DAG 0 edge pair 3 2 computed
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:17 Descriptors for DAG 0 edge pair 2 3 computed
 </pre></div>
 </div>
 </div>
 </div>
-<p>We can calculate the descriptors with the line <code class="docutils literal notranslate"><span class="pre">d2c.initialize()</span></code>. The object also offers a method <code class="docutils literal notranslate"><span class="pre">load_descriptors()</span></code> to load the descriptors that have been previously computed and stored into a file, to avoid repeating the computation.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#d2c.initialize()</span>
-<span class="n">d2c</span><span class="o">.</span><span class="n">load_descriptors_df</span><span class="p">(</span><span class="s1">&#39;dataframe.csv&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>We can take a look at the descriptors. Let’s retrieve the dataframe from the D2C object using the <code class="docutils literal notranslate"><span class="pre">get_df()</span></code> and print it.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">get_descriptors_df</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">score</span><span class="p">,</span> <span class="n">G</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">test_df</span><span class="o">=</span><span class="n">d2c_test</span><span class="o">.</span><span class="n">get_decsriptors_df</span><span class="p">(),</span> <span class="n">reconstruct</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>    graph_id  edge_source  edge_dest         effca         effef    comcau  \
-0          0            1          0  6.892631e-01  4.801133e-16  0.449849   
-1          0            0          1  4.801133e-16  4.640393e-16  0.449732   
-2          0            2          0  2.193653e-02 -3.165594e-16  0.178385   
-3          0            0          2 -5.255358e-17  2.840123e-16  0.178429   
-4          0            2          1 -3.772340e-01  2.678803e-16  0.353385   
-..       ...          ...        ...           ...           ...       ...   
-95         4            1          4  1.830362e-16  1.620039e-16  0.402702   
-96         4            4          2 -3.613654e-19  4.052794e-01  0.137863   
-97         4            2          4 -4.352466e-16 -2.635870e-16  0.138677   
-98         4            4          3  1.157671e-16 -5.090505e+13  0.220710   
-99         4            3          4 -6.852847e-17  4.148920e-16  0.218113   
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">AttributeError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
+<span class="nn">Input In [8],</span> in <span class="ni">&lt;cell line: 1&gt;</span><span class="nt">()</span>
+<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">score</span><span class="p">,</span> <span class="n">G</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">test_df</span><span class="o">=</span><span class="n">d2c_test</span><span class="o">.</span><span class="n">get_decsriptors_df</span><span class="p">(),</span> <span class="n">reconstruct</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-       delta    delta2      delta.i1      delta.i2  ...   Int3.j3   Int3.j4  \
-0   0.449849  0.000000  0.000000e+00  0.000000e+00  ... -0.149916 -0.141600   
-1   0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.213443 -0.169813   
-2   0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.149916 -0.141600   
-3   0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.403378 -0.322234   
-4   0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.213443 -0.169813   
-..       ...       ...           ...           ...  ...       ...       ...   
-95  0.000000  0.000000  4.269991e-10  8.539981e-10  ... -0.103468 -0.049961   
-96  0.000000  0.138677  0.000000e+00  0.000000e+00  ... -0.245866  0.000000   
-97  0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.103468 -0.049961   
-98  0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.096983 -0.035796   
-99  0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.103468 -0.049961   
-
-     Int3.j5   Int3.j6   Int3.j7  gini.delta  gini.delta2  gini.ca.ef  \
-0  -0.121706 -0.109769 -0.105791    0.415948      0.00000    0.099514   
-1  -0.138350 -0.119472 -0.113180    0.000000      0.00000    0.098935   
-2  -0.121706 -0.109769 -0.105791    0.000000      0.00000    0.168314   
-3  -0.281664 -0.257321 -0.249207    0.000000      0.00000    0.177884   
-4  -0.138350 -0.119472 -0.113180    0.000000      0.00000    0.246525   
-..       ...       ...       ...         ...          ...         ...   
-95  0.007743  0.042366  0.053907    0.000000      0.00000    0.045896   
-96  0.040869  0.065391  0.073565    0.000000      0.12638    0.000000   
-97  0.007743  0.042366  0.053907    0.000000      0.00000    0.000000   
-98  0.015655  0.046526  0.056816    0.000000      0.00000    0.143618   
-99  0.007743  0.042366  0.053907    0.000000      0.00000    0.147366   
-
-    gini.ef.ca  is_causal  
-0     0.098935          1  
-1     0.099514          0  
-2     0.177884          1  
-3     0.168314          0  
-4     0.247482          1  
-..         ...        ...  
-95    0.043650          0  
-96    0.000000          1  
-97    0.000000          0  
-98    0.147366          1  
-99    0.143618          0  
-
-[100 rows x 85 columns]
+<span class="ne">AttributeError</span>: &#39;D2C&#39; object has no attribute &#39;get_decsriptors_df&#39;
 </pre></div>
 </div>
 </div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">D2C</span></code> object offers a method <code class="docutils literal notranslate"><span class="pre">get_score()</span></code> to quickly assess the ability of using these descriptors to perform causal discovery. In fact, descriptors for <code class="docutils literal notranslate"><span class="pre">child</span> <span class="pre">-&gt;</span> <span class="pre">parent</span></code> edges are also computed, but their label is set to zero. Therefore, we can perform a standard classification task on this dataframe. By default, this method uses a <code class="docutils literal notranslate"><span class="pre">RandomForestClassifier()</span></code>.</p>
+<section id="true-graph">
+<h2>True graph<a class="headerlink" href="#true-graph" title="Permalink to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the score of a Random Forest Classifier</span>
-<span class="n">score</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">get_score</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The accuracy of the model is: </span><span class="si">{</span><span class="n">score</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The accuracy of the model is: 0.9199999999999999
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">testing_DAGs</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node </span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">edge_source</span><span class="p">,</span> <span class="n">edge_dest</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">testing_DAGs</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Edge </span><span class="si">{</span><span class="n">edge_source</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">edge_dest</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
+</section>
+<section id="reconstructed-graph">
+<h2>Reconstructed graph<a class="headerlink" href="#reconstructed-graph" title="Permalink to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Node </span><span class="si">{</span><span class="n">node</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">edge_source</span><span class="p">,</span> <span class="n">edge_dest</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Edge </span><span class="si">{</span><span class="n">edge_source</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">edge_dest</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
 </section>
 
     <script type="text/x-thebe-config">
@@ -579,20 +566,20 @@ document.write(`
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="algorithm.html"
+       href="simulatedTimeSeries_introduction.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">D2C Algorithm</p>
+        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">SimulatedTimeSeries</span></code></p>
       </div>
     </a>
     <a class="right-next"
-       href="simulatedDAGs_introduction.html"
+       href="simulatedTimeSeries_implementation.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">SimulatedDAG</p>
+        <p class="prev-next-title">Attributes:</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -605,6 +592,21 @@ document.write(`
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#true-graph">True graph</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reconstructed-graph">Reconstructed graph</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>
