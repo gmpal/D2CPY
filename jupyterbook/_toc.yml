@@ -21,6 +21,15 @@ chapters:
   - file: simulatedDAGs_implementation
     title: Implementation
 
+- file: simulatedTimeSeries_introduction
+  title: Simulated TimeSeries
+  sections:
+  - file: simulatedTimeSeries_examples
+    title: Examples
+  - file: simulatedTimeSeries_implementation
+    title: Implementation
+
+
 - file: D2C_introduction
   title: D2C
   sections:

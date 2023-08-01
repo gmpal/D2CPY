@@ -166,7 +166,13 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2"><a class="reference internal" href="simulatedDAGs_implementation.html">Implementation</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="D2C_introduction.html">D2C</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="simulatedTimeSeries_introduction.html">Simulated TimeSeries</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulatedTimeSeries_examples.html">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulatedTimeSeries_implementation.html">Attributes:</a></li>
+
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="D2C_introduction.html">D2C</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="D2C_examples.html">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="D2C_implementation.html">Implementation</a></li>
 </ul>
@@ -444,17 +450,7 @@ document.write(`
 <p>We have DAGs and corresponding observations now. We can proceed by initializing our <code class="docutils literal notranslate"><span class="pre">D2C</span></code> object that will allow us to compute the descriptors.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">d2c</span> <span class="o">=</span> <span class="n">D2C</span><span class="p">(</span><span class="n">simulated_dags</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">N_JOBS</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">TypeError</span><span class="g g-Whitespace">                                 </span>Traceback (most recent call last)
-<span class="nn">Input In [7],</span> in <span class="ni">&lt;cell line: 1&gt;</span><span class="nt">()</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">d2c</span> <span class="o">=</span> <span class="n">D2C</span><span class="p">(</span><span class="n">simulated_dags</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">N_JOBS</span><span class="p">)</span>
-
-<span class="ne">TypeError</span>: __init__() missing 1 required positional argument: &#39;observations&#39;
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">d2c</span> <span class="o">=</span> <span class="n">D2C</span><span class="p">(</span><span class="n">simulated_dags</span><span class="o">.</span><span class="n">get_dags</span><span class="p">(),</span> <span class="n">simulated_dags</span><span class="o">.</span><span class="n">get_observations</span><span class="p">(),</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">N_JOBS</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -463,7 +459,7 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#d2c.initialize()</span>
-<span class="n">d2c</span><span class="o">.</span><span class="n">load_descriptors</span><span class="p">(</span><span class="s1">&#39;dataframe.csv&#39;</span><span class="p">)</span>
+<span class="n">d2c</span><span class="o">.</span><span class="n">load_descriptors_df</span><span class="p">(</span><span class="s1">&#39;dataframe.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -471,8 +467,65 @@ document.write(`
 <p>We can take a look at the descriptors. Let’s retrieve the dataframe from the D2C object using the <code class="docutils literal notranslate"><span class="pre">get_df()</span></code> and print it.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">get_df</span><span class="p">()</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">get_descriptors_df</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>    graph_id  edge_source  edge_dest         effca         effef    comcau  \
+0          0            1          0  6.892631e-01  4.801133e-16  0.449849   
+1          0            0          1  4.801133e-16  4.640393e-16  0.449732   
+2          0            2          0  2.193653e-02 -3.165594e-16  0.178385   
+3          0            0          2 -5.255358e-17  2.840123e-16  0.178429   
+4          0            2          1 -3.772340e-01  2.678803e-16  0.353385   
+..       ...          ...        ...           ...           ...       ...   
+95         4            1          4  1.830362e-16  1.620039e-16  0.402702   
+96         4            4          2 -3.613654e-19  4.052794e-01  0.137863   
+97         4            2          4 -4.352466e-16 -2.635870e-16  0.138677   
+98         4            4          3  1.157671e-16 -5.090505e+13  0.220710   
+99         4            3          4 -6.852847e-17  4.148920e-16  0.218113   
+
+       delta    delta2      delta.i1      delta.i2  ...   Int3.j3   Int3.j4  \
+0   0.449849  0.000000  0.000000e+00  0.000000e+00  ... -0.149916 -0.141600   
+1   0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.213443 -0.169813   
+2   0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.149916 -0.141600   
+3   0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.403378 -0.322234   
+4   0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.213443 -0.169813   
+..       ...       ...           ...           ...  ...       ...       ...   
+95  0.000000  0.000000  4.269991e-10  8.539981e-10  ... -0.103468 -0.049961   
+96  0.000000  0.138677  0.000000e+00  0.000000e+00  ... -0.245866  0.000000   
+97  0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.103468 -0.049961   
+98  0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.096983 -0.035796   
+99  0.000000  0.000000  0.000000e+00  0.000000e+00  ... -0.103468 -0.049961   
+
+     Int3.j5   Int3.j6   Int3.j7  gini.delta  gini.delta2  gini.ca.ef  \
+0  -0.121706 -0.109769 -0.105791    0.415948      0.00000    0.099514   
+1  -0.138350 -0.119472 -0.113180    0.000000      0.00000    0.098935   
+2  -0.121706 -0.109769 -0.105791    0.000000      0.00000    0.168314   
+3  -0.281664 -0.257321 -0.249207    0.000000      0.00000    0.177884   
+4  -0.138350 -0.119472 -0.113180    0.000000      0.00000    0.246525   
+..       ...       ...       ...         ...          ...         ...   
+95  0.007743  0.042366  0.053907    0.000000      0.00000    0.045896   
+96  0.040869  0.065391  0.073565    0.000000      0.12638    0.000000   
+97  0.007743  0.042366  0.053907    0.000000      0.00000    0.000000   
+98  0.015655  0.046526  0.056816    0.000000      0.00000    0.143618   
+99  0.007743  0.042366  0.053907    0.000000      0.00000    0.147366   
+
+    gini.ef.ca  is_causal  
+0     0.098935          1  
+1     0.099514          0  
+2     0.177884          1  
+3     0.168314          0  
+4     0.247482          1  
+..         ...        ...  
+95    0.043650          0  
+96    0.000000          1  
+97    0.000000          0  
+98    0.147366          1  
+99    0.143618          0  
+
+[100 rows x 85 columns]
 </pre></div>
 </div>
 </div>
@@ -481,13 +534,13 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the score of a Random Forest Classifier</span>
-<span class="n">score</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">get_score</span><span class="p">(</span><span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;accuracy&#39;</span><span class="p">)</span>
+<span class="n">score</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">get_score</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The accuracy of the model is: </span><span class="si">{</span><span class="n">score</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(0.725, 0.7027027027027027)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>The accuracy of the model is: 0.9199999999999999
 </pre></div>
 </div>
 </div>
