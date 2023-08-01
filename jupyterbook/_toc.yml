@@ -1,0 +1,39 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: README
+chapters:
+- file: install
+  title: Installation
+
+- file: algorithm
+  title: The D2C Algorithm
+
+- file: main
+  title: Usage
+
+- file: simulatedDAGs_introduction
+  title: Simulated DAGs
+  sections:
+  - file: simulatedDAGs_examples
+    title: Examples
+  - file: simulatedDAGs_implementation
+    title: Implementation
+
+- file: D2C_introduction
+  title: D2C
+  sections:
+  - file: D2C_examples
+    title: Examples
+  - file: D2C_implementation
+    title: Implementation
+
+- file: utils
+  title: Additional functions
+
+- file: bibliography
+  title: Bibliography
+
+- file: about
+  title: About

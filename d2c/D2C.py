@@ -254,7 +254,7 @@ class D2C:
         self.X = df.iloc[:, :-1]
         self.Y = df.iloc[:, -1]
 
-    def get_decsriptors_df(self) -> pd.DataFrame:
+    def get_descriptors_df(self) -> pd.DataFrame:
         """
         Get the concatenated DataFrame of X and Y.
 
@@ -274,13 +274,13 @@ class D2C:
             path (str): The path to the CSV file.
 
         """
-        concatenated_df = self.get_decsriptors_df()
+        concatenated_df = self.get_descriptors_df()
         concatenated_df.to_csv(path, index=False)
 
     def get_score(self, model: RandomForestClassifier = RandomForestClassifier(), n_splits: int = 10, metric: str = "accuracy") -> Union[float, None]:
 
         
-        dataframe = self.get_decsriptors_df()
+        dataframe = self.get_descriptors_df()
         X = dataframe.drop(columns=['graph_id', 'is_causal'])
         y = dataframe['is_causal']
         groups = dataframe['graph_id']
@@ -312,7 +312,7 @@ class D2C:
             nx.DiGraph: The reconstructed DAG.
 
         """
-        dataframe = self.get_decsriptors_df()
+        dataframe = self.get_descriptors_df()
         X_train = dataframe.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
         y_train = dataframe['is_causal']
         
