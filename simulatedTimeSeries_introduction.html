@@ -168,8 +168,7 @@ const thebe_selector_output = ".output, .cell_output"
 </li>
 <li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Simulated TimeSeries</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="simulatedTimeSeries_examples.html">Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulatedTimeSeries_implementation.html">Attributes:</a></li>
-
+<li class="toctree-l2"><a class="reference internal" href="simulatedTimeSeries_implementation.html">Implementation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="D2C_introduction.html">D2C</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -386,7 +385,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section class="tex2jax_ignore mathjax_ignore" id="simulatedtimeseries">
-<h1><code class="docutils literal notranslate"><span class="pre">SimulatedTimeSeries</span></code><a class="headerlink" href="#simulatedtimeseries" title="Permalink to this heading">#</a></h1>
+<h1>SimulatedTimeSeries<a class="headerlink" href="#simulatedtimeseries" title="Permalink to this heading">#</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">SimulatedTimeSeries</span></code> class is a Python object designed to generate and simulate observations on Directed Acyclic Graphs (DAGs) across different time steps. These temporal graphs are utilized to model causal relationships in time series data, encompassing areas such as econometrics, machine learning, and system dynamics.</p>
 <p>This class provides an efficient way to create a single DAG and simulate observations for it over several time steps. It enables customization of the number of variables (nodes), the length of the time series, and the types of functions applied to the relationships within the DAG. While the initial version supports linear functions, it can be extended to include more complex relationships such as quadratic or sigmoid functions.</p>
 <p>To further refine the simulation, the class allows the user to specify parameters including the standard deviation of noise, weights, biases, and the type of relationships between the variables (e.g., linear). These settings enable precise control over the simulated process and can be adjusted to align with specific research or analytical goals.</p>

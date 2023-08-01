@@ -65,7 +65,7 @@ const thebe_selector_output = ".output, .cell_output"
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Attributes:" href="simulatedTimeSeries_implementation.html" />
+    <link rel="next" title="Implementation" href="simulatedTimeSeries_implementation.html" />
     <link rel="prev" title="SimulatedTimeSeries" href="simulatedTimeSeries_introduction.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -168,8 +168,7 @@ const thebe_selector_output = ".output, .cell_output"
 </li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="simulatedTimeSeries_introduction.html">Simulated TimeSeries</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Examples</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulatedTimeSeries_implementation.html">Attributes:</a></li>
-
+<li class="toctree-l2"><a class="reference internal" href="simulatedTimeSeries_implementation.html">Implementation</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="D2C_introduction.html">D2C</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -350,9 +349,7 @@ document.write(`
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="fa-solid fa-list"></span>
-</label>
+
 </div></div>
       
     </div>
@@ -368,15 +365,6 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
-            <div>
-                <h2> Contents </h2>
-            </div>
-            <nav aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#true-graph">True graph</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reconstructed-graph">Reconstructed graph</a></li>
-</ul>
-            </nav>
         </div>
     </div>
 </div>
@@ -446,68 +434,21 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">d2c_test</span> <span class="o">=</span> <span class="n">D2C</span><span class="p">([</span><span class="n">testing_DAGs</span><span class="p">],[</span><span class="n">testing_observations</span><span class="p">])</span>
-<span class="n">d2c_test</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:05 Descriptors for DAG 0 edge pair 1 0 computed
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:06 Descriptors for DAG 0 edge pair 0 1 computed
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:07 Descriptors for DAG 0 edge pair 2 0 computed
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:08 Descriptors for DAG 0 edge pair 0 2 computed
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:09 Descriptors for DAG 0 edge pair 2 1 computed
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:10 Descriptors for DAG 0 edge pair 1 2 computed
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:11 Descriptors for DAG 0 edge pair 3 0 computed
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:12 Descriptors for DAG 0 edge pair 0 3 computed
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:14 Descriptors for DAG 0 edge pair 3 1 computed
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:15 Descriptors for DAG 0 edge pair 1 3 computed
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:16 Descriptors for DAG 0 edge pair 3 2 computed
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>14:44:17 Descriptors for DAG 0 edge pair 2 3 computed
+<span class="c1"># d2c_test.initialize()</span>
+<span class="c1"># d2c_test.save_descriptors_df(&#39;timeseries_test.csv&#39;)</span>
+<span class="n">d2c_test</span><span class="o">.</span><span class="n">load_descriptors_df</span><span class="p">(</span><span class="s1">&#39;timeseries_test.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">score</span><span class="p">,</span> <span class="n">G</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">test_df</span><span class="o">=</span><span class="n">d2c_test</span><span class="o">.</span><span class="n">get_decsriptors_df</span><span class="p">(),</span> <span class="n">reconstruct</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">AttributeError</span><span class="g g-Whitespace">                            </span>Traceback (most recent call last)
-<span class="nn">Input In [8],</span> in <span class="ni">&lt;cell line: 1&gt;</span><span class="nt">()</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">score</span><span class="p">,</span> <span class="n">G</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">test_df</span><span class="o">=</span><span class="n">d2c_test</span><span class="o">.</span><span class="n">get_decsriptors_df</span><span class="p">(),</span> <span class="n">reconstruct</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="ne">AttributeError</span>: &#39;D2C&#39; object has no attribute &#39;get_decsriptors_df&#39;
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">score</span><span class="p">,</span> <span class="n">G</span> <span class="o">=</span> <span class="n">d2c</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">test_df</span><span class="o">=</span><span class="n">d2c_test</span><span class="o">.</span><span class="n">get_descriptors_df</span><span class="p">(),</span> <span class="n">reconstruct</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
-<section id="true-graph">
-<h2>True graph<a class="headerlink" href="#true-graph" title="Permalink to this heading">#</a></h2>
+<p>True graph</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">testing_DAGs</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -517,10 +458,22 @@ document.write(`
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Node 1
+Node 0
+Node 2
+Node 3
+Edge 1 -&gt; 0
+Edge 2 -&gt; 0
+Edge 2 -&gt; 1
+Edge 3 -&gt; 0
+Edge 3 -&gt; 1
+Edge 3 -&gt; 2
+</pre></div>
 </div>
-</section>
-<section id="reconstructed-graph">
-<h2>Reconstructed graph<a class="headerlink" href="#reconstructed-graph" title="Permalink to this heading">#</a></h2>
+</div>
+</div>
+<p>Reconstructed graph</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -530,8 +483,20 @@ document.write(`
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Node 1.0
+Node 0.0
+Node 2.0
+Node 3.0
+Edge 1.0 -&gt; 0.0
+Edge 0.0 -&gt; 1.0
+Edge 2.0 -&gt; 1.0
+Edge 3.0 -&gt; 0.0
+Edge 3.0 -&gt; 1.0
+</pre></div>
 </div>
-</section>
+</div>
+</div>
 </section>
 
     <script type="text/x-thebe-config">
@@ -571,7 +536,7 @@ document.write(`
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title"><code class="docutils literal notranslate"><span class="pre">SimulatedTimeSeries</span></code></p>
+        <p class="prev-next-title">SimulatedTimeSeries</p>
       </div>
     </a>
     <a class="right-next"
@@ -579,7 +544,7 @@ document.write(`
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Attributes:</p>
+        <p class="prev-next-title">Implementation</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -592,21 +557,6 @@ document.write(`
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> Contents
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#true-graph">True graph</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reconstructed-graph">Reconstructed graph</a></li>
-</ul>
-  </nav></div>
-
-</div></div>
               
             
           </div>
