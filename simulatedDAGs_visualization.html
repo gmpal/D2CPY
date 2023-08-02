@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Welcome to D2CPY! &#8212; D2CPY</title>
+    <title>Visualizing DAGs &#8212; D2CPY</title>
   
   
   
@@ -61,11 +61,12 @@ const thebe_selector_input = "pre"
 const thebe_selector_output = ".output, .cell_output"
 </script>
     <script async="async" src="_static/sphinx-thebe.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'README';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'simulatedDAGs_visualization';</script>
     <link rel="author" title="About these documents" href="about.html" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Installation" href="install.html" />
+    <link rel="next" title="SimulatedTimeSeries" href="simulatedTimeSeries_introduction.html" />
+    <link rel="prev" title="SimulatedDAGs Class" href="simulatedDAGs_implementation.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -131,7 +132,7 @@ const thebe_selector_output = ".output, .cell_output"
         <div class="sidebar-primary-item">
   
 
-<a class="navbar-brand logo" href="#">
+<a class="navbar-brand logo" href="README.html">
   
   
   
@@ -150,20 +151,20 @@ const thebe_selector_output = ".output, .cell_output"
     <div class="bd-toc-item navbar-nav active">
         
         <ul class="nav bd-sidenav bd-sidenav__home-link">
-            <li class="toctree-l1 current active">
-                <a class="reference internal" href="#">
+            <li class="toctree-l1">
+                <a class="reference internal" href="README.html">
                     Welcome to D2CPY!
                 </a>
             </li>
         </ul>
-        <ul class="nav bd-sidenav">
+        <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="algorithm.html">The D2C Algorithm</a></li>
 <li class="toctree-l1"><a class="reference internal" href="main.html">Usage</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="simulatedDAGs_introduction.html">Simulated DAGs</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="simulatedDAGs_introduction.html">Simulated DAGs</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="simulatedDAGs_examples.html">Examples</a></li>
 <li class="toctree-l2"><a class="reference internal" href="simulatedDAGs_implementation.html">Implementation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulatedDAGs_visualization.html">Visualization</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Visualization</a></li>
 </ul>
 </li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="simulatedTimeSeries_introduction.html">Simulated TimeSeries</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
@@ -253,7 +254,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="https://github.com/gmpal/D2CPY/issues/new?title=Issue%20on%20page%20%2FREADME.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/gmpal/D2CPY/issues/new?title=Issue%20on%20page%20%2FsimulatedDAGs_visualization.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -283,7 +284,7 @@ const thebe_selector_output = ".output, .cell_output"
       
       
       
-      <li><a href="_sources/README.md" target="_blank"
+      <li><a href="_sources/simulatedDAGs_visualization.ipynb" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -293,7 +294,7 @@ const thebe_selector_output = ".output, .cell_output"
 <span class="btn__icon-container">
   <i class="fas fa-file"></i>
   </span>
-<span class="btn__text-container">.md</span>
+<span class="btn__text-container">.ipynb</span>
 </a>
 </li>
       
@@ -363,7 +364,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Welcome to D2CPY!</h1>
+    <h1>Visualizing DAGs</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -377,15 +378,42 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="welcome-to-d2cpy">
-<h1>Welcome to D2CPY!<a class="headerlink" href="#welcome-to-d2cpy" title="Permalink to this heading">#</a></h1>
-<p><code class="docutils literal notranslate"><span class="pre">D2CPY</span></code> is a Python library that serves as a Python adaptation of the R package <a class="reference external" href="https://github.com/gbonte/D2C"><code class="docutils literal notranslate"><span class="pre">D2C</span></code></a>. Originally developed in R, <code class="docutils literal notranslate"><span class="pre">D2C</span></code> is a powerful tool based on the research paper <span id="id1">[<a class="reference internal" href="bibliography.html#id2" title="Gianluca Bontempi and Maxime Flauder. From dependency to causality: a machine learning approach. Journal of Machine Learning Research, 16(74):2437–2457, 2015. URL: http://jmlr.org/papers/v16/bontempi15a.html.">BF15</a>]</span> titled “From Dependency to Causality: A Machine Learning Approach” by Gianluca Bontempi and Maxime Flauder, published in the Journal of Machine Learning Research (JMLR) in 2015. The paper itself can be found at <a class="reference external" href="http://jmlr.org/papers/v16/bontempi15a.html">this link</a>.</p>
-<p>The research paper addresses the fundamental relationship between statistical dependency and causality, which forms the basis of various statistical approaches to causal inference. One of the key contributions of the paper is the demonstration that causal directionality can be accurately inferred even in Markov indistinguishable configurations through data-driven approaches.</p>
-<p><code class="docutils literal notranslate"><span class="pre">D2C</span></code> implements a supervised machine learning approach that enables the detection of directed causal links between variables in multivariate settings where the number of variables exceeds two (n&gt;2). The methodology leverages the asymmetry of conditional (in)dependence relations among the members of the Markov blankets of causally connected variables. By utilizing statistical descriptors with asymmetry, <code class="docutils literal notranslate"><span class="pre">D2C</span></code> demonstrates that supervised learning techniques can effectively extract valuable causal information from multivariate distributions where n&gt;2.</p>
-<p>With <code class="docutils literal notranslate"><span class="pre">D2CPY</span></code>, Python developers gain access to the rich functionalities and capabilities originally offered by the <code class="docutils literal notranslate"><span class="pre">D2C</span></code> package. It empowers users to explore causal relationships in complex multivariate systems and facilitates the extraction of causal insights from data using state-of-the-art machine learning techniques.</p>
-<p>By providing a Python implementation of the D2C package and incorporating the advancements presented in the research paper, <code class="docutils literal notranslate"><span class="pre">D2CPY</span></code> offers a seamless and efficient experience for causal inference and analysis in Python, expanding the reach of this significant research to a wider community of Python developers and data scientists.</p>
-<p>Start leveraging the power of causal inference in your Python projects with <code class="docutils literal notranslate"><span class="pre">D2CPY</span></code> today.</p>
-<div class="toctree-wrapper compound">
+  <section class="tex2jax_ignore mathjax_ignore" id="visualizing-dags">
+<h1>Visualizing DAGs<a class="headerlink" href="#visualizing-dags" title="Permalink to this heading">#</a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;..&quot;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">d2c.simulatedDAGs</span> <span class="kn">import</span> <span class="n">SimulatedDAGs</span>
+
+<span class="c1"># Initialize the SimulatedDAGs object</span>
+<span class="n">sim_dags</span> <span class="o">=</span> <span class="n">SimulatedDAGs</span><span class="p">(</span><span class="n">n_dags</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_observations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">n_nodes</span><span class="o">=</span><span class="mi">7</span><span class="p">)</span>
+
+<span class="c1"># Generate the DAGs</span>
+<span class="n">sim_dags</span><span class="o">.</span><span class="n">generate_dags</span><span class="p">()</span>
+<span class="n">DAG</span> <span class="o">=</span> <span class="n">sim_dags</span><span class="o">.</span><span class="n">get_dags</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">graphviz</span> <span class="kn">import</span> <span class="n">Digraph</span>
+
+<span class="n">G_dot</span> <span class="o">=</span> <span class="n">Digraph</span><span class="p">(</span><span class="n">engine</span><span class="o">=</span><span class="s2">&quot;dot&quot;</span><span class="p">,</span><span class="nb">format</span><span class="o">=</span><span class="s1">&#39;png&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">DAG</span><span class="o">.</span><span class="n">nodes</span><span class="p">():</span>
+    <span class="n">G_dot</span><span class="o">.</span><span class="n">node</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">edge</span> <span class="ow">in</span> <span class="n">DAG</span><span class="o">.</span><span class="n">edges</span><span class="p">():</span>
+    <span class="n">G_dot</span><span class="o">.</span><span class="n">edge</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">str</span><span class="p">(</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+<span class="c1"># Render the graph in a hierarchical layout</span>
+<span class="n">G_dot</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="_images/33b57f0224f301515bbe43ad089737e999bfa7cad2e72ec12fd3cb3f676ed60d.svg" src="_images/33b57f0224f301515bbe43ad089737e999bfa7cad2e72ec12fd3cb3f676ed60d.svg" /></div>
 </div>
 </section>
 
@@ -420,12 +448,21 @@ document.write(`
   
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="simulatedDAGs_implementation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">SimulatedDAGs Class</p>
+      </div>
+    </a>
     <a class="right-next"
-       href="install.html"
+       href="simulatedTimeSeries_introduction.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Installation</p>
+        <p class="prev-next-title">SimulatedTimeSeries</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
