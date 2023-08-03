@@ -1,0 +1,712 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Causeme &#8212; D2CPY</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" href="_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/togglebutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-thebe.css" />
+    <link rel="stylesheet" type="text/css" href="_static/design-style.4045f2051d55cab465a707391d5b2007.min.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/clipboard.min.js"></script>
+    <script src="_static/copybutton.js"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>let toggleHintShow = 'Click to show';</script>
+    <script>let toggleHintHide = 'Click to hide';</script>
+    <script>let toggleOpenOnPrint = 'true';</script>
+    <script src="_static/togglebutton.js"></script>
+    <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="_static/design-tabs.js"></script>
+    <script>const THEBE_JS_URL = "https://unpkg.com/thebe@0.8.2/lib/index.js"
+const thebe_selector = ".thebe,.cell"
+const thebe_selector_input = "pre"
+const thebe_selector_output = ".output, .cell_output"
+</script>
+    <script async="async" src="_static/sphinx-thebe.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'causeme_connection';</script>
+    <link rel="author" title="About these documents" href="about.html" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Utilities Functions" href="utils.html" />
+    <link rel="prev" title="D2C Class" href="D2C_implementation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search this book..."
+         aria-label="Search this book..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="README.html">
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="_static/logo.png" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        
+        <ul class="nav bd-sidenav bd-sidenav__home-link">
+            <li class="toctree-l1">
+                <a class="reference internal" href="README.html">
+                    Welcome to D2CPY!
+                </a>
+            </li>
+        </ul>
+        <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="algorithm.html">The D2C Algorithm</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main.html">Usage</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="simulatedDAGs_introduction.html">Simulated DAGs</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulatedDAGs_examples.html">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulatedDAGs_implementation.html">Implementation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="simulatedTimeSeries_introduction.html">Simulated TimeSeries</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulatedTimeSeries_examples.html">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulatedTimeSeries_implementation.html">Implementation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="D2C_introduction.html">D2C</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="D2C_examples.html">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="D2C_implementation.html">Implementation</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Causeme Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utils.html">Additional functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/gmpal/D2CPY" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/gmpal/D2CPY/issues/new?title=Issue%20on%20page%20%2Fcauseme_connection.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/causeme_connection.ipynb" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.ipynb</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Causeme</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causeme-and-d2c">Causeme and D2C</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-code">The code</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="causeme">
+<h1>Causeme<a class="headerlink" href="#causeme" title="Permalink to this heading">#</a></h1>
+<p>The CauseMe platform, hosted at <a class="reference external" href="https://causeme.uv.es/">https://causeme.uv.es/</a>, is an online benchmarking tool focused on causal discovery methods, specifically designed to detect causal associations in time series datasets. These datasets may relate to intricate systems like the Earth’s ecology or the human brain, where determining causality can be highly complex. CauseMe offers ground truth benchmark datasets, containing both synthetic models that emulate real challenges and real-world datasets with known causal structures, varying in complexity, dimensionality, and sophistication. Method developers can contribute by developing new methods and assessing their performance on available datasets, or by providing multivariate time series data with known causal ground truth. Within the platform, synthetic model data are provided to address a multitude of real-world challenges, and developers can upload their predictions of causal connections. The platform then evaluates and ranks these methods using different performance metrics. CauseMe serves as a valuable tool for researchers and scholars by providing access to data, insights, and evaluation techniques that promote advancements in causal discovery across various fields.</p>
+<section id="causeme-and-d2c">
+<h2>Causeme and D2C<a class="headerlink" href="#causeme-and-d2c" title="Permalink to this heading">#</a></h2>
+<p>D2CPY could find substantial utility by integrating with the platform’s vast benchmark datasets for causal discovery. By leveraging CauseMe’s ground truth datasets and evaluation metrics, developers and data scientists using D2CPY can validate and refine their causal discovery methods. The platform’s diverse datasets, encompassing both real-world and synthetic challenges, could help in testing the robustness of the D2C algorithm implemented in D2CPY.</p>
+<p>By utilizing the code that we’ll be exploring together, library users can seamlessly connect their D2CPY-based causal discovery methods to CauseMe. This will allow them to run their algorithms on CauseMe’s real and synthetic datasets, compare the outcomes with ground truth causal structures, and gain valuable insights into the effectiveness and robustness of their approaches. The code bridges the functionality of D2CPY with CauseMe’s evaluation environment, streamlining the process of testing, validation, and enhancement.</p>
+</section>
+<section id="the-code">
+<h2>The code<a class="headerlink" href="#the-code" title="Permalink to this heading">#</a></h2>
+<p>First, the user must register her method on the causemeplatform, to receive a <code class="docutils literal notranslate"><span class="pre">method_sha</span></code> that needs to be included in the submission. <br>
+For submitting to the platform, a wrapper around a function <code class="docutils literal notranslate"><span class="pre">my_method()</span></code> is provided by the D2C platform. <br>
+Therefore, the user can focus on the implementation of the aforementioned function. A minimal example is shown below. <br></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This file must contain a function called my_method that triggers all the steps </span>
+<span class="sd">required in order to obtain</span>
+
+<span class="sd"> *val_matrix: mandatory, (N, N) matrix of scores for links</span>
+<span class="sd"> *p_matrix: optional, (N, N) matrix of p-values for links; if not available, </span>
+<span class="sd">            None must be returned</span>
+<span class="sd"> *lag_matrix: optional, (N, N) matrix of time lags for links; if not available, </span>
+<span class="sd">              None must be returned</span>
+
+<span class="sd">Zip this file (together with other necessary files if you have further handmade </span>
+<span class="sd">packages) to upload as a code.zip. You do NOT need to upload files for packages </span>
+<span class="sd">that can be imported via pip or conda repositories. Once you upload your code, </span>
+<span class="sd">we are able to validate results including runtime estimates on the same machine.</span>
+<span class="sd">These results are then marked as &quot;Validated&quot; and users can use filters to only </span>
+<span class="sd">show validated results.</span>
+
+<span class="sd">Shown here is a vector-autoregressive model estimator as a simple method.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># import sys</span>
+<span class="c1"># sys.path.append(&quot;..&quot;)</span>
+<span class="c1"># import numpy as np</span>
+<span class="c1"># from d2c.simulatedTimeSeries import SimulatedTimeSeries</span>
+<span class="c1"># from d2c.D2C import D2C</span>
+<span class="c1"># import pandas as pd</span>
+<span class="c1"># from sklearn.ensemble import RandomForestClassifier</span>
+
+<span class="c1"># Your method must be called &#39;my_method&#39;</span>
+<span class="c1"># Describe all parameters (except for &#39;data&#39;) in the method registration on CauseMe</span>
+<span class="k">def</span> <span class="nf">my_method</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">maxlags</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">correct_pvalues</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+    <span class="c1"># Input data is of shape (time, variables)</span>
+    <span class="n">T</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="n">data_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">d2c_test</span> <span class="o">=</span> <span class="n">D2C</span><span class="p">([</span><span class="kc">None</span><span class="p">],[</span><span class="n">data_df</span><span class="p">])</span>
+    <span class="n">X_test</span> <span class="o">=</span> <span class="n">d2c_test</span><span class="o">.</span><span class="n">compute_descriptors_no_dags</span><span class="p">()</span>
+
+    <span class="n">training_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;./timeseries_training.csv&#39;</span><span class="p">)</span>
+
+    <span class="n">X_train</span> <span class="o">=</span> <span class="n">training_data</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;graph_id&#39;</span><span class="p">,</span> <span class="s1">&#39;edge_source&#39;</span><span class="p">,</span> <span class="s1">&#39;edge_dest&#39;</span><span class="p">,</span> <span class="s1">&#39;is_causal&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">y_train</span> <span class="o">=</span> <span class="n">training_data</span><span class="p">[</span><span class="s1">&#39;is_causal&#39;</span><span class="p">]</span>
+
+    <span class="n">test_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;graph_id&#39;</span><span class="p">,</span> <span class="s1">&#39;edge_source&#39;</span><span class="p">,</span> <span class="s1">&#39;edge_dest&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">clf</span> <span class="o">=</span> <span class="n">RandomForestClassifier</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+    <span class="n">y_pred</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_df</span><span class="p">)</span>
+
+    <span class="n">returned</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">X_test</span><span class="p">),</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;is_causal&#39;</span><span class="p">])],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">of_interest</span> <span class="o">=</span> <span class="n">returned</span><span class="p">[[</span><span class="s1">&#39;edge_source&#39;</span><span class="p">,</span> <span class="s1">&#39;edge_dest&#39;</span><span class="p">,</span><span class="s1">&#39;is_causal&#39;</span><span class="p">]]</span>
+    
+
+    <span class="n">val_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">of_interest</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;edge_source&#39;</span><span class="p">]</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;edge_dest&#39;</span><span class="p">]</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;is_causal&#39;</span><span class="p">]</span>
+        <span class="n">val_matrix</span><span class="p">[</span><span class="n">source</span><span class="p">,</span> <span class="n">dest</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight</span>
+
+    <span class="k">return</span> <span class="n">val_matrix</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The wrapper code, that requires minor modifications, can be found below. Datasets in the <code class="docutils literal notranslate"><span class="pre">experiment</span></code> folder must be downloaded from the platform as necessary. The wrapper will produce an output file in the <code class="docutils literal notranslate"><span class="pre">results</span></code> folder that needs to be uploaded on the causeme platform.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># &quot;&quot;&quot;</span>
+<span class="c1"># This script can be used to iterate over the datasets of a particular experiment.</span>
+<span class="c1"># Below you import your function &quot;my_method&quot; stored in the module causeme_my_method.</span>
+
+<span class="c1"># Importantly, you need to first register your method on CauseMe.</span>
+<span class="c1"># Then CauseMe will return a hash code that you use below to identify which method</span>
+<span class="c1"># you used. Of course, we cannot check how you generated your results, but we can</span>
+<span class="c1"># validate a result if you upload code. Users can filter the Ranking table to only</span>
+<span class="c1"># show validated results.</span>
+<span class="c1"># &quot;&quot;&quot;</span>
+
+
+<span class="c1"># # Imports</span>
+<span class="c1"># import numpy as np</span>
+<span class="c1"># import json</span>
+<span class="c1"># import zipfile</span>
+<span class="c1"># import bz2</span>
+<span class="c1"># import time</span>
+
+<span class="c1"># from causeme_my_method import my_method</span>
+
+<span class="c1"># # Setup a python dictionary to store method hash, parameter values, and results</span>
+<span class="c1"># results = {}</span>
+
+<span class="c1"># ################################################</span>
+<span class="c1"># # Identify method and used parameters</span>
+<span class="c1"># ################################################</span>
+
+<span class="c1"># # Method name just for file saving</span>
+<span class="c1"># method_name = &#39;varmodel-python&#39;</span>
+
+<span class="c1"># # Insert method hash obtained from CauseMe after method registration</span>
+<span class="c1"># results[&#39;method_sha&#39;] = &quot;e182a71f4e1645a1b9ede10f615df88a&quot;</span>
+
+<span class="c1"># # The only parameter here is the maximum time lag</span>
+<span class="c1"># maxlags = 1</span>
+
+<span class="c1"># # Parameter values: These are essential to validate your results</span>
+<span class="c1"># # provided that you also uploaded code</span>
+<span class="c1"># results[&#39;parameter_values&#39;] = &quot;maxlags=%d&quot; % maxlags</span>
+
+<span class="c1"># #################################################</span>
+<span class="c1"># # Experiment details</span>
+<span class="c1"># #################################################</span>
+<span class="c1"># # Choose model and experiment as downloaded from causeme</span>
+<span class="c1"># results[&#39;model&#39;] = &#39;linear-VAR&#39;</span>
+
+<span class="c1"># # Here we choose the setup with N=3 variables and time series length T=150</span>
+<span class="c1"># experimental_setup = &#39;N-3_T-150&#39;</span>
+<span class="c1"># results[&#39;experiment&#39;] = results[&#39;model&#39;] + &#39;_&#39; + experimental_setup</span>
+
+<span class="c1"># # Adjust save name if needed</span>
+<span class="c1"># save_name = &#39;{}_{}_{}&#39;.format(method_name,</span>
+<span class="c1">#                               results[&#39;parameter_values&#39;],</span>
+<span class="c1">#                               results[&#39;experiment&#39;])</span>
+
+<span class="c1"># # Setup directories (adjust to your needs)</span>
+<span class="c1"># experiment_zip = &#39;experiments/%s.zip&#39; % results[&#39;experiment&#39;]</span>
+<span class="c1"># results_file = &#39;results/%s.json.bz2&#39; % (save_name)</span>
+
+<span class="c1"># #################################################</span>
+
+<span class="c1"># # Start of script</span>
+<span class="c1"># scores = []</span>
+<span class="c1"># pvalues = []</span>
+<span class="c1"># lags = []</span>
+<span class="c1"># runtimes = []</span>
+
+<span class="c1"># # (Note that runtimes on causeme are only shown for validated results, this is more for</span>
+<span class="c1"># # your own assessment here)</span>
+
+<span class="c1"># # Loop over all datasets within an experiment</span>
+<span class="c1"># # Important note: The datasets need to be stored in the order of their filename</span>
+<span class="c1"># # extensions, hence they are sorted here</span>
+<span class="c1"># print(&quot;Load data&quot;)</span>
+<span class="c1"># with zipfile.ZipFile(experiment_zip, &quot;r&quot;) as zip_ref:</span>
+<span class="c1">#     for name in sorted(zip_ref.namelist()):</span>
+
+<span class="c1">#         print(&quot;Run {} on {}&quot;.format(method_name, name))</span>
+<span class="c1">#         data = np.loadtxt(zip_ref.open(name))</span>
+
+<span class="c1">#         # Runtimes for your own assessment</span>
+<span class="c1">#         start_time = time.time()</span>
+
+<span class="c1">#         # Run your method (adapt parameters if needed)</span>
+<span class="c1">#         val_matrix, p_matrix, lag_matrix = my_method(data, maxlags)</span>
+<span class="c1">#         runtimes.append(time.time() - start_time)</span>
+
+<span class="c1">#         # Now we convert the matrices to the required format</span>
+<span class="c1">#         # and write the results file</span>
+<span class="c1">#         scores.append(val_matrix.flatten())</span>
+
+<span class="c1">#         # pvalues and lags are recommended for a more comprehensive method evaluation,</span>
+<span class="c1">#         # but not required. Then you can leave the dictionary field empty          </span>
+<span class="c1">#         if p_matrix is not None: pvalues.append(p_matrix.flatten())</span>
+<span class="c1">#         if lag_matrix is not None: lags.append(lag_matrix.flatten())</span>
+
+<span class="c1"># # Store arrays as lists for json</span>
+<span class="c1"># results[&#39;scores&#39;] = np.array(scores).tolist()</span>
+<span class="c1"># if len(pvalues) &gt; 0: results[&#39;pvalues&#39;] = np.array(pvalues).tolist()</span>
+<span class="c1"># if len(lags) &gt; 0: results[&#39;lags&#39;] = np.array(lags).tolist()</span>
+<span class="c1"># results[&#39;runtimes&#39;] = np.array(runtimes).tolist()</span>
+
+<span class="c1"># # Save data</span>
+<span class="c1"># print(&#39;Writing results ...&#39;)</span>
+<span class="c1"># results_json = bytes(json.dumps(results), encoding=&#39;latin1&#39;)</span>
+<span class="c1"># with bz2.BZ2File(results_file, &#39;w&#39;) as mybz2:</span>
+<span class="c1">#     mybz2.write(results_json)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>For further instruction, the user is encouraged to look at the extensive causeme documentation.</p>
+</section>
+</section>
+
+    <script type="text/x-thebe-config">
+    {
+        requestKernel: true,
+        binderOptions: {
+            repo: "binder-examples/jupyter-stacks-datascience",
+            ref: "master",
+        },
+        codeMirrorConfig: {
+            theme: "abcdef",
+            mode: "python"
+        },
+        kernelOptions: {
+            name: "python3",
+            path: "./."
+        },
+        predefinedOutput: true
+    }
+    </script>
+    <script>kernelName = 'python3'</script>
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="D2C_implementation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">D2C Class</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="utils.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Utilities Functions</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#causeme-and-d2c">Causeme and D2C</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-code">The code</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Gian Marco Paldino
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2022.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

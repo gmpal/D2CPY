@@ -217,6 +217,11 @@ class SimulatedTimeSeries:
         """
         return self.list_initial_dags
 
+    def get_updated_dags(self) -> List[nx.DiGraph]:
+        """
+        Returns the generated DAGs including the past nodes.
+        """
+        return self.list_updated_dags
 
 def main():
     # Instantiate SimulatedTimeSeries object

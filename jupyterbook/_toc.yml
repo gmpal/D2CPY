@@ -20,6 +20,8 @@ chapters:
     title: Examples
   - file: simulatedDAGs_implementation
     title: Implementation
+  - file: simulatedDAGs_visualization
+    title: Visualization
 
 - file: simulatedTimeSeries_introduction
   title: Simulated TimeSeries
@@ -28,6 +30,8 @@ chapters:
     title: Examples
   - file: simulatedTimeSeries_implementation
     title: Implementation
+  - file: simulatedTimeSeries_visualization
+    title: Visualization
 
 
 - file: D2C_introduction
@@ -37,6 +41,15 @@ chapters:
     title: Examples
   - file: D2C_implementation
     title: Implementation
+
+- file: GNN
+  title: Graph Neural Networks
+  
+- file: causeme_connection
+  title: Causeme Integration
+
+- file: visualization
+  title: Visualizing DAGs
 
 - file: utils
   title: Additional functions

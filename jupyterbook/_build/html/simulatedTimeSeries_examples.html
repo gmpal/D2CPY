@@ -176,6 +176,7 @@ const thebe_selector_output = ".output, .cell_output"
 <li class="toctree-l2"><a class="reference internal" href="D2C_implementation.html">Implementation</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="causeme_connection.html">Causeme Integration</a></li>
 <li class="toctree-l1"><a class="reference internal" href="utils.html">Additional functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
 <li class="toctree-l1"><a class="reference internal" href="about.html">About</a></li>
@@ -403,7 +404,7 @@ document.write(`
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulated_timeseries</span> <span class="o">=</span> <span class="n">SimulatedTimeSeries</span><span class="p">(</span><span class="n">n_series</span><span class="p">,</span> <span class="n">n_observations</span><span class="p">,</span> <span class="n">n_variables</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">simulated_timeseries</span> <span class="o">=</span> <span class="n">SimulatedTimeSeries</span><span class="p">(</span><span class="n">n_series</span><span class="p">,</span> <span class="n">n_observations</span><span class="p">,</span> <span class="n">n_variables</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">simulated_timeseries</span><span class="o">.</span><span class="n">generate_time_series</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -426,6 +427,7 @@ document.write(`
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">d2c</span> <span class="o">=</span> <span class="n">D2C</span><span class="p">(</span><span class="n">training_DAGs</span><span class="p">,</span><span class="n">training_observations</span><span class="p">)</span>
 <span class="c1"># d2c.initialize()</span>
+<span class="c1"># d2c.save_descriptors_df(&#39;timeseries_training.csv&#39;)</span>
 <span class="n">d2c</span><span class="o">.</span><span class="n">load_descriptors_df</span><span class="p">(</span><span class="s1">&#39;timeseries.csv&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
