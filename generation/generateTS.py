@@ -1,5 +1,6 @@
 import sys
 sys.path.append("..")
+sys.path.append("../d2c/")
 import numpy as np
 from d2c.simulated import Simulated
 from d2c.simulatedTimeSeries import SimulatedTimeSeries
