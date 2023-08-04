@@ -103,11 +103,11 @@ class SimulatedTimeSeries(Simulated):
                     if H == "linear":
                             a = np.random.uniform(-1, 1, 2).reshape(2, 1)
                             X = np.array([data[parent] ** i for i in range(2)])    # data[node] += a0 * 1 + a1 * data[parent] 
-                            data[node] += np.sum(X * a, axis=0)
+                            data[node] += np.sum(X * a)
                     elif H == "quadratic":
                         a = np.random.uniform(-1, 1, 3).reshape(3, 1)
                         X = np.array([data[parent] ** i for i in range(3)])
-                        data[node] += np.sum(X * a, axis=0)
+                        data[node] += np.sum(X * a)
                     elif H == "exponential":
                         a = np.random.uniform(-1, 1)
                         b = np.random.uniform(0, 1)
@@ -191,11 +191,13 @@ class SimulatedTimeSeries(Simulated):
                     if H == "linear":
                             a = np.random.uniform(-1, 1, 2).reshape(2, 1)
                             X = np.array([data.loc[timestep-1, parent_idx] ** i for i in range(2)])    # data[node] += a0 * 1 + a1 * data[parent] 
-                            data.loc[timestep, node] += np.sum(X * a, axis=0)
+                            data.loc[timestep, node] += np.sum(X * a)
                     elif H == "quadratic":
+   
                         a = np.random.uniform(-1, 1, 3).reshape(3, 1)
                         X = np.array([data.loc[timestep-1, parent_idx] ** i for i in range(3)])
-                        data.loc[timestep, node] += np.sum(X * a, axis=0)
+
+                        data.loc[timestep, node] += np.sum(X * a)
                     elif H == "exponential":
                         a = np.random.uniform(-1, 1)
                         b = np.random.uniform(0, 1)
