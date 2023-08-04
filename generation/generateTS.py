@@ -1,6 +1,7 @@
 import sys
 sys.path.append("..")
 import numpy as np
+from d2c.simulated import Simulated
 from d2c.simulatedTimeSeries import SimulatedTimeSeries
 import pickle
 
