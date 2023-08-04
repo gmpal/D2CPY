@@ -29,6 +29,7 @@ class SimulatedTimeSeries(Simulated):
         self.list_time_series = []
         self.list_initial_dags = []
         self.list_updated_dags = []
+        self.sdn = 0.1
 
         self.n_jobs = n_jobs
 
