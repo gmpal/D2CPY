@@ -15,13 +15,13 @@ class TestSimulatedDAGs(unittest.TestCase):
 
     # tests if generate_dags() generates the correct number of DAGs and that they are of the correct type.
     def test_generate_dags(self):
-        self.simulated_DAGs.generate_dags()
+        self.simulated_DAGs.generate()
         self.assertEqual(len(self.simulated_DAGs.list_DAGs), 2)
         for dag in self.simulated_DAGs.list_DAGs:
             self.assertIsInstance(dag, nx.DiGraph)
     # tests if simulate_observations() generates the correct number of dataframes and that they are of the correct type.
     def test_simulate_observations(self):
-        self.simulated_DAGs.generate_dags()
+        self.simulated_DAGs.generate()
         self.simulated_DAGs.simulate_observations()
         self.assertEqual(len(self.simulated_DAGs.list_observations), 2)
         for obs in self.simulated_DAGs.list_observations:
