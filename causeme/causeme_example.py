@@ -16,6 +16,10 @@ import zipfile
 import bz2
 import time
 
+import sys
+sys.path.append("..")
+sys.path.append("../d2c/")
+
 from causeme_my_method import my_method
 
 # Setup a python dictionary to store method hash, parameter values, and results

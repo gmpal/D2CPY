@@ -36,18 +36,18 @@ def my_method(data, maxlags=1, correct_pvalues=True):
 
     d2c_test = D2C([None],[data_df])
     X_test = d2c_test.compute_descriptors_no_dags()
-
-    training_data = pd.read_csv('./timeseries_training.csv')
+    
+    training_data = pd.read_csv('./descriptors.csv')
 
     X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
     y_train = training_data['is_causal']
 
-    test_df = pd.DataFrame(X_test).drop(['graph_id', 'edge_source', 'edge_dest'], axis=1)
-    clf = RandomForestClassifier(n_estimators=100, max_depth=2, random_state=0)
+    test_df = pd.DataFrame(X_test)
+    test_df = test_df.drop(['graph_id', 'edge_source', 'edge_dest'], axis=1)
+    clf = RandomForestClassifier(n_estimators=100, n_jobs=4)
     clf.fit(X_train, y_train)
 
-    y_pred = clf.predict(test_df)
-
+    y_pred = clf.predict_proba(test_df)[:,1]
     returned = pd.concat([pd.DataFrame(X_test), pd.DataFrame(y_pred, columns=['is_causal'])], axis=1)
     of_interest = returned[['edge_source', 'edge_dest','is_causal']]
     
@@ -55,8 +55,8 @@ def my_method(data, maxlags=1, correct_pvalues=True):
     val_matrix = np.zeros((N, N), dtype='float32')
 
     for index, row in of_interest.iterrows():
-        source = row['edge_source']
-        dest = row['edge_dest']
+        source =int(row['edge_source'])
+        dest = int(row['edge_dest'])
         weight = row['is_causal']
         val_matrix[source, dest] = weight
 

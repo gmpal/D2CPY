@@ -257,7 +257,7 @@ class D2C:
         #     if np.isnan(dictionary[key]):
         #         dictionary[key] = 0
         
-        print(datetime.now().strftime('%H:%M:%S'), "Descriptors for DAG", DAG_index, "edge pair", ca, ef, "computed")
+        # print(datetime.now().strftime('%H:%M:%S'), "Descriptors for DAG", DAG_index, "edge pair", ca, ef, "computed")
         return dictionary
 
     def load_descriptors_df(self, path: str) -> None:

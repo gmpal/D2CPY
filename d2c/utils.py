@@ -53,7 +53,7 @@ def normalized_prediction(X, Y, lin=True, verbose=True):
     if N < 5 or np.any(np.isnan(XX)): 
         return np.var(Y)
     if lin: 
-        return max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), XX, Y, scoring='neg_mean_squared_error', cv=5)) / (1e-3 + np.var(Y)))
+        return max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), XX, Y, scoring='neg_mean_squared_error', cv=2)) / (1e-3 + np.var(Y)))
 
     #TODO: implement the nonlinear case
 
