@@ -21,39 +21,33 @@ from datetime import datetime
 COUNTER = 0
 
 
-def normalized_conditional_information(y, x1, x2=None, lin=True, verbose=True):
+def normalized_conditional_information(y, x1, x2=None):
         """
         Normalized conditional information of x1 to y given x2
         I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
         """
         if x2 is None:  # I(x1;y)= (H(y)-H(y | x1))/H(y)
-            entropy_y_given_x1 = normalized_prediction(x1, y, verbose=verbose)
+            entropy_y_given_x1 = normalized_prediction(x1, y) 
             return max(0, 1 - entropy_y_given_x1)
-        entropy_y_given_x2 = normalized_prediction(x2, y, verbose=verbose)
-        entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y, verbose=verbose)
-        return max(0, entropy_y_given_x2 - entropy_y_given_x1_x2 ) / (entropy_y_given_x2 + 0.01)
+        else:  # I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
+            entropy_y_given_x2 = normalized_prediction(x2, y)
+            entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y)
+            return max(0, entropy_y_given_x2 - entropy_y_given_x1_x2 ) / (entropy_y_given_x2 + 0.01)
 
-def normalized_prediction(X, Y, lin=True, verbose=True):
+def normalized_prediction(X, Y):
     """
-    Normalized mean squared error of the dependency
+    Normalized mean squared error of the dependency.
+    Replies to the question: How much information about Y is contained in X?
+    This depends on the mean squared error of the prediction of Y from X.
+    If X can predict Y perfectly, then the NMSE will be close to zero. This would indicate that X provides a lot of information about Y, or in other words, the mutual information between X and Y is high.
+    Conversely, if X is a poor predictor of Y, then the NMSE will be high, indicating that the mutual information between X and Y is low.
     """
 
-    if isinstance(X, pd.Series):
-        X = pd.DataFrame(X)
-    N, n = X.shape
+    if isinstance(X, pd.Series): X = pd.DataFrame(X)
 
-    if n > 1: # TODO: check the case if all columns are constant, return 1
-        X = np.delete(X, np.where(np.std(X, axis=0) < 0.01)[0], axis=1) # if there is any constant column, remove it
-        X = np.delete(X, np.where(np.isnan(np.sum(X, axis=0)))[0], axis=1) # if there is any nan, remove it
-    else:
-        if np.any(np.isnan(X)): return 1 # TODO: check this
-            
-    XX = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
+    X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
 
-    if N < 5 or np.any(np.isnan(XX)): 
-        return np.var(Y)
-    if lin: 
-        return max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), XX, Y, scoring='neg_mean_squared_error', cv=2)) / (1e-3 + np.var(Y)))
+    return max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), X, Y, scoring='neg_mean_squared_error', cv=2)) / (1e-3 + np.var(Y)))
 
     #TODO: implement the nonlinear case
 

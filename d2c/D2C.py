@@ -156,16 +156,21 @@ class D2C:
             ind2 = rankrho(D.iloc[:,ind2],D.iloc[:,ef],nmax=min(len(ind2),5*MB_size),verbose=self.verbose)  
             MBef = ind2[mRMR(D.iloc[:,ind2],D.iloc[:,ef],nmax=MB_size,verbose=self.verbose)]  
     
-        comcau = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, list(common_causes)], lin=lin,verbose=self.verbose) if len(common_causes) > 0 else 1
+        # I(cause; effect | common_causes) 
+        comcau = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, list(common_causes)]) if len(common_causes) > 0 else 1
 
         effca = coeff(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, MBef], verbose=self.verbose)
         effef = coeff(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:, MBca], verbose=self.verbose)
 
-        ca_ef = normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], lin=lin,verbose=self.verbose) 
-        ef_ca = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], lin=lin,verbose=self.verbose) 
+        #I(cause; effect) 
+        ca_ef = normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef]) 
+        #I(effect; cause)
+        ef_ca = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca]) 
 
-        delta = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, MBef], lin=lin,verbose=self.verbose) 
-        delta2 = normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:, MBca], lin=lin,verbose=self.verbose) 
+        #I(effect; cause | MBeffect) 
+        delta = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, MBef]) 
+        #I(cause; effect | MBcause)
+        delta2 = normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:, MBca]) 
 
 
         delta_i = []  
@@ -174,29 +179,29 @@ class D2C:
         arrays_m_plus_MBef = [np.unique(array).tolist() for array in [np.concatenate(([m], MBef)) for m in MBca]]
 
         for array in arrays_m_plus_MBca:
-            delta_i.append( normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:,  array], lin=lin,verbose=self.verbose))
+            delta_i.append( normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:,  array]))
         for array in arrays_m_plus_MBef:
-            delta2_i.append(normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:,  array], lin=lin,verbose=self.verbose))
+            delta2_i.append(normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:,  array]))
 
-        I1_i = [normalized_conditional_information(D.iloc[:, MBef[j]], D.iloc[:, ca], lin=lin,verbose=self.verbose) for j in range(len(MBef))]
-        I1_j = [normalized_conditional_information(D.iloc[:, MBca[j]], D.iloc[:, ef], lin=lin,verbose=self.verbose) for j in range(len(MBca))]
+        I1_i = [normalized_conditional_information(D.iloc[:, MBef[j]], D.iloc[:, ca]) for j in range(len(MBef))]
+        I1_j = [normalized_conditional_information(D.iloc[:, MBca[j]], D.iloc[:, ef]) for j in range(len(MBca))]
 
-        I2_i = [normalized_conditional_information(D.iloc[:, ca], D.iloc[:, MBef[j]], D.iloc[:, ef], lin=lin,verbose=self.verbose) for j in range(len(MBef))]
-        I2_j = [normalized_conditional_information(D.iloc[:, ef], D.iloc[:, MBca[j]], D.iloc[:, ca], lin=lin,verbose=self.verbose) for j in range(len(MBca))]
+        I2_i = [normalized_conditional_information(D.iloc[:, ca], D.iloc[:, MBef[j]], D.iloc[:, ef]) for j in range(len(MBef))]
+        I2_j = [normalized_conditional_information(D.iloc[:, ef], D.iloc[:, MBca[j]], D.iloc[:, ca]) for j in range(len(MBca))]
 
         # Randomly select maxs pairs
         IJ = np.array(np.meshgrid(np.arange(len(MBca)), np.arange(len(MBef)))).T.reshape(-1,2)
         np.random.shuffle(IJ)
         IJ = IJ[:min(maxs, len(IJ))]
 
-        I3_i = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ca], lin=lin,verbose=self.verbose) for i, j in IJ]
-        I3_j = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ef], lin=lin,verbose=self.verbose) for i, j in IJ]
+        I3_i = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ca]) for i, j in IJ]
+        I3_j = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) for i, j in IJ]
 
         IJ = np.array([(i, j) for i in range(len(MBca)) for j in range(i+1, len(MBca))])
         np.random.shuffle(IJ)
         IJ = IJ[:min(maxs, len(IJ))]
 
-        Int3_i = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca], lin=lin,verbose=self.verbose) - normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], lin=lin,verbose=self.verbose) for i, j in IJ]
+        Int3_i = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca]) - normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]]) for i, j in IJ]
         if len(Int3_i) == 0:
             Int3_i = [0]
             #TODO: verify why this happens
@@ -205,18 +210,18 @@ class D2C:
         np.random.shuffle(IJ)
         IJ = IJ[:min(maxs, len(IJ))]
 
-        Int3_j = [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef], lin=lin,verbose=self.verbose) - normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], lin=lin,verbose=self.verbose) for i, j in IJ]
+        Int3_j = [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) - normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]]) for i, j in IJ]
         if len(Int3_j) == 0:
             Int3_j = [0]
             #TODO: verify why this happens
         E_ef = ecdf(D.iloc[:, ef],verbose=self.verbose)(D.iloc[:, ef]) 
         E_ca = ecdf(D.iloc[:, ca],verbose=self.verbose)(D.iloc[:, ca])
 
-        gini_ca_ef = normalized_conditional_information(D.iloc[:, ca], pd.DataFrame(E_ef), lin=lin,verbose=self.verbose)
-        gini_ef_ca = normalized_conditional_information(D.iloc[:, ef], pd.DataFrame(E_ca), lin=lin,verbose=self.verbose)
+        gini_ca_ef = normalized_conditional_information(D.iloc[:, ca], pd.DataFrame(E_ef))
+        gini_ef_ca = normalized_conditional_information(D.iloc[:, ef], pd.DataFrame(E_ca))
 
-        gini_delta = normalized_conditional_information(D.iloc[:, ef], pd.DataFrame(E_ca), D.iloc[:, MBef], lin=lin,verbose=self.verbose)
-        gini_delta2 = normalized_conditional_information(D.iloc[:, ca], pd.DataFrame(E_ef), D.iloc[:, MBca], lin=lin,verbose=self.verbose)
+        gini_delta = normalized_conditional_information(D.iloc[:, ef], pd.DataFrame(E_ca), D.iloc[:, MBef])
+        gini_delta2 = normalized_conditional_information(D.iloc[:, ca], pd.DataFrame(E_ef), D.iloc[:, MBca])
 
         namesx = ["effca","effef","comcau","delta","delta2"]
         namesx += ["delta.i" + str(i+1) for i in range(len(pq))]
