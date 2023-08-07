@@ -9,7 +9,7 @@ from typing import List
 # Base class
 class Simulated(ABC):
 
-    FUNCTION_TYPES = ["linear", "quadratic", "exponential", "logarithmic","sigmoid", "sinusoidal"]
+    FUNCTION_TYPES = ["linear", "quadratic"]
 
     @abstractmethod
     def generate(self):
