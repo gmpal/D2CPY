@@ -19,7 +19,7 @@ class Simulated(ABC):
     def get_observations(self) -> List[pd.DataFrame]:
         pass
 
-    def _generate_single_dag(self, index: int) -> nx.DiGraph:
+    def _generate_single_dag(self) -> nx.DiGraph:
         """
         Generates a single directed acyclic graph (DAG).
         
@@ -41,7 +41,7 @@ class Simulated(ABC):
         for node in G.nodes:
             G.nodes[node]['bias'] = np.random.normal(loc=0, scale=1)
             G.nodes[node]['sigma'] = self.sdn
-            G.nodes[node]['seed'] = self.random_state + index
+            G.nodes[node]['seed'] = self.random_state
 
         for edge in G.edges:
             G.edges[edge]['weight'] = np.random.uniform(low=0, high=1) #TODO: check weight implementation
