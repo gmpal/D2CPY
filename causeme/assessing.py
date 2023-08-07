@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 
 # assuming df is your dataframe, X are your features, y is your target
-df = pd.read_csv('descriptors.csv')  # replace with your data file
+df = pd.read_csv('timeseries_training.csv')  # replace with your data file
+
+df = df.loc[df['graph_id'] < 1000]
 X = df.drop(columns=['graph_id','edge_source','edge_dest', 'is_causal'])
 y = df['is_causal']
 
@@ -18,6 +20,6 @@ classifier = LogisticRegression(solver='liblinear')
 scores = cross_validate(classifier, X, y, cv=logo.split(X, y, df['graph_id']), n_jobs=-1, 
                         scoring=['accuracy', 'f1', 'roc_auc'], return_train_score=True)
 
-print("Test Accuracy: %0.2f (+/- %0.2f)" % (scores['test_accuracy'].mean(), scores['test_accuracy'].std() * 2))
-print("Test F1: %0.2f (+/- %0.2f)" % (scores['test_f1'].mean(), scores['test_f1'].std() * 2))
-print("Test ROC AUC: %0.2f (+/- %0.2f)" % (scores['test_roc_auc'].mean(), scores['test_roc_auc'].std() * 2))
+print("Test Accuracy: %0.2f (+/- %0.2f)" % (scores['test_accuracy'].median(), scores['test_accuracy'].std() * 2))
+print("Test F1: %0.2f (+/- %0.2f)" % (scores['test_f1'].median(), scores['test_f1'].std() * 2))
+print("Test ROC AUC: %0.2f (+/- %0.2f)" % (scores['test_roc_auc'].median(), scores['test_roc_auc'].std() * 2))
