@@ -62,10 +62,11 @@ class SimulatedTimeSeries(Simulated):
         # Initialize a DataFrame to hold the time series data
         # pick a random lag between 1 and maxlags
         current_lag = np.random.randint(1, self.maxlags + 1)
-        print(f"current lag: {current_lag}")
+        # print(f"current lag: {current_lag}")
         initial_DAG = self._generate_single_dag()
         updated_DAG = self._update_dag_for_timestep(initial_DAG, current_lag)
-        data = pd.DataFrame(np.random.rand(current_lag, self.n_variables))
+        data = pd.DataFrame(np.random.rand(current_lag, self.n_variables)).round(2)
+        # print(data)
         for _ in range(1, self.n_observations):
             self._generate_timestep_observation(updated_DAG, data)
         return data, initial_DAG, updated_DAG
@@ -87,13 +88,11 @@ class SimulatedTimeSeries(Simulated):
         past_dag = dag.copy(as_view=False)
 
         # Add past nodes and edges to the DAG
-        for node in dag.nodes:
+        for node in nx.topological_sort(dag):
             for lag in range(1, current_lag + 1):
                 past_node = f"{node}_t-{lag}"
                 past_dag.add_node(past_node, **dag.nodes[node])  # Copy attributes from the original node
-                if lag > 1: 
-                    past_dag.add_edge(past_node, f"{node}_t-{lag-1}", weight=1, H='linear')
-                weight = np.random.uniform(low=-1, high=1)
+                weight = np.round(np.random.uniform(low=-1, high=1),2)
                 h = random.choice(self.FUNCTION_TYPES)
                 past_dag.add_edge(past_node, node, weight=weight, H=h)
                 if lag > 1: 
@@ -110,54 +109,40 @@ class SimulatedTimeSeries(Simulated):
     def _generate_timestep_observation(self, dag: nx.DiGraph, data: pd.DataFrame) -> pd.DataFrame:
         
         #inizialize the first row of the dataframe
+
         current_len = len(data)
         for node in nx.topological_sort(dag):
+            # print("Node", node)
+            # print("with bias", dag.nodes[node]['bias'])
             if f"_t-" in str(node):
                 variable = int(str(node)[0])
                 timestamp = int(str(node)[-1])
                 dag.nodes[node]['value'] = data.loc[len(data) - timestamp, variable] 
+                # print("Value",dag.nodes[node]['value'])
             else:
                 parents = list(dag.predecessors(node))
                 data.loc[current_len, node] = 0
+                # print("Data now is ", data)
+                # print("parents", parents, "with values", [dag.nodes[parent]['value'] for parent in parents])
+                # print("with edges weight", [dag.edges[parent, node]['weight'] for parent in parents])
                 for parent in parents:
+                    
                     data.loc[current_len, node] += self.compute_value(dag.nodes[node], dag.edges[parent, node], dag.nodes[parent]['value'])
+                data.loc[current_len, node] += dag.nodes[node]['bias']
                 dag.nodes[node]['value'] = data.loc[current_len, node]
-        
+                # print("Value",dag.nodes[node]['value'])
 
         
 
     def compute_value(self, node_data, edge_data, parent_value):
-        bias = node_data['bias']
         sigma = node_data['sigma']
         weight = edge_data['weight'] 
         H = edge_data['H']
         value = 0
         if H == "linear":
-            a = [bias, weight]
-            X = np.array([parent_value ** i for i in range(2)])    # data[node] += a0 * 1 + a1 * data[parent] 
-            value += np.sum(X * a)
-        elif H == "quadratic":
-            a = [bias, weight, weight]
-            X = np.array([parent_value ** i for i in range(3)]) # data[node] += a0 * 1 + a1 * data[parent] + a2 * data[parent] ** 2 
-            value += np.sum(X * a)
-        elif H == "exponential": #TODO: handle weights
-            a = np.random.uniform(-1, 1)
-            b = np.random.uniform(0, 1)
-            value += a * np.exp(b * parent_value) #data[node] += a * exp(b * data[parent])
-        elif H == "logarithmic": #could capture a slowing or saturating effect. #TODO: handle weights
-            a = np.random.uniform(-1, 1)
-            b = np.random.uniform(1, 2)
-            value += a * np.log(b + parent_value)
-        elif H == "sigmoid": #could model a system that has a thresholding or saturating effect. #TODO: handle weights
-            a = np.random.uniform(-5, 5)
-            b = np.random.uniform(0, 1)
-            value += 1 / (1 + np.exp(-a * (parent_value - b)))
-        elif H == "sinusoidal": #can model periodic effects
-            a = np.random.uniform(-1, 1)
-            b = np.random.uniform(0, 2 * np.pi)
-            value += a * np.sin(b + parent_value)
-        value += np.random.normal(scale=sigma)
-        return value 
+            value += parent_value * weight
+        # value += np.random.normal(scale=sigma)
+        return np.round(value,2)
 
 
 
@@ -185,11 +170,11 @@ class SimulatedTimeSeries(Simulated):
 
 
 if __name__ == "__main__":
-    n_series = 10  # You can change this as needed
-    n_observations = 10
+    n_series = 1  # You can change this as needed
+    n_observations = 3
     n_variables = 3
     # Testing with a single process
-    generator = SimulatedTimeSeries(n_series, n_observations, n_variables, maxlags=5)
+    generator = SimulatedTimeSeries(n_series, n_observations, n_variables, maxlags=1)
     generator.generate()
     dags = generator.get_dags()[0]
     DAG = generator.get_updated_dags()[-1]
