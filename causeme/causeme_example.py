@@ -82,8 +82,8 @@ if __name__ == '__main__':
                                 results['experiment'])
 
     # Setup directories (adjust to your needs)
-    experiment_zip = 'experiments/%s.zip' % results['experiment']
-    results_file = 'results/%s.json.bz2' % (save_name)
+    experiment_zip = '../causeme/experiments/%s.zip' % results['experiment']
+    results_file = '../causeme/results/%s.json.bz2' % (save_name)
 
     #################################################
 

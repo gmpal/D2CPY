@@ -29,6 +29,7 @@ class Simulated(ABC):
         Returns:
             nx.DiGraph: Generated DAG.
         """
+
         # randomly at 50/50
         G = nx.DiGraph()
         edges = [(i, j) for i in range(self.n_variables) for j in range(i)]
