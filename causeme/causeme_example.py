@@ -103,7 +103,6 @@ if __name__ == '__main__':
   
 
     # This will hold results from all processes
-    results = {}
     results_from_mp = []
 
     with zipfile.ZipFile(experiment_zip, "r") as zip_ref:
