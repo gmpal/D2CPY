@@ -116,39 +116,36 @@ class SimulatedTimeSeries(Simulated):
                 dag.nodes[node]['value'] = data.loc[len(data) - timestamp, variable] 
             else:
                 parents = list(dag.predecessors(node))
-                bias = dag.nodes[node]['bias']
-                sigma = dag.nodes[node]['sigma']
-                
                 data.loc[current_len, node] = 0
                 for parent in parents:
-                    edge_data = dag.edges[parent, node]
-                    data.loc[current_len, node] += self.compute_value(bias, edge_data, dag.nodes[parent]['value'])
-                data.loc[current_len, node] += np.random.normal(scale=sigma)
+                    data.loc[current_len, node] += self.compute_value(dag.nodes[node], dag.edges[parent, node], dag.nodes[parent]['value'])
                 dag.nodes[node]['value'] = data.loc[current_len, node]
         
 
         
 
-    def compute_value(self, value, edge_data, parent_value):
+    def compute_value(self, node_data, edge_data, parent_value):
+        bias = node_data['bias']
+        sigma = node_data['sigma']
         weight = edge_data['weight'] 
         H = edge_data['H']
         if H == "linear":
-            a = np.random.uniform(-1, 1, 2).reshape(2, 1)
+            a = [bias, weight]
             X = np.array([parent_value ** i for i in range(2)])    # data[node] += a0 * 1 + a1 * data[parent] 
             value += np.sum(X * a)
         elif H == "quadratic":
-            a = np.random.uniform(-1, 1, 3).reshape(3, 1)
-            X = np.array([parent_value ** i for i in range(3)])
+            a = [bias, weight, weight]
+            X = np.array([parent_value ** i for i in range(3)]) # data[node] += a0 * 1 + a1 * data[parent] + a2 * data[parent] ** 2 
             value += np.sum(X * a)
-        elif H == "exponential":
+        elif H == "exponential": #TODO: handle weights
             a = np.random.uniform(-1, 1)
             b = np.random.uniform(0, 1)
-            value += a * np.exp(b * parent_value)
-        elif H == "logarithmic": #could capture a slowing or saturating effect.
+            value += a * np.exp(b * parent_value) #data[node] += a * exp(b * data[parent])
+        elif H == "logarithmic": #could capture a slowing or saturating effect. #TODO: handle weights
             a = np.random.uniform(-1, 1)
             b = np.random.uniform(1, 2)
             value += a * np.log(b + parent_value)
-        elif H == "sigmoid": #could model a system that has a thresholding or saturating effect.
+        elif H == "sigmoid": #could model a system that has a thresholding or saturating effect. #TODO: handle weights
             a = np.random.uniform(-5, 5)
             b = np.random.uniform(0, 1)
             value += 1 / (1 + np.exp(-a * (parent_value - b)))
@@ -156,7 +153,7 @@ class SimulatedTimeSeries(Simulated):
             a = np.random.uniform(-1, 1)
             b = np.random.uniform(0, 2 * np.pi)
             value += a * np.sin(b + parent_value)
-
+        value += np.random.normal(scale=sigma)
         return value 
 
 
