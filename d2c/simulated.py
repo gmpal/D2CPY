@@ -34,22 +34,18 @@ class Simulated(ABC):
         G = nx.DiGraph()
         edges = [(i, j) for i in range(self.n_variables) for j in range(i)]
 
-        complex = False
-        if complex: 
-            
-            G.add_edges_from(edges)
-            
-            while not is_directed_acyclic_graph(G):
-                # If it's not a DAG, remove a random edge
-                edge_to_remove = random.choice(list(G.edges()))
-                G.remove_edge(*edge_to_remove)
-        else:  # simple
-            random.shuffle(edges)
+        #select a number between 1 and len(edges)
+        n_edges = random.randint(1, len(edges))
 
-            for edge in edges:
-                G.add_edge(*edge)
-                if not nx.is_directed_acyclic_graph(G):
-                    G.remove_edge(*edge)
+        #select a random subset of edges
+        edges = random.sample(edges, n_edges)
+            
+        G.add_edges_from(edges)
+        
+        while not is_directed_acyclic_graph(G):
+            # If it's not a DAG, remove a random edge
+            edge_to_remove = random.choice(list(G.edges()))
+            G.remove_edge(*edge_to_remove)
 
         for node in G.nodes:
             G.nodes[node]['bias'] = np.round(np.random.normal(loc=0, scale=1),2)
