@@ -201,10 +201,9 @@ def co2i(X,Y, verbose=True):
     correlation_vector = column_based_correlation(X,Y, verbose=verbose)
     corr_sq = np.square(correlation_vector)
 
-    if 1 - corr_sq == 0: #TODO: check this condition
-        I = 0
-    else: 
-        I = -0.5 * np.log(1 - corr_sq)
+    epsilon = 1e-10  # a small positive value to prevent log(0)
+    clamped_values = np.clip(1 - corr_sq, epsilon, None)
+    I = -0.5 * np.log(clamped_values)
     if verbose: print(datetime.now().strftime('%H:%M:%S'),'I: ', I)
 
     return I
