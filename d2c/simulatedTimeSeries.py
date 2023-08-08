@@ -93,12 +93,14 @@ class SimulatedTimeSeries(Simulated):
                 past_dag.add_node(past_node, **dag.nodes[node])  # Copy attributes from the original node
                 if lag > 1: 
                     past_dag.add_edge(past_node, f"{node}_t-{lag-1}", weight=1, H='linear')
-                weight = np.round(np.random.uniform(low=0, high=1), 2)
-                past_dag.add_edge(past_node, node, weight=weight, H='linear')
+                weight = np.random.uniform(low=-1, high=1)
+                h = random.choice(self.FUNCTION_TYPES)
+                past_dag.add_edge(past_node, node, weight=weight, H=h)
+                if lag > 1: 
+                    past_dag.add_edge(past_node, f"{node}_t-{lag-1}", weight=weight, H=h)
 
                 # Add edges from past nodes to current nodes that the original node had edges to
                 for successor in dag.successors(node):
-                    weight = np.round(np.random.uniform(low=0, high=1), 2)
                     past_dag.add_edge(past_node, successor, **dag.edges[node, successor])  # Copy attributes from the original edge
 
         return past_dag

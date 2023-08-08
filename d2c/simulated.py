@@ -9,7 +9,7 @@ from typing import List
 # Base class
 class Simulated(ABC):
 
-    FUNCTION_TYPES = ["linear", "quadratic"]
+    FUNCTION_TYPES = ["linear"]
 
     @abstractmethod
     def generate(self):
@@ -56,7 +56,7 @@ class Simulated(ABC):
             G.nodes[node]['seed'] = self.random_state
 
         for edge in G.edges:
-            G.edges[edge]['weight'] = np.random.uniform(low=0, high=1) #TODO: check weight implementation
+            G.edges[edge]['weight'] = np.random.uniform(low=-1, high=1)
             G.edges[edge]['H'] = random.choice(self.FUNCTION_TYPES) 
 
         return G
