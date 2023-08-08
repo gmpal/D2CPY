@@ -129,6 +129,7 @@ class SimulatedTimeSeries(Simulated):
         sigma = node_data['sigma']
         weight = edge_data['weight'] 
         H = edge_data['H']
+        value = 0
         if H == "linear":
             a = [bias, weight]
             X = np.array([parent_value ** i for i in range(2)])    # data[node] += a0 * 1 + a1 * data[parent] 
