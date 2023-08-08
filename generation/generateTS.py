@@ -10,7 +10,8 @@ if __name__ == "__main__":
     n_series = 100  # You can change this as needed
     n_observations = 300
     n_variables = 3
-    generator = SimulatedTimeSeries(n_series,  n_observations, n_variables, n_jobs=35)
+    maxlags = 5
+    generator = SimulatedTimeSeries(n_series,  n_observations, n_variables, maxlags, n_jobs=35)
     generator.generate()
 
     observations = generator.get_observations()
