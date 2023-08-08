@@ -70,10 +70,10 @@ if __name__ == '__main__':
     # Experiment details
     #################################################
     # Choose model and experiment as downloaded from causeme
-    results['model'] = 'linear-VAR'
+    results['model'] = 'nonlinear-VAR'
 
     # Here we choose the setup with N=3 variables and time series length T=150
-    experimental_setup = 'N-3_T-150'
+    experimental_setup = 'N-3_T-300'
     results['experiment'] = results['model'] + '_' + experimental_setup
 
     # Adjust save name if needed
