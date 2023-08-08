@@ -29,14 +29,26 @@ class Simulated(ABC):
         Returns:
             nx.DiGraph: Generated DAG.
         """
+        # randomly at 50/50
         G = nx.DiGraph()
         edges = [(i, j) for i in range(self.n_variables) for j in range(i)]
-        G.add_edges_from(edges)
-        
-        while not is_directed_acyclic_graph(G):
-            # If it's not a DAG, remove a random edge
-            edge_to_remove = random.choice(list(G.edges()))
-            G.remove_edge(*edge_to_remove)
+
+        complex = random.random() < 0.5
+        if complex: 
+            
+            G.add_edges_from(edges)
+            
+            while not is_directed_acyclic_graph(G):
+                # If it's not a DAG, remove a random edge
+                edge_to_remove = random.choice(list(G.edges()))
+                G.remove_edge(*edge_to_remove)
+        else:  # simple
+            random.shuffle(edges)
+
+            for edge in edges:
+                G.add_edge(*edge)
+                if not nx.is_directed_acyclic_graph(G):
+                    G.remove_edge(*edge)
 
         for node in G.nodes:
             G.nodes[node]['bias'] = np.random.normal(loc=0, scale=1)

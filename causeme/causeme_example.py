@@ -8,104 +8,131 @@ you used. Of course, we cannot check how you generated your results, but we can
 validate a result if you upload code. Users can filter the Ranking table to only
 show validated results.
 """
-
-# Imports
 import numpy as np
 import json
 import zipfile
 import bz2
 import time
-
 import sys
 sys.path.append("..")
 sys.path.append("../d2c/")
+import numpy as np
+from multiprocessing import Pool, cpu_count
+
 
 from causeme_my_method import my_method
 
-# Setup a python dictionary to store method hash, parameter values, and results
-results = {}
 
-################################################
-# Identify method and used parameters
-################################################
+def process_zip_file(name, maxlags=1):
+    print("Run on {}".format(name))
+    data = np.loadtxt('experiments/'+name)
 
-# Method name just for file saving
-method_name = 'varmodel-python'
+    # Runtimes for your own assessment
+    start_time = time.time()
 
-# Insert method hash obtained from CauseMe after method registration
-results['method_sha'] = "e182a71f4e1645a1b9ede10f615df88a"
+    # Run your method (adapt parameters if needed)
+    val_matrix, p_matrix, lag_matrix = my_method(data, maxlags)
+    runtime = time.time() - start_time
 
-# The only parameter here is the maximum time lag
-maxlags = 1
+    # Convert the matrices to the required format and return
+    score = val_matrix.flatten()
+    pvalue = p_matrix.flatten() if p_matrix is not None else None
+    lag = lag_matrix.flatten() if lag_matrix is not None else None
 
-# Parameter values: These are essential to validate your results
-# provided that you also uploaded code
-results['parameter_values'] = "maxlags=%d" % maxlags
+    return score, pvalue, lag, runtime
 
-#################################################
-# Experiment details
-#################################################
-# Choose model and experiment as downloaded from causeme
-results['model'] = 'linear-VAR'
 
-# Here we choose the setup with N=3 variables and time series length T=150
-experimental_setup = 'N-3_T-150'
-results['experiment'] = results['model'] + '_' + experimental_setup
+if __name__ == '__main__':
 
-# Adjust save name if needed
-save_name = '{}_{}_{}'.format(method_name,
-                              results['parameter_values'],
-                              results['experiment'])
 
-# Setup directories (adjust to your needs)
-experiment_zip = 'experiments/%s.zip' % results['experiment']
-results_file = 'results/%s.json.bz2' % (save_name)
+ 
+    # Setup a python dictionary to store method hash, parameter values, and results
+    results = {}
 
-#################################################
+    ################################################
+    # Identify method and used parameters
+    ################################################
 
-# Start of script
-scores = []
-pvalues = []
-lags = []
-runtimes = []
+    # Method name just for file saving
+    method_name = 'varmodel-python'
 
-# (Note that runtimes on causeme are only shown for validated results, this is more for
-# your own assessment here)
+    # Insert method hash obtained from CauseMe after method registration
+    results['method_sha'] = "e182a71f4e1645a1b9ede10f615df88a"
 
-# Loop over all datasets within an experiment
-# Important note: The datasets need to be stored in the order of their filename
-# extensions, hence they are sorted here
-print("Load data")
-with zipfile.ZipFile(experiment_zip, "r") as zip_ref:
-    for name in sorted(zip_ref.namelist()):
+    # The only parameter here is the maximum time lag
+    maxlags = 1
 
-        print("Run {} on {}".format(method_name, name))
-        data = np.loadtxt(zip_ref.open(name))
+    # Parameter values: These are essential to validate your results
+    # provided that you also uploaded code
+    results['parameter_values'] = "maxlags=%d" % maxlags
 
-        # Runtimes for your own assessment
-        start_time = time.time()
+    #################################################
+    # Experiment details
+    #################################################
+    # Choose model and experiment as downloaded from causeme
+    results['model'] = 'linear-VAR'
 
-        # Run your method (adapt parameters if needed)
-        val_matrix, p_matrix, lag_matrix = my_method(data, maxlags)
-        runtimes.append(time.time() - start_time)
+    # Here we choose the setup with N=3 variables and time series length T=150
+    experimental_setup = 'N-3_T-150'
+    results['experiment'] = results['model'] + '_' + experimental_setup
 
-        # Now we convert the matrices to the required format
-        # and write the results file
-        scores.append(val_matrix.flatten())
+    # Adjust save name if needed
+    save_name = '{}_{}_{}'.format(method_name,
+                                results['parameter_values'],
+                                results['experiment'])
 
-        # pvalues and lags are recommended for a more comprehensive method evaluation,
-        # but not required. Then you can leave the dictionary field empty          
-        if p_matrix is not None: pvalues.append(p_matrix.flatten())
-        if lag_matrix is not None: lags.append(lag_matrix.flatten())
+    # Setup directories (adjust to your needs)
+    experiment_zip = 'experiments/%s.zip' % results['experiment']
+    results_file = 'results/%s.json.bz2' % (save_name)
 
-# Store arrays as lists for json
-results['scores'] = np.array(scores).tolist()
-if len(pvalues) > 0: results['pvalues'] = np.array(pvalues).tolist()
-if len(lags) > 0: results['lags'] = np.array(lags).tolist()
-results['runtimes'] = np.array(runtimes).tolist()
+    #################################################
 
-# Save data
-print('Writing results ...')
-results_json = bytes(json.dumps(results), encoding='latin1')
-with bz2.BZ2File(results_file, 'w') as mybz2:
-    mybz2.write(results_json)
+    # Start of script
+    scores = []
+    pvalues = []
+    lags = []
+    runtimes = []
+
+    # (Note that runtimes on causeme are only shown for validated results, this is more for
+    # your own assessment here)
+
+    # Loop over all datasets within an experiment
+    # Important note: The datasets need to be stored in the order of their filename
+    # extensions, hence they are sorted here
+    print("Load data")
+  
+
+    # This will hold results from all processes
+    results = {}
+    results_from_mp = []
+
+    with zipfile.ZipFile(experiment_zip, "r") as zip_ref:
+        #unzip the files and make a list
+        zip_ref.extractall("experiments")
+        names = sorted(zip_ref.namelist())
+
+
+    # Create a pool of worker processes
+    with Pool(processes=6) as pool:
+        results_from_mp = pool.map(process_zip_file, names)
+
+    # Extract the results to the original lists
+    scores, pvalues, lags, runtimes = [], [], [], []
+    for result in results_from_mp:
+        score, pvalue, lag, runtime = result
+        scores.append(score)
+        if pvalue is not None: pvalues.append(pvalue)
+        if lag is not None: lags.append(lag)
+        runtimes.append(runtime)
+
+    # Store arrays as lists for json
+    results['scores'] = np.array(scores).tolist()
+    if len(pvalues) > 0: results['pvalues'] = np.array(pvalues).tolist()
+    if len(lags) > 0: results['lags'] = np.array(lags).tolist()
+    results['runtimes'] = np.array(runtimes).tolist()
+
+    # Save data
+    print('Writing results ...')
+    results_json = bytes(json.dumps(results), encoding='latin1')
+    with bz2.BZ2File(results_file, 'w') as mybz2:
+        mybz2.write(results_json)
