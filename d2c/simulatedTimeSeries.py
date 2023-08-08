@@ -61,6 +61,7 @@ class SimulatedTimeSeries(Simulated):
         """
         # Initialize a DataFrame to hold the time series data
         # pick a random lag between 1 and maxlags
+        np.random.seed(self.random_state + index)
         current_lag = np.random.randint(1, self.maxlags + 1)
         # print(f"current lag: {current_lag}")
         initial_DAG = self._generate_single_dag()
@@ -141,7 +142,7 @@ class SimulatedTimeSeries(Simulated):
         value = 0
         if H == "linear":
             value += parent_value * weight
-        # value += np.random.normal(scale=sigma)
+        value += np.random.normal(scale=sigma)
         return np.round(value,2)
 
 

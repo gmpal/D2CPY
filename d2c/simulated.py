@@ -34,7 +34,7 @@ class Simulated(ABC):
         G = nx.DiGraph()
         edges = [(i, j) for i in range(self.n_variables) for j in range(i)]
 
-        complex = random.random() < 0.5
+        complex = False
         if complex: 
             
             G.add_edges_from(edges)
