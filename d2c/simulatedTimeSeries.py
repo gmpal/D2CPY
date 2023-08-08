@@ -12,7 +12,7 @@ from simulated import Simulated
 #TODO: the two classes share a lot, consider merging them into one class and inherit from it.
 
 class SimulatedTimeSeries(Simulated):
-    def __init__(self, n_series: int, n_observations: int, n_variables: int, maxlags=1, n_jobs: int = 1, random_state: int = 42):
+    def __init__(self, n_series: int, n_observations: int, n_variables: int, maxlags:int = 1, n_jobs: int = 1, random_state: int = 42):
         """
         SimulatedTimeSeries is a class to generate time series data based on a Vector Autoregressive (VAR) model.
         
@@ -60,15 +60,18 @@ class SimulatedTimeSeries(Simulated):
         Generates a single time series.
         """
         # Initialize a DataFrame to hold the time series data
+        # pick a random lag between 1 and maxlags
+        current_lag = np.random.randint(1, self.maxlags + 1)
+        print(f"current lag: {current_lag}")
         initial_DAG = self._generate_single_dag()
-        updated_DAG = self._update_dag_for_timestep(initial_DAG)
-        data = pd.DataFrame(np.random.rand(self.maxlags, self.n_variables))
+        updated_DAG = self._update_dag_for_timestep(initial_DAG, current_lag)
+        data = pd.DataFrame(np.random.rand(current_lag, self.n_variables))
         for _ in range(1, self.n_observations):
             self._generate_timestep_observation(updated_DAG, data)
         return data, initial_DAG, updated_DAG
 
 
-    def _update_dag_for_timestep(self, dag: nx.DiGraph) -> nx.DiGraph:
+    def _update_dag_for_timestep(self, dag: nx.DiGraph, current_lag: int) -> nx.DiGraph:
         """
         Updates the given DAG for a new timestep by adding past values as new nodes.
         
@@ -85,7 +88,7 @@ class SimulatedTimeSeries(Simulated):
 
         # Add past nodes and edges to the DAG
         for node in dag.nodes:
-            for lag in range(1, self.maxlags + 1):
+            for lag in range(1, current_lag + 1):
                 past_node = f"{node}_t-{lag}"
                 past_dag.add_node(past_node, **dag.nodes[node])  # Copy attributes from the original node
                 if lag > 1: 
@@ -182,13 +185,26 @@ class SimulatedTimeSeries(Simulated):
 
 
 if __name__ == "__main__":
-    n_series = 3  # You can change this as needed
+    n_series = 10  # You can change this as needed
     n_observations = 10
-    n_variables = 5
+    n_variables = 3
     # Testing with a single process
-    generator = SimulatedTimeSeries(n_series, n_observations, n_variables, maxlags=3)
+    generator = SimulatedTimeSeries(n_series, n_observations, n_variables, maxlags=5)
     generator.generate()
-    dags = generator.get_dags()
-    DAG = generator.get_updated_dags()[0]
+    dags = generator.get_dags()[0]
+    DAG = generator.get_updated_dags()[-1]
+    data = generator.get_observations()[0]
     
+    from graphviz import Digraph
+
+    G_dot = Digraph(engine="dot",format='png')
+
+    for node in DAG.nodes():
+        G_dot.node(str(node))
+    for edge in DAG.edges():
+        G_dot.edge(str(edge[0]), str(edge[1]))
+
+    # Render the graph in a hierarchical layout
+    #save the graph
+    G_dot.render('graph', view=True)
 
