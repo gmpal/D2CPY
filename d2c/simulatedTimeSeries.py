@@ -171,26 +171,28 @@ class SimulatedTimeSeries(Simulated):
 
 
 if __name__ == "__main__":
-    n_series = 1  # You can change this as needed
+    from graphviz import Digraph
+
+    n_series = 5  # You can change this as needed
     n_observations = 3
     n_variables = 3
     # Testing with a single process
     generator = SimulatedTimeSeries(n_series, n_observations, n_variables, maxlags=1)
     generator.generate()
     dags = generator.get_dags()[0]
-    DAG = generator.get_updated_dags()[-1]
+    DAGs = generator.get_updated_dags()
     data = generator.get_observations()[0]
     
-    from graphviz import Digraph
 
-    G_dot = Digraph(engine="dot",format='png')
+    for idx, DAG in enumerate(DAGs):
+        G_dot = Digraph(engine="dot",format='png')
 
-    for node in DAG.nodes():
-        G_dot.node(str(node))
-    for edge in DAG.edges():
-        G_dot.edge(str(edge[0]), str(edge[1]))
+        for node in DAG.nodes():
+            G_dot.node(str(node))
+        for edge in DAG.edges():
+            G_dot.edge(str(edge[0]), str(edge[1]))
 
-    # Render the graph in a hierarchical layout
-    #save the graph
-    G_dot.render('graph', view=True)
+        # Render the graph in a hierarchical layout
+        #save the graph
+        G_dot.render('graph'+str(idx), view=True)
 
