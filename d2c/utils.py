@@ -422,7 +422,7 @@ def coeff(y, x1, x2=None, verbose=True):
 
 
 
-def print_DAG(self, dag):
+def print_DAG(dag):
     print("#"*20)
     for node, attr in dag.nodes(data=True):
         print(f"Node {node} has attributes {attr}")

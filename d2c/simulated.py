@@ -36,6 +36,7 @@ class Simulated(ABC):
 
         #select a number between 1 and len(edges)
         n_edges = random.randint(1, len(edges))
+        print("chosen number of edges: ", n_edges)
 
         #select a random subset of edges
         edges = random.sample(edges, n_edges)
