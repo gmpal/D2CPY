@@ -5,3 +5,4 @@ test.ipynb
 generation/*.pkl
 causeme/experiments/*.txt
 causeme/results/*.bz2
+*graph_*.png

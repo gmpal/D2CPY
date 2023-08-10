@@ -22,7 +22,7 @@ class Simulated(ABC):
     def _generate_single_dag(self) -> nx.DiGraph:
         """
         Generates a single directed acyclic graph (DAG).
-        
+
         Args:
             index (int): The index number for the DAG.
 
@@ -32,6 +32,8 @@ class Simulated(ABC):
 
         # randomly at 50/50
         G = nx.DiGraph()
+        for i in range(self.n_variables):
+            G.add_node(i)
         edges = [(i, j) for i in range(self.n_variables) for j in range(i)]
 
         #select a number between 1 and len(edges)
@@ -40,9 +42,9 @@ class Simulated(ABC):
 
         #select a random subset of edges
         edges = random.sample(edges, n_edges)
-            
+
         G.add_edges_from(edges)
-        
+
         while not is_directed_acyclic_graph(G):
             # If it's not a DAG, remove a random edge
             edge_to_remove = random.choice(list(G.edges()))
@@ -55,7 +57,7 @@ class Simulated(ABC):
 
         for edge in G.edges:
             G.edges[edge]['weight'] = np.round(np.random.uniform(low=-1, high=1))
-            G.edges[edge]['H'] = random.choice(self.FUNCTION_TYPES) 
+            G.edges[edge]['H'] = random.choice(self.FUNCTION_TYPES)
 
         return G
 

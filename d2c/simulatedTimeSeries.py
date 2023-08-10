@@ -176,26 +176,25 @@ if __name__ == "__main__":
 
     n_series = 1  # You can change this as needed
     n_observations = 3
-    n_variables = 3
-    maxlags = 1
+    n_variables = 5
+    maxlags = 4
     # Testing with a single process
     generator = SimulatedTimeSeries(n_series, n_observations, n_variables, maxlags)
     generator.generate()
-    dags = generator.get_dags()[0]
+    dags = generator.get_dags()
     DAGs = generator.get_updated_dags()
     data = generator.get_observations()[0]
     
 
     for idx, DAG in enumerate(DAGs):
-        print_DAG(DAG)
-        # G_dot = Digraph(engine="dot",format='png')
+        G_dot = Digraph(engine="dot",format='png')
 
-        # for node in DAG.nodes():
-        #     G_dot.node(str(node))
-        # for edge in DAG.edges():
-        #     G_dot.edge(str(edge[0]), str(edge[1]))
+        for node in DAG.nodes():
+            G_dot.node(str(node))
+        for edge in DAG.edges():
+            G_dot.edge(str(edge[0]), str(edge[1]))
 
-        # # Render the graph in a hierarchical layout
-        # #save the graph
-        # G_dot.render(f"graph_{idx}", view=True)
+        # Render the graph in a hierarchical layout
+        #save the graph
+        G_dot.render(f"graph_{idx}", view=True)
 
