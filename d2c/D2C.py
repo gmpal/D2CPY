@@ -89,25 +89,29 @@ class D2C:
         X = []
         Y = []
 
-        edge_pairs = []
+        nodes = len(self.DAGs[DAG_index].nodes)
+
+        child_edge_pairs = []
+        all_possible_edges = [(i, j) for i in range(nodes) for j in range(nodes) if i != j]
         #if dependency_type == "is.child": #TODO implement other dependencies
         for parent_node, child_node in self.DAGs[DAG_index].edges:
-            edge_pairs.append((parent_node, child_node))
+            child_edge_pairs.append((parent_node, child_node))
 
-        for edge_pair in edge_pairs:
+        for edge_pair in child_edge_pairs:
             parent, child = edge_pair[0], edge_pair[1]
             descriptor = self._compute_descriptors(DAG_index, parent, child)
             X.append(descriptor)
             Y.append(1)  # Label edge as "is.child"
 
-            if self.rev:
-                # Reverse edge direction
-                descriptor_reverse = self._compute_descriptors(DAG_index, child, parent)
-                X.append(descriptor_reverse)
-                Y.append(0)  # Label reverse edge as NOT "is.child"
-
+        # For all remaining edges that are not in the DAG, compute descriptors and label them as "not a child"
+        for edge_pair in all_possible_edges:
+            if edge_pair not in child_edge_pairs:
+                parent, child = edge_pair[0], edge_pair[1]
+                descriptor = self._compute_descriptors(DAG_index, parent, child)
+                X.append(descriptor)
+                Y.append(0)  # Label edge as "not a child"
         return X, Y
-    
+            
 
     def _compute_descriptors(self, DAG_index, ca, ef, MB_size=None, maxs=20,
             lin=False, acc=True,

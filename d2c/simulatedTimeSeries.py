@@ -174,8 +174,8 @@ if __name__ == "__main__":
     from graphviz import Digraph
     from utils import print_DAG
 
-    n_series = 1  # You can change this as needed
-    n_observations = 3
+    n_series = 5  # You can change this as needed
+    n_observations = 5
     n_variables = 5
     maxlags = 4
     # Testing with a single process
@@ -186,7 +186,7 @@ if __name__ == "__main__":
     data = generator.get_observations()[0]
     
 
-    for idx, DAG in enumerate(DAGs):
+    for idx, DAG in enumerate(dags):
         G_dot = Digraph(engine="dot",format='png')
 
         for node in DAG.nodes():

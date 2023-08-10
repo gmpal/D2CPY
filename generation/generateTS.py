@@ -7,11 +7,11 @@ from d2c.simulatedTimeSeries import SimulatedTimeSeries
 import pickle
 
 if __name__ == "__main__":
-    n_series = 500  # You can change this as needed
-    n_observations = 150
-    n_variables = 3
+    n_series = 5  # You can change this as needed
+    n_observations = 10
+    n_variables = 5
     maxlags = 5
-    generator = SimulatedTimeSeries(n_series,  n_observations, n_variables, maxlags, n_jobs=35)
+    generator = SimulatedTimeSeries(n_series,  n_observations, n_variables, maxlags, n_jobs=5)
     generator.generate()
 
     observations = generator.get_observations()
