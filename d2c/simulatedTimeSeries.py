@@ -102,6 +102,15 @@ class SimulatedTimeSeries(Simulated):
                 # Add edges from past nodes to current nodes that the original node had edges to
                 for successor in dag.successors(node):
                     past_dag.add_edge(past_node, successor, **dag.edges[node, successor])  # Copy attributes from the original edge
+        
+        #number of edges 
+        n_edges = len(past_dag.edges)
+        #random number between 0 and n_edges
+        n_edges_to_remove = int(np.round(np.random.uniform(low=0, high=n_edges)))
+        #remove n_edges_to_remove edges
+        for _ in range(n_edges_to_remove):
+            edge_to_remove = random.choice(list(past_dag.edges))
+            past_dag.remove_edge(edge_to_remove[0], edge_to_remove[1])
 
         return past_dag
 

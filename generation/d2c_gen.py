@@ -15,6 +15,6 @@ if __name__ == '__main__':
         updated_dags = pickle.load(f)
 
     from d2c.D2C import D2C
-    d2c = D2C(dags,observations,n_jobs=5)
+    d2c = D2C(dags,observations,n_jobs=10)
     d2c.initialize()
     d2c.save_descriptors_df('descriptors.csv')

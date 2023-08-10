@@ -37,7 +37,7 @@ def my_method(data, maxlags=1, correct_pvalues=True):
     d2c_test = D2C([None],[data_df])
     X_test = d2c_test.compute_descriptors_no_dags()
     
-    training_data = pd.read_csv('./with_extra_descriptors.csv')
+    training_data = pd.read_csv('./descriptors.csv')
 
     X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
     y_train = training_data['is_causal']
