@@ -34,6 +34,7 @@ class Simulated(ABC):
         G = nx.DiGraph()
         for i in range(self.n_variables):
             G.add_node(i)
+            
         edges = [(i, j) for i in range(self.n_variables) for j in range(i)]
 
         #select a number between 1 and len(edges)
