@@ -248,8 +248,8 @@ class D2C:
         namesx += ["Int3.i" + str(i+1) for i in range(len(pq))]
         namesx += ["Int3.j" + str(i+1) for i in range(len(pq))]
         namesx += ["gini.delta","gini.delta2","gini.ca.ef","gini.ef.ca"]
-        namesx += ['N', 'n', 'n/N', 'B.kurtosis1', 'B.kurtosis2', 'B.skewness1', 'B.skewness2',
-                        'B.hoc12', 'B.hoc21', 'B.hoc13', 'B.hoc31', 'B.stab1', 'B.stab2']
+        # namesx += ['N', 'n', 'n/N', 'B.kurtosis1', 'B.kurtosis2', 'B.skewness1', 'B.skewness2',
+        #                 'B.hoc12', 'B.hoc21', 'B.hoc13', 'B.hoc31', 'B.stab1', 'B.stab2']
 
         keys = ['graph_id','edge_source','edge_dest'] + namesx
 
@@ -268,20 +268,20 @@ class D2C:
         values.extend(np.quantile(Int3_i, q=pq, axis=0).flatten()) 
         values.extend(np.quantile(Int3_j, q=pq, axis=0).flatten()) 
         values.extend([gini_delta, gini_delta2,gini_ca_ef, gini_ef_ca])
-        values.extend([                
-                n_observations,
-                n_features,
-                n_features/n_observations,
-                kurtosis(D.iloc[:, ca]),
-                kurtosis(D.iloc[:, ef]),
-                skew(D.iloc[:, ca]),
-                skew(D.iloc[:, ef]),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 2),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 2, 1),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 3),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 3, 1),
-                stab(D.iloc[:, ca], D.iloc[:, ef]),
-                stab(D.iloc[:, ef], D.iloc[:, ca])]) 
+        # values.extend([                
+        #         n_observations,
+        #         n_features,
+        #         n_features/n_observations,
+        #         kurtosis(D.iloc[:, ca]),
+        #         kurtosis(D.iloc[:, ef]),
+        #         skew(D.iloc[:, ca]),
+        #         skew(D.iloc[:, ef]),
+        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 2),
+        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 2, 1),
+        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 3),
+        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 3, 1),
+        #         stab(D.iloc[:, ca], D.iloc[:, ef]),
+        #         stab(D.iloc[:, ef], D.iloc[:, ca])]) 
 
         
         # Replace NA values with 0
