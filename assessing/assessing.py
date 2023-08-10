@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 
 # assuming df is your dataframe, X are your features, y is your target
-df = pd.read_csv('new_descriptors.csv')  # replace with your data file
+df = pd.read_csv('with_extra_descriptors.csv')  # replace with your data file
 
 # df = df.loc[df['graph_id']<500]
 X = df.drop(columns=['graph_id','edge_source','edge_dest', 'is_causal'])

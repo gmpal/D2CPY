@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
 
     # Create a pool of worker processes
-    with Pool(processes=6) as pool:
+    with Pool(processes=10) as pool:
         results_from_mp = pool.map(process_zip_file, names)
 
     # Extract the results to the original lists

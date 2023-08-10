@@ -19,6 +19,10 @@ from d2c.utils import *
 
 from datetime import datetime
 
+import numpy as np
+import pandas as pd
+from scipy.stats import kurtosis, skew
+
 
 class D2C:
     def __init__(self, dags, observations, rev: bool = True, verbose=False, random_state: int = 42, n_jobs: int = 1) -> None:
@@ -45,6 +49,7 @@ class D2C:
         self.verbose = verbose
         self.n_jobs = n_jobs
         self.random_state = random_state
+
 
     def compute_descriptors_no_dags(self):
 
@@ -223,6 +228,9 @@ class D2C:
         gini_delta = normalized_conditional_information(D.iloc[:, ef], pd.DataFrame(E_ca), D.iloc[:, MBef])
         gini_delta2 = normalized_conditional_information(D.iloc[:, ca], pd.DataFrame(E_ef), D.iloc[:, MBca])
 
+
+
+        ###
         namesx = ["effca","effef","comcau","delta","delta2"]
         namesx += ["delta.i" + str(i+1) for i in range(len(pq))]
         namesx += ["delta2.i" + str(i+1) for i in range(len(pq))]
@@ -236,6 +244,8 @@ class D2C:
         namesx += ["Int3.i" + str(i+1) for i in range(len(pq))]
         namesx += ["Int3.j" + str(i+1) for i in range(len(pq))]
         namesx += ["gini.delta","gini.delta2","gini.ca.ef","gini.ef.ca"]
+        namesx += ['N', 'n', 'n/N', 'B.kurtosis1', 'B.kurtosis2', 'B.skewness1', 'B.skewness2',
+                        'B.hoc12', 'B.hoc21', 'B.hoc13', 'B.hoc31', 'B.stab1', 'B.stab2']
 
         keys = ['graph_id','edge_source','edge_dest'] + namesx
 
@@ -253,7 +263,21 @@ class D2C:
         values.extend(np.quantile(I3_j, q=pq, axis=0).flatten()) 
         values.extend(np.quantile(Int3_i, q=pq, axis=0).flatten()) 
         values.extend(np.quantile(Int3_j, q=pq, axis=0).flatten()) 
-        values.extend([gini_delta, gini_delta2,gini_ca_ef, gini_ef_ca]) 
+        values.extend([gini_delta, gini_delta2,gini_ca_ef, gini_ef_ca])
+        values.extend([                
+                n_observations,
+                n_features,
+                n_features/n_observations,
+                kurtosis(D.iloc[:, ca]),
+                kurtosis(D.iloc[:, ef]),
+                skew(D.iloc[:, ca]),
+                skew(D.iloc[:, ef]),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 2),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 2, 1),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 3),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 3, 1),
+                stab(D.iloc[:, ca], D.iloc[:, ef]),
+                stab(D.iloc[:, ef], D.iloc[:, ca])]) 
 
         
         # Replace NA values with 0

@@ -16,6 +16,8 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
 import numpy as np
 
+import statsmodels.api as sm
+
 from datetime import datetime
 
 COUNTER = 0
@@ -418,7 +420,37 @@ def coeff(y, x1, x2=None, verbose=True):
 
 
 
+# High Order Correlation
+def HOC(x, y, i, j):
+    return np.mean((x - np.mean(x))**i * (y - np.mean(y))**j) / (np.std(x)**i * np.std(y)**j)
 
+def stab(X, Y, lin=True, R=10):
+    X = (X - np.min(X)) / (np.max(X) - np.min(X) + 1e-4)
+    Y = (Y - np.min(Y)) / (np.max(Y) - np.min(Y) + 1e-4)
+    
+    Xhat = []
+    Yhat = []
+    
+    for r in range(R):
+        m1 = np.random.rand()
+        m2 = np.random.rand()
+        prob = np.exp(-((X - m1)**2) / (2 * 0.25**2)) + np.exp(-((X - m2)**2) / (2 * 0.25**2))
+        prob /= np.sum(prob)
+        indices = np.random.choice(np.arange(len(X)), 100, p=prob) # Get indices
+        rX = X[indices]
+        rY = Y[indices] # Directly use the indices to get rY values
+        
+        model_Y = sm.OLS(rY, sm.add_constant(rX)).fit()
+        model_X = sm.OLS(rX, sm.add_constant(rY)).fit()
+        
+        Xts = np.linspace(0, 1, 100)
+        Yts = np.linspace(0, 1, 100)
+        pY = model_Y.predict(sm.add_constant(Xts))
+        pX = model_X.predict(sm.add_constant(Yts))
+        Yhat.append(pY)
+        Xhat.append(pX)
+    
+    return np.sign(np.mean(np.std(Yhat, axis=0)) - np.mean(np.std(Xhat, axis=0)))
 
 
 
