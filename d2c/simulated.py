@@ -52,12 +52,13 @@ class Simulated(ABC):
             G.remove_edge(*edge_to_remove)
 
         for node in G.nodes:
-            G.nodes[node]['bias'] = np.round(np.random.normal(loc=0, scale=1),2)
+            # G.nodes[node]['bias'] = np.round(np.random.uniform(low=-0.1, high=0.1),5)
+            G.nodes[node]['bias'] = 0
             G.nodes[node]['sigma'] = self.sdn
             G.nodes[node]['seed'] = self.random_state
 
         for edge in G.edges:
-            G.edges[edge]['weight'] = np.round(np.random.uniform(low=-1, high=1))
+            G.edges[edge]['weight'] = np.round(np.random.uniform(low=-1, high=1),5)
             G.edges[edge]['H'] = random.choice(self.FUNCTION_TYPES)
 
         return G

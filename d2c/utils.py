@@ -461,3 +461,20 @@ def print_DAG(dag):
     for edge_source, edge_dest, attrs in dag.edges(data=True):
         print(f"Edge {edge_source} -> {edge_dest} has attributes {attrs}")
     print("#"*20)
+
+
+def dag_to_formula(dag):
+    import networkx as nx
+    formula = ""
+    for node in nx.topological_sort(dag):
+        if f"_t-" not in str(node):
+            formula += f"{node} = "
+            bias = dag.nodes[node]['bias']
+            parents = list(dag.predecessors(node))
+            for parent in parents:
+                edge = dag.edges[parent, node]
+                weight = edge['weight']
+                formula += f"{weight}*{parent} + "
+            formula += f"{bias}\n"
+
+    return formula

@@ -30,7 +30,7 @@ class SimulatedTimeSeries(Simulated):
         self.list_initial_dags = []
         self.list_updated_dags = []
         self.maxlags = maxlags
-        self.sdn = 0.1
+        self.sdn = 0.01
 
         self.n_jobs = n_jobs
 
@@ -66,7 +66,7 @@ class SimulatedTimeSeries(Simulated):
         # print(f"current lag: {current_lag}")
         initial_DAG = self._generate_single_dag()
         updated_DAG = self._update_dag_for_timestep(initial_DAG, current_lag)
-        data = pd.DataFrame(np.random.rand(current_lag, self.n_variables)).round(2)
+        data = pd.DataFrame(2*np.random.rand(current_lag, self.n_variables)-1).round(5)
         # print(data)
         for _ in range(1, self.n_observations):
             self._generate_timestep_observation(updated_DAG, data)
@@ -93,7 +93,7 @@ class SimulatedTimeSeries(Simulated):
             for lag in range(1, current_lag + 1):
                 past_node = f"{node}_t-{lag}"
                 past_dag.add_node(past_node, **dag.nodes[node])  # Copy attributes from the original node
-                weight = np.round(np.random.uniform(low=-1, high=1),2)
+                weight = np.round(np.random.uniform(low=-1, high=1),5)
                 h = random.choice(self.FUNCTION_TYPES)
                 past_dag.add_edge(past_node, node, weight=weight, H=h)
                 if lag > 1: 
@@ -103,7 +103,14 @@ class SimulatedTimeSeries(Simulated):
                 for successor in dag.successors(node):
                     past_dag.add_edge(past_node, successor, **dag.edges[node, successor])  # Copy attributes from the original edge
 
-
+        #TESTING ONLY THE PAST
+        for node in nx.topological_sort(dag):
+            if f"_t-" not in str(node):
+                #remove all successors 
+                successors = list(past_dag.successors(node))
+                if len(successors) > 0:
+                    for successor in successors:
+                        past_dag.remove_edge(node, successor)
         #we avoid edge cases for the moment
         # #number of edges 
         # n_edges = len(past_dag.edges)
@@ -154,7 +161,7 @@ class SimulatedTimeSeries(Simulated):
         if H == "linear":
             value += parent_value * weight
         value += np.random.normal(scale=sigma)
-        return np.round(value,2)
+        return np.round(value,5)
 
 
 
