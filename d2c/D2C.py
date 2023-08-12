@@ -109,7 +109,7 @@ class D2C:
         
         #sample from all_possible_edges the same amount of edges as child_edge_pairs
         # Flatten the array to make it 1D
-        flattened_edges = all_possible_edges.flatten()
+        flattened_edges = np.array(all_possible_edges).flatten()
 
         # Perform the random choice operation
         selected_flattened_edges = np.random.choice(flattened_edges, size=len(child_edge_pairs)*2, replace=False)  # Note that we multiply the size by 2 because each edge pair has 2 entries
