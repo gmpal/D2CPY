@@ -107,16 +107,10 @@ class D2C:
 
         # For all remaining edges that are not in the DAG, compute descriptors and label them as "not a child"
         
-        #sample from all_possible_edges the same amount of edges as child_edge_pairs
-        # Flatten the array to make it 1D
-        flattened_edges = np.array(all_possible_edges).flatten()
+        selected_indices = np.random.choice(len(all_possible_edges), size=len(child_edge_pairs), replace=False)
 
-        # Perform the random choice operation
-        selected_flattened_edges = np.random.choice(flattened_edges, size=len(child_edge_pairs)*2, replace=False)  # Note that we multiply the size by 2 because each edge pair has 2 entries
-
-        # Reshape the result back into a 2D array of edge pairs
-        selected_edges = selected_flattened_edges.reshape(-1, 2)
-
+        # Use list comprehension to select edges
+        selected_edges = [all_possible_edges[i] for i in selected_indices]
 
         for edge_pair in selected_edges:
             if edge_pair not in child_edge_pairs:
