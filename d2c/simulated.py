@@ -36,10 +36,7 @@ class Simulated(ABC):
         for i in range(self.n_variables):
             G.add_node(i)
 
-        if random.random() < 0.5:    
-            edges = [(i, j) for i in range(self.n_variables) for j in range(i)]
-        else:    
-            edges = [(i, j) for j in range(self.n_variables) for i in range(j)]
+        edges = [(i, j) for i in range(self.n_variables) for j in range(self.n_variables) if i != j]
             
         G.add_edges_from(edges)
 
