@@ -6,7 +6,7 @@ from imblearn.ensemble import BalancedRandomForestClassifier
 import networkx as nx
 
 # assuming df is your dataframe, X are your features, y is your target
-df = pd.read_csv('descriptors.csv')  # replace with your data file
+df = pd.read_csv('_descriptors.csv')  # replace with your data file
 
 sampled_ids = df['graph_id'].drop_duplicates().sample(100)
 

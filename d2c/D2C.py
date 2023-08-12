@@ -114,7 +114,7 @@ class D2C:
             
 
     def _compute_descriptors(self, DAG_index, ca, ef, MB_size=None, maxs=20,
-            lin=False, acc=True,
+            lin=False, acc=True, compute_error_descriptors=True,
             pq= [0.05,0.1,0.25,0.5,0.75,0.9,0.95]):
         
         """
@@ -232,6 +232,66 @@ class D2C:
         gini_delta = normalized_conditional_information(D.iloc[:, ef], pd.DataFrame(E_ca), D.iloc[:, MBef])
         gini_delta2 = normalized_conditional_information(D.iloc[:, ca], pd.DataFrame(E_ef), D.iloc[:, MBca])
 
+        if compute_error_descriptors:
+            mfs = [i for i in range(n_features) if i not in [ef]]
+            # if boot == "mimr":
+                # fsef = [mfs[i] for i in mimr(D.iloc[:, mfs], D.iloc[:, ef], nmax=3)]
+            # if boot == "rank":
+            #     fsef = [mfs[i] for i in rankrho(D.iloc[:, mfs], D.iloc[:, ef], nmax=3)]
+            ranking = rankrho(D.iloc[:, mfs], D.iloc[:, ef], nmax=min(n_features-1,3))  -1
+            fsef = [mfs[i] for i in ranking]
+            eef = epred(D.iloc[:, fsef], D.iloc[:, ef])
+
+            mfs = [i for i in range(n_features) if i not in [ca]]
+            # if boot == "mimr":
+            #     fsca = [mfs[i] for i in mimr(D.iloc[:, mfs], D.iloc[:, ca], nmax=3)]
+            # if boot == "rank":
+            #     fsca = [mfs[i] for i in rankrho(D.iloc[:, mfs], D.iloc[:, ca], nmax=3)]
+            ranking = rankrho(D.iloc[:, mfs], D.iloc[:, ca], nmax=min(n_features-1,3)) -1
+            fsca = [mfs[i] for i in ranking]
+            eca = epred(D.iloc[:, fsca], D.iloc[:, ca])
+
+            merged_list = [ca, ef] + fsef + fsca
+            unique_indices = np.unique(merged_list)
+            DD = D.iloc[:, unique_indices]
+
+            # Icov2 = np.linalg.pinv(np.cov(DD) + np.diag([0.01] * DD.shape[1]))
+
+            eDe = []
+
+            eef = pd.Series(eef)
+            eca = pd.Series(eca)
+
+            eDe.append(normalized_conditional_information(eef, eca, D.iloc[:, ca]) - normalized_conditional_information(eef, eca))
+            eDe.append(normalized_conditional_information(eef, eca, D.iloc[:, ef]) - normalized_conditional_information(eef, eca))
+            eDe.append(normalized_conditional_information(eef, D.iloc[:, ca], D.iloc[:, ef]) - normalized_conditional_information(eef, D.iloc[:, ca]))
+            eDe.append(normalized_conditional_information(eca, D.iloc[:, ef], D.iloc[:, ca]) - normalized_conditional_information(eca, D.iloc[:, ef]))
+            eDe.append(normalized_conditional_information(eca, D.iloc[:, ef]))
+            eDe.append(normalized_conditional_information(eef, D.iloc[:, ca]))
+            
+            #TODO: understand the need for Icov
+            cov_D = np.cov(D, rowvar=False)  # Get covariance matrix. Set rowvar to False to ensure columns are treated as variables.
+            shifted_cov_D = cov_D + np.eye(D.shape[1]) * 0.01  # Add 0.01 to the diagonal
+            Icov = np.linalg.inv(shifted_cov_D)
+            # Assuming Icov is already defined
+            eDe.extend([
+                Icov[ca, ef],
+                # Icov2[0, 1],
+                np.corrcoef(eef, D.iloc[:, ca])[0, 1],
+                np.corrcoef(eca, D.iloc[:, ef])[0, 1],
+                HOC(eef, eca, 0, 1),
+                HOC(eef, eca, 1, 0),
+                skew(eca),
+                skew(eef)
+            ])
+
+            eDe_names = [
+                "M.e1", "M.e2", "M.e3", "M.e4", "M.e5", "M.e6",
+                "M.Icov", "M.Icov2",
+                "M.cor.e1", "M.cor.e2",
+                "B.HOC12.e", "B.HOC21.e", "B.skew.eca", "B.skew.eef"
+            ]
+
 
 
         ###
@@ -248,8 +308,8 @@ class D2C:
         namesx += ["Int3.i" + str(i+1) for i in range(len(pq))]
         namesx += ["Int3.j" + str(i+1) for i in range(len(pq))]
         namesx += ["gini.delta","gini.delta2","gini.ca.ef","gini.ef.ca"]
-        # namesx += ['N', 'n', 'n/N', 'B.kurtosis1', 'B.kurtosis2', 'B.skewness1', 'B.skewness2',
-        #                 'B.hoc12', 'B.hoc21', 'B.hoc13', 'B.hoc31', 'B.stab1', 'B.stab2']
+        namesx += ['N', 'n', 'n/N', 'B.kurtosis1', 'B.kurtosis2', 'B.skewness1', 'B.skewness2',
+                        'B.hoc12', 'B.hoc21', 'B.hoc13', 'B.hoc31']
 
         keys = ['graph_id','edge_source','edge_dest'] + namesx
 
@@ -268,20 +328,25 @@ class D2C:
         values.extend(np.quantile(Int3_i, q=pq, axis=0).flatten()) 
         values.extend(np.quantile(Int3_j, q=pq, axis=0).flatten()) 
         values.extend([gini_delta, gini_delta2,gini_ca_ef, gini_ef_ca])
-        # values.extend([                
-        #         n_observations,
-        #         n_features,
-        #         n_features/n_observations,
-        #         kurtosis(D.iloc[:, ca]),
-        #         kurtosis(D.iloc[:, ef]),
-        #         skew(D.iloc[:, ca]),
-        #         skew(D.iloc[:, ef]),
-        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 2),
-        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 2, 1),
-        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 3),
-        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 3, 1),
-        #         stab(D.iloc[:, ca], D.iloc[:, ef]),
-        #         stab(D.iloc[:, ef], D.iloc[:, ca])]) 
+        values.extend([
+                n_observations,                
+                n_features,
+                n_features/n_observations,
+                kurtosis(D.iloc[:, ca]),
+                kurtosis(D.iloc[:, ef]),
+                skew(D.iloc[:, ca]),
+                skew(D.iloc[:, ef]),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 2),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 2, 1),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 3),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 3, 1),
+                # stab(D.iloc[:, ca], D.iloc[:, ef]),
+                # stab(D.iloc[:, ef], D.iloc[:, ca])
+                ]) 
+        
+        if compute_error_descriptors:
+            values.extend(eDe)
+            keys.extend(eDe_names)
 
         
         # Replace NA values with 0

@@ -61,6 +61,7 @@ class SimulatedTimeSeries(Simulated):
         """
         # Initialize a DataFrame to hold the time series data
         # pick a random lag between 1 and maxlags
+        random.seed(self.random_state + index)
         np.random.seed(self.random_state + index)
         current_lag = np.random.randint(1, self.maxlags + 1)
         # print(f"current lag: {current_lag}")

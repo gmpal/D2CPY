@@ -112,7 +112,7 @@ if __name__ == '__main__':
         zip_ref.extractall("experiments")
         names = sorted(zip_ref.namelist())
 
-    training_data = pd.read_csv('./descriptors.csv')
+    training_data = pd.read_csv('./_descriptors.csv')
 
     X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
     y_train = training_data['is_causal']
@@ -124,7 +124,7 @@ if __name__ == '__main__':
 
     # Create a pool of worker processes
     with Pool(processes=10) as pool:
-        pool.starmap(process_zip_file, args_list)
+        results_from_mp = pool.starmap(process_zip_file, args_list)
 
     # Extract the results to the original lists
     scores, pvalues, lags, runtimes = [], [], [], []

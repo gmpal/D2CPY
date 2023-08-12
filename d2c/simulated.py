@@ -5,6 +5,7 @@ import random
 import numpy as np
 import pandas as pd
 from typing import List
+from utils import print_DAG
 
 # Base class
 class Simulated(ABC):
@@ -34,22 +35,26 @@ class Simulated(ABC):
         G = nx.DiGraph()
         for i in range(self.n_variables):
             G.add_node(i)
+
+        if random.random() < 0.5:    
+            edges = [(i, j) for i in range(self.n_variables) for j in range(i)]
+        else:    
+            edges = [(i, j) for j in range(self.n_variables) for i in range(j)]
             
-        edges = [(i, j) for i in range(self.n_variables) for j in range(i)]
-
-        #select a number between 1 and len(edges)
-        n_edges = random.randint(1, len(edges))
-        print("chosen number of edges: ", n_edges)
-
-        #select a random subset of edges
-        edges = random.sample(edges, n_edges)
-
         G.add_edges_from(edges)
 
         while not is_directed_acyclic_graph(G):
             # If it's not a DAG, remove a random edge
             edge_to_remove = random.choice(list(G.edges()))
             G.remove_edge(*edge_to_remove)
+        # else: 
+        #     while not is_directed_acyclic_graph(G):
+        #         n_edges = random.randint(1, len(edges))
+
+        #         #select a random subset of edges
+        #         edges = random.sample(edges, n_edges)
+        #         G.add_edges_from(edges)
+
 
         for node in G.nodes:
             # G.nodes[node]['bias'] = np.round(np.random.uniform(low=-0.1, high=0.1),5)

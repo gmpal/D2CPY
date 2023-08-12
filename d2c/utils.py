@@ -33,7 +33,9 @@ def normalized_conditional_information(y, x1, x2=None):
             return max(0, 1 - entropy_y_given_x1)
         else:  # I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
             entropy_y_given_x2 = normalized_prediction(x2, y)
+            
             entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y)
+            
             return max(0, entropy_y_given_x2 - entropy_y_given_x1_x2 ) / (entropy_y_given_x2 + 0.01)
 
 def normalized_prediction(X, Y):
@@ -46,10 +48,14 @@ def normalized_prediction(X, Y):
     """
 
     if isinstance(X, pd.Series): X = pd.DataFrame(X)
+    if isinstance(Y, pd.DataFrame): Y = Y.iloc[:,0]
 
     X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
-
-    return max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), X, Y, scoring='neg_mean_squared_error', cv=2)) / (1e-3 + np.var(Y)))
+    
+    
+    numerator = max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), X, Y, scoring='neg_mean_squared_error', cv=2)))
+    denominator = (1e-3 + np.var(Y))
+    return numerator / denominator
 
     #TODO: implement the nonlinear case
 
@@ -210,7 +216,7 @@ def co2i(X,Y, verbose=True):
 
     return I
 
-def rankrho(X, Y, nmax=5, regr=False, verbose=True):
+def rankrho(X, Y, nmax=5, regr=False, verbose=False):
     """
     Perform mutual information ranking between two arrays.
 
@@ -454,13 +460,21 @@ def stab(X, Y, lin=True, R=10):
 
 
 
-def print_DAG(dag):
-    print("#"*20)
-    for node, attr in dag.nodes(data=True):
-        print(f"Node {node} has attributes {attr}")
-    for edge_source, edge_dest, attrs in dag.edges(data=True):
-        print(f"Edge {edge_source} -> {edge_dest} has attributes {attrs}")
-    print("#"*20)
+def print_DAG(dag, part="all"):
+    if part == "all":
+        print("#"*20)
+        for node, attr in dag.nodes(data=True):
+            print(f"Node {node} has attributes {attr}")
+        for edge_source, edge_dest, attrs in dag.edges(data=True):
+            print(f"Edge {edge_source} -> {edge_dest} has attributes {attrs}")
+    elif part == "nodes":
+        print("#"*20)
+        for node in dag.nodes():
+            print(f"Node {node}")
+    elif part == "edges":
+        print("#"*20)
+        for edge_source, edge_dest in dag.edges():
+            print(f"Edge {edge_source} -> {edge_dest}")
 
 
 def dag_to_formula(dag):
@@ -478,3 +492,41 @@ def dag_to_formula(dag):
             formula += f"{bias}\n"
 
     return formula
+
+
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
+
+def epred(X, Y):
+    """
+    Returns the predicted values for Y using linear regression.
+    
+    Parameters:
+    - X: A 2D numpy array or matrix representing predictor variables.
+    - Y: A 1D numpy array representing the response variable.
+    
+    Returns:
+    Predicted values for Y.
+    """
+    # Get the number of rows and columns of the matrix X
+    N, n = X.shape
+    
+    # Check for columns with almost constant values
+    sds = np.std(X, axis=0)
+    non_const_cols = sds > 0.01
+    X = X.loc[:, non_const_cols]
+    
+    # Scale the predictors
+    scaler = StandardScaler()
+    XX = scaler.fit_transform(X)
+    
+    # Check for insufficient rows or NaN values
+    if N < 5 or np.isnan(XX).any():
+        raise ValueError("Error in epred")
+    
+    # Linear regression prediction
+    reg = LinearRegression().fit(XX, Y)
+    Y_hat = reg.predict(XX)
+    
+    return Y_hat
