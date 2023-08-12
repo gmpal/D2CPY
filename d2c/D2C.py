@@ -22,6 +22,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from scipy.stats import kurtosis, skew
+import pickle
 
 
 class D2C:
@@ -105,12 +106,20 @@ class D2C:
             Y.append(1)  # Label edge as "is.child"
 
         # For all remaining edges that are not in the DAG, compute descriptors and label them as "not a child"
+        
+        #sample from all_possible_edges the same amount of edges as child_edge_pairs
+        all_possible_edges = np.random.choice(all_possible_edges, size=len(child_edge_pairs), replace=False)
+
         for edge_pair in all_possible_edges:
             if edge_pair not in child_edge_pairs:
                 parent, child = edge_pair[0], edge_pair[1]
                 descriptor = self._compute_descriptors(DAG_index, parent, child)
                 X.append(descriptor)
                 Y.append(0)  # Label edge as "not a child"
+
+        #pickle the couple X,Y
+        with open(f'./_descriptors_{DAG_index}.pkl', 'wb') as f:
+            pickle.dump((X,Y), f)
         return X, Y
             
 

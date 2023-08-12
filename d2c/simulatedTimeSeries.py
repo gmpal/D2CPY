@@ -13,46 +13,29 @@ from simulated import Simulated
 #TODO: the two classes share a lot, consider merging them into one class and inherit from it.
 
 class SimulatedTimeSeries(Simulated):
-    def __init__(self, n_series: int, n_observations: int, n_variables: int, maxlags:int = 1, n_jobs: int = 1, random_state: int = 42):
-        """
-        SimulatedTimeSeries is a class to generate time series data based on a Vector Autoregressive (VAR) model.
-        
-        Args:
-            n_series (int): Number of time series to generate.
-            n_observations (int): Number of observations per series.
-            n_variables (int): Number of variables in each series.
-            random_state (int): Seed for the random number generator. Defaults to 42.
-        """
-        self.n_series = n_series
-        self.n_observations = n_observations
-        self.n_variables = n_variables
-        self.random_state = random_state
-        self.list_time_series = []
-        self.list_initial_dags = []
+    
+    def __init__(self, n_dags: int, n_observations: int, n_variables: int, maxlags: int,  n_jobs: int = 1, random_state: int = 42, function_types: list = ["linear"], sdn: int = 0.001):
+        super().__init__(n_dags, n_observations, n_variables, n_jobs=n_jobs, random_state=random_state, function_types=function_types, sdn=sdn)
         self.list_updated_dags = []
         self.maxlags = maxlags
-        self.sdn = 0.001
 
-        self.n_jobs = n_jobs
-
-        np.random.seed(self.random_state)
 
     def generate(self):
         """
-        Generates n_series number of time series.
+        Generates n_dags number of time series.
         """
         if self.n_jobs == 1: 
-            for _ in range(self.n_series):
+            for _ in range(self.n_dags):
                 data, initial_DAG, updated_DAG = self._generate_single_time_series(_)
-                self.list_time_series.append(data)
+                self.list_observations.append(data)
                 self.list_initial_dags.append(initial_DAG)
                 self.list_updated_dags.append(updated_DAG)
         else:
             with Pool(self.n_jobs) as pool:
-                results = pool.map(self._generate_single_time_series, range(self.n_series))
+                results = pool.map(self._generate_single_time_series, range(self.n_dags))
 
             for data, initial_DAG, updated_DAG in results:
-                self.list_time_series.append(data)
+                self.list_observations.append(data)
                 self.list_initial_dags.append(initial_DAG)
                 self.list_updated_dags.append(updated_DAG)
 
@@ -97,7 +80,7 @@ class SimulatedTimeSeries(Simulated):
                 past_node = f"{node}_t-{lag}"
                 past_dag.add_node(past_node, **dag.nodes[node])  # Copy attributes from the original node
                 weight = np.round(np.random.uniform(low=-0.5, high=0.5),5)
-                h = random.choice(self.FUNCTION_TYPES)
+                h = random.choice(self.function_types)
                 past_dag.add_edge(past_node, node, weight=weight, H=h)
                 if lag > 1: 
                     past_dag.add_edge(past_node, f"{node}_t-{lag-1}", weight=weight, H=h)
@@ -172,7 +155,7 @@ class SimulatedTimeSeries(Simulated):
         """
         Returns the generated time series.
         """
-        return self.list_time_series
+        return self.list_observations
 
     def get_dags(self) -> List[nx.DiGraph]:
         """
@@ -195,12 +178,12 @@ if __name__ == "__main__":
     from graphviz import Digraph
     from utils import print_DAG
 
-    n_series = 5  # You can change this as needed
+    n_dags = 5  # You can change this as needed
     n_observations = 5
     n_variables = 5
     maxlags = 4
     # Testing with a single process
-    generator = SimulatedTimeSeries(n_series, n_observations, n_variables, maxlags)
+    generator = SimulatedTimeSeries(n_dags, n_observations, n_variables, maxlags)
     generator.generate()
     dags = generator.get_dags()
     DAGs = generator.get_updated_dags()
