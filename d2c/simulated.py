@@ -47,13 +47,6 @@ class Simulated(ABC):
             # If it's not a DAG, remove a random edge
             edge_to_remove = random.choice(list(G.edges()))
             G.remove_edge(*edge_to_remove)
-        # else: 
-        #     while not is_directed_acyclic_graph(G):
-        #         n_edges = random.randint(1, len(edges))
-
-        #         #select a random subset of edges
-        #         edges = random.sample(edges, n_edges)
-        #         G.add_edges_from(edges)
 
 
         for node in G.nodes:
@@ -63,7 +56,7 @@ class Simulated(ABC):
             G.nodes[node]['seed'] = self.random_state
 
         for edge in G.edges:
-            G.edges[edge]['weight'] = np.round(np.random.uniform(low=-1, high=1),5)
+            G.edges[edge]['weight'] = np.round(np.random.uniform(low=-0.5, high=0.5),5)
             G.edges[edge]['H'] = random.choice(self.FUNCTION_TYPES)
 
         return G

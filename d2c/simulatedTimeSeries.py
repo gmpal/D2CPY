@@ -31,7 +31,7 @@ class SimulatedTimeSeries(Simulated):
         self.list_initial_dags = []
         self.list_updated_dags = []
         self.maxlags = maxlags
-        self.sdn = 0.01
+        self.sdn = 0.001
 
         self.n_jobs = n_jobs
 
@@ -96,7 +96,7 @@ class SimulatedTimeSeries(Simulated):
             for lag in range(1, current_lag + 1):
                 past_node = f"{node}_t-{lag}"
                 past_dag.add_node(past_node, **dag.nodes[node])  # Copy attributes from the original node
-                weight = np.round(np.random.uniform(low=-1, high=1),5)
+                weight = np.round(np.random.uniform(low=-0.5, high=0.5),5)
                 h = random.choice(self.FUNCTION_TYPES)
                 past_dag.add_edge(past_node, node, weight=weight, H=h)
                 if lag > 1: 
