@@ -17,13 +17,15 @@ import sys
 sys.path.append("..")
 sys.path.append("../d2c/")
 import numpy as np
-from multiprocessing import Pool, cpu_count
+from multiprocessing import Pool
+import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 
 
 from causeme_my_method import my_method
 
 
-def process_zip_file(name, maxlags=1):
+def process_zip_file(name, clf, maxlags=1):
     print("Run on {}".format(name))
     data = np.loadtxt('experiments/'+name)
 
@@ -31,7 +33,7 @@ def process_zip_file(name, maxlags=1):
     start_time = time.time()
 
     # Run your method (adapt parameters if needed)
-    val_matrix, p_matrix, lag_matrix = my_method(data, maxlags)
+    val_matrix, p_matrix, lag_matrix = my_method(data, clf, maxlags)
     runtime = time.time() - start_time
 
     # Convert the matrices to the required format and return
@@ -110,10 +112,19 @@ if __name__ == '__main__':
         zip_ref.extractall("experiments")
         names = sorted(zip_ref.namelist())
 
+    training_data = pd.read_csv('./descriptors.csv')
+
+    X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
+    y_train = training_data['is_causal']
+
+    clf = RandomForestClassifier(n_estimators=100, n_jobs=1)
+    clf.fit(X_train, y_train)
+
+    args_list = [(name, clf) for name in names]
 
     # Create a pool of worker processes
     with Pool(processes=10) as pool:
-        results_from_mp = pool.map(process_zip_file, names)
+        pool.starmap(process_zip_file, args_list)
 
     # Extract the results to the original lists
     scores, pvalues, lags, runtimes = [], [], [], []
