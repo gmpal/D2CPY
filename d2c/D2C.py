@@ -86,6 +86,7 @@ class D2C:
         """
         Compute descriptors in parallel for a given observation.
         """
+        print(DAG_index)
         X = []
         Y = []
 

@@ -5,6 +5,7 @@ from multiprocessing import Pool
 import pandas as pd
 import random
 
+
 from typing import List
 
 from simulated import Simulated
@@ -59,6 +60,7 @@ class SimulatedTimeSeries(Simulated):
         """
         Generates a single time series.
         """
+        print(index)
         # Initialize a DataFrame to hold the time series data
         # pick a random lag between 1 and maxlags
         random.seed(self.random_state + index)
