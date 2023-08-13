@@ -5,7 +5,7 @@ import random
 import numpy as np
 import pandas as pd
 from typing import List
-from utils import print_DAG
+from utils import print_dag
 
 # Base class
 class Simulated(ABC):

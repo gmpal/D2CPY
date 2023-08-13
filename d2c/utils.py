@@ -460,7 +460,7 @@ def stab(X, Y, lin=True, R=10):
 
 
 
-def print_DAG(dag, part="all"):
+def print_dag(dag, part="all"):
     if part == "all":
         print("#"*20)
         for node, attr in dag.nodes(data=True):
@@ -490,8 +490,20 @@ def dag_to_formula(dag):
                 weight = edge['weight']
                 formula += f"{weight}*{parent} + "
             formula += f"{bias}\n"
+    print(formula)
 
-    return formula
+def show_dag(DAG):
+    from graphviz import Digraph
+
+    G_dot = Digraph(engine="dot",format='png')
+
+    for node in DAG.nodes():
+        G_dot.node(str(node))
+    for edge in DAG.edges():
+        G_dot.edge(str(edge[0]), str(edge[1]))
+
+    # Render the graph in a hierarchical layout
+    return G_dot
 
 
 import numpy as np

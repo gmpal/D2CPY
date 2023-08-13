@@ -9,20 +9,55 @@ validate a result if you upload code. Users can filter the Ranking table to only
 show validated results.
 """
 import numpy as np
+import pandas as pd
 import json
 import zipfile
 import bz2
 import time
+
+from multiprocessing import Pool
+from sklearn.ensemble import RandomForestClassifier
+
 import sys
 sys.path.append("..")
 sys.path.append("../d2c/")
-import numpy as np
-from multiprocessing import Pool
-import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from d2c.simulatedTimeSeries import SimulatedTimeSeries
+from d2c.D2C import D2C
 
 
-from causeme_my_method import my_method
+# Your method must be called 'my_method'
+# Describe all parameters (except for 'data') in the method registration on CauseMe
+def my_method(data, clf=RandomForestClassifier(n_estimators=100, max_depth=2, random_state=0), maxlags=1, correct_pvalues=True):
+
+    # Input data is of shape (time, variables)
+    T, N = data.shape
+
+    data_df = pd.DataFrame(data)
+
+    d2c_test = D2C([None],[data_df])
+    X_test = d2c_test.compute_descriptors_no_dags()
+    
+
+
+    test_df = pd.DataFrame(X_test)
+    test_df = test_df.drop(['graph_id', 'edge_source', 'edge_dest'], axis=1)
+    
+    
+    y_pred = clf.predict_proba(test_df)[:,1]
+    returned = pd.concat([pd.DataFrame(X_test), pd.DataFrame(y_pred, columns=['is_causal'])], axis=1)
+    of_interest = returned[['edge_source', 'edge_dest','is_causal']]
+    
+
+    val_matrix = np.zeros((N, N), dtype='float32')
+
+    for index, row in of_interest.iterrows():
+        source =int(row['edge_source'])
+        dest = int(row['edge_dest'])
+        weight = row['is_causal']
+        val_matrix[source, dest] = weight
+
+    return val_matrix, None, None
+
 
 
 def process_zip_file(name, clf, maxlags=1):
@@ -112,7 +147,7 @@ if __name__ == '__main__':
         zip_ref.extractall("experiments")
         names = sorted(zip_ref.namelist())
 
-    training_data = pd.read_csv('./hopeful_descriptors.csv')
+    training_data = pd.read_csv('./filtered_descriptors.csv')
 
     X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
     y_train = training_data['is_causal']

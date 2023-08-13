@@ -2,16 +2,15 @@ from sklearn.model_selection import cross_validate, LeaveOneGroupOut
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from imblearn.ensemble import BalancedRandomForestClassifier
 import networkx as nx
 
 # assuming df is your dataframe, X are your features, y is your target
-df = pd.read_csv('hopeful_descriptors.csv')  # replace with your data file
+df = pd.read_csv('filtered_descriptors.csv')  # replace with your data file
 
-sampled_ids = df['graph_id'].drop_duplicates().sample(100)
+# sampled_ids = df['graph_id'].drop_duplicates().sample(100)
 
-# Use the sampled_ids to select from the original df
-df = df[df['graph_id'].isin(sampled_ids)]
+# # Use the sampled_ids to select from the original df
+# df = df[df['graph_id'].isin(sampled_ids)]
 
 # Populate the graph with edges and attributes
 # graphs = {}
@@ -33,7 +32,7 @@ y = df['is_causal']
 logo = LeaveOneGroupOut()
 
 # create a Logistic Regression classifier
-classifier = RandomForestClassifier(n_estimators=20, n_jobs=1)
+classifier = RandomForestClassifier(n_estimators=200, n_jobs=1)
 
 # use cross_validate and fit it with LOGO cross-validator
 scores = cross_validate(classifier, X, y, cv=logo.split(X, y, df['graph_id']), n_jobs=-1, 
