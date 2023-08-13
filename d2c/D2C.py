@@ -107,12 +107,12 @@ class D2C:
 
         # For all remaining edges that are not in the DAG, compute descriptors and label them as "not a child"
         
-        selected_indices = np.random.choice(len(all_possible_edges), size=len(child_edge_pairs), replace=False)
+        # selected_indices = np.random.choice(len(all_possible_edges), size=len(child_edge_pairs), replace=False)
 
         # Use list comprehension to select edges
-        selected_edges = [all_possible_edges[i] for i in selected_indices]
+        # selected_edges = [all_possible_edges[i] for i in selected_indices]
 
-        for edge_pair in selected_edges:
+        for edge_pair in all_possible_edges:
             if edge_pair not in child_edge_pairs:
                 parent, child = edge_pair[0], edge_pair[1]
                 descriptor = self._compute_descriptors(DAG_index, parent, child)

@@ -72,10 +72,10 @@ if __name__ == '__main__':
     # Experiment details
     #################################################
     # Choose model and experiment as downloaded from causeme
-    results['model'] = 'linear-VAR_aggregated'
+    results['model'] = 'linear-VAR'
 
     # Here we choose the setup with N=3 variables and time series length T=150
-    experimental_setup = 'N-3_T-150_agg-2'
+    experimental_setup = 'N-3_T-150'
     results['experiment'] = results['model'] + '_' + experimental_setup
 
     # Adjust save name if needed
@@ -112,7 +112,7 @@ if __name__ == '__main__':
         zip_ref.extractall("experiments")
         names = sorted(zip_ref.namelist())
 
-    training_data = pd.read_csv('./_descriptors.csv')
+    training_data = pd.read_csv('./hopeful_descriptors.csv')
 
     X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
     y_train = training_data['is_causal']
