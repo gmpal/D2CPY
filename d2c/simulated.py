@@ -5,7 +5,7 @@ import random
 import numpy as np
 import pandas as pd
 from typing import List
-from utils import print_dag
+from utils import print_dag, make_name
 
 # Base class
 class Simulated(ABC):
@@ -51,7 +51,7 @@ class Simulated(ABC):
     def get_observations(self) -> List[pd.DataFrame]:
         pass
 
-    def _generate_single_dag(self) -> nx.DiGraph:
+    def _generate_single_dag(self, dag_index: int = 1) -> nx.DiGraph:
         """
         Generates a single directed acyclic graph (DAG).
 
@@ -61,6 +61,8 @@ class Simulated(ABC):
         Returns:
             nx.DiGraph: Generated DAG.
         """
+
+
 
         # randomly at 50/50
         G = nx.DiGraph()

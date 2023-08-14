@@ -8,22 +8,20 @@ import pickle
 import multiprocessing as mp
 
 if __name__ == "__main__":
-    n_dags = 10000
+    n_dags = 5
     # Other parameters that might be needed for your class, adjust as needed
     n_observations = 150
-    n_variables = 5
-    generator = SimulatedDAGs(n_dags,  n_observations, n_variables, n_jobs=mp.cpu_count())
+    n_variables = 10
+    generator = SimulatedDAGs(n_dags,  n_observations, n_variables, n_jobs=10)
     generator.generate()
 
     observations = generator.get_observations()
     dags = generator.get_dags()
 
     #pickle everything
-    with open('DAGS_observations.pkl', 'wb') as f:
-        pickle.dump(observations, f)
+    with open('../data/dag.pkl', 'wb') as f:
+        pickle.dump((observations,dags), f)
 
-    with open('DAGS_dags.pkl', 'wb') as f:
-        pickle.dump(dags, f)
 
 
 

@@ -41,7 +41,7 @@ class D2C:
             n_jobs (int, optional): Number of parallel jobs. Defaults to 1.
             random_state (int, optional): Random seed. Defaults to 42.
         """
-        self.DAGs_index = np.arange(len(dags))
+        self.DAGs_index = np.arange(len(observations))
         self.DAGs = dags #it's a LIST
         self.observations_from_DAGs = observations #it's a LIST  
         self.rev = rev
@@ -62,7 +62,7 @@ class D2C:
             for j in range(num_nodes):
                 if i != j:
                     pairs.append((i,j))
-                    X.append(self._compute_descriptors(0, i, j))
+                    X.append(self.compute_descriptors(0, i, j))
         return X
 
     def initialize(self) -> None:
@@ -101,7 +101,7 @@ class D2C:
 
         for edge_pair in child_edge_pairs:
             parent, child = edge_pair[0], edge_pair[1]
-            descriptor = self._compute_descriptors(DAG_index, parent, child)
+            descriptor = self.compute_descriptors(DAG_index, parent, child)
             X.append(descriptor)
             Y.append(1)  # Label edge as "is.child"
 
@@ -115,7 +115,7 @@ class D2C:
         for edge_pair in all_possible_edges:
             if edge_pair not in child_edge_pairs:
                 parent, child = edge_pair[0], edge_pair[1]
-                descriptor = self._compute_descriptors(DAG_index, parent, child)
+                descriptor = self.compute_descriptors(DAG_index, parent, child)
                 X.append(descriptor)
                 Y.append(0)  # Label edge as "not a child"
 
@@ -123,9 +123,38 @@ class D2C:
         with open(f'./_descriptors_{DAG_index}.pkl', 'wb') as f:
             pickle.dump((X,Y), f)
         return X, Y
-            
 
-    def _compute_descriptors(self, DAG_index, ca, ef, MB_size=None, maxs=20,
+    def compute_markov_blanket(self, DAG_index, D, variable, MB_size, verbose=False):
+        if self.DAGs is None:
+            ind = list(set(np.arange(D.shape[1])) - {variable})
+            order = rankrho(D.iloc[:,ind],D.iloc[:,variable],nmax=min(len(ind),5*MB_size),verbose=self.verbose)
+            sorted_ind = [ind[i] for i in order]
+            return sorted_ind[:MB_size]
+            #TODO: at the moment we do not use mRMR, just rankrho.
+            # return ind[mRMR(D.iloc[:,ind],D.iloc[:,variable],nmax=MB_size,verbose=self.verbose)]  
+        else: 
+            dag = self.DAGs[DAG_index]
+            node = variable
+            parents = list(dag.predecessors(node))
+            children = list(dag.successors(node))
+            parents_of_children = []
+            for child in children:
+                parents_of_children.extend(list(dag.predecessors(child)))
+            parents_of_children = list(set(parents_of_children))
+            
+            
+            MB = list(set(parents + parents_of_children + children))
+            #remove node
+            MB = list(set(MB) - {node})
+            if len(MB) > MB_size:
+                print("MB size is greater than MB_size")
+                #TODO: fix this in order to select the top most relevant
+                #random selection
+                MB = np.random.choice(MB, size=MB_size, replace=False)
+            return MB
+
+
+    def compute_descriptors(self, DAG_index, ca, ef, MB_size=None, maxs=20,
             lin=False, acc=True, compute_error_descriptors=True,
             pq= [0.05,0.1,0.25,0.5,0.75,0.9,0.95]):
         
@@ -167,15 +196,8 @@ class D2C:
         common_causes = MBca.intersection(MBef)
         # Creation of the Markov Blanket of ca (denoted MBca) and ef (MBef)
         if n_features > (MB_size+1):
-            # MBca
-            ind = list(set(np.arange(n_features)) - {ca})
-            ind = rankrho(D.iloc[:,ind],D.iloc[:,ca],nmax=min(len(ind),5*MB_size),verbose=self.verbose) - 1 #python starts from 0
-            MBca = ind[mRMR(D.iloc[:,ind],D.iloc[:,ca],nmax=MB_size,verbose=self.verbose)]  
-
-            # MBef
-            ind2 = list(set(np.arange(n_features)) - {ef})
-            ind2 = rankrho(D.iloc[:,ind2],D.iloc[:,ef],nmax=min(len(ind2),5*MB_size),verbose=self.verbose)  
-            MBef = ind2[mRMR(D.iloc[:,ind2],D.iloc[:,ef],nmax=MB_size,verbose=self.verbose)]  
+            MBca = self.compute_markov_blanket(DAG_index, D, ca, MB_size)
+            MBef = self.compute_markov_blanket(DAG_index, D, ef, MB_size)
     
         # I(cause; effect | common_causes) 
         comcau = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, list(common_causes)]) if len(common_causes) > 0 else 1
@@ -250,7 +272,7 @@ class D2C:
                 # fsef = [mfs[i] for i in mimr(D.iloc[:, mfs], D.iloc[:, ef], nmax=3)]
             # if boot == "rank":
             #     fsef = [mfs[i] for i in rankrho(D.iloc[:, mfs], D.iloc[:, ef], nmax=3)]
-            ranking = rankrho(D.iloc[:, mfs], D.iloc[:, ef], nmax=min(n_features-1,3))  -1
+            ranking = rankrho(D.iloc[:, mfs], D.iloc[:, ef], nmax=min(n_features-1,3)) 
             fsef = [mfs[i] for i in ranking]
             eef = epred(D.iloc[:, fsef], D.iloc[:, ef])
 
@@ -259,7 +281,7 @@ class D2C:
             #     fsca = [mfs[i] for i in mimr(D.iloc[:, mfs], D.iloc[:, ca], nmax=3)]
             # if boot == "rank":
             #     fsca = [mfs[i] for i in rankrho(D.iloc[:, mfs], D.iloc[:, ca], nmax=3)]
-            ranking = rankrho(D.iloc[:, mfs], D.iloc[:, ca], nmax=min(n_features-1,3)) -1
+            ranking = rankrho(D.iloc[:, mfs], D.iloc[:, ca], nmax=min(n_features-1,3))
             fsca = [mfs[i] for i in ranking]
             eca = epred(D.iloc[:, fsca], D.iloc[:, ca])
 

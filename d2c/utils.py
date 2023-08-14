@@ -62,44 +62,48 @@ def normalized_prediction(X, Y):
 ############################################################################################################
 #######   COMMENTED OUT FOR NOW because it is compacted in the above function  ############################
 # ############################################################################################################
-# def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3):
-#     """
-#     Perform ridge regression and returns the trained model, predictions, and metrics.
+def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3):
+    """
+    Perform ridge regression and returns the trained model, predictions, and metrics.
 
-#     Args:
-#         X_train (np.ndarray): The training design matrix.
-#         Y_train (np.ndarray): The training response vector.
-#         X_test (np.ndarray, optional): The test design matrix. Defaults to None.
-#         lambda_val (float, optional): The regularization parameter. Defaults to 1e-3.
+    Args:
+        X_train (np.ndarray): The training design matrix.
+        Y_train (np.ndarray): The training response vector.
+        X_test (np.ndarray, optional): The test design matrix. Defaults to None.
+        lambda_val (float, optional): The regularization parameter. Defaults to 1e-3.
 
-#     Returns:
-#         dict: Dictionary containing the trained model, predictions, and computed metrics.
-#     """
+    Returns:
+        dict: Dictionary containing the trained model, predictions, and computed metrics.
+    """
 
-#     model = Ridge(alpha=lambda_val)
-#     model.fit(X_train, Y_train)
+    X_train = pd.DataFrame(X_train)
 
-#     Y_train_hat = model.predict(X_train)
-#     e_train = Y_train - Y_train_hat
-#     MSE_emp = mean_squared_error(Y_train, Y_train_hat)
-#     NMSE = MSE_emp / (np.var(Y_train)**2)
+    model = Ridge(alpha=lambda_val)
+    model.fit(X_train, Y_train)
 
-#     e_loo = cross_val_score(model, X_train, Y_train, scoring='neg_mean_squared_error', cv=len(X_train))
-#     MSE_loo = -np.mean(e_loo)
+    Y_train_hat = model.predict(X_train)
+    e_train = Y_train - Y_train_hat
+    MSE_emp = mean_squared_error(Y_train, Y_train_hat)
+    NMSE = MSE_emp / (np.var(Y_train)**2)
 
-#     Y_test_hat = None
-#     if X_test is not None:
-#         Y_test_hat = model.predict(X_test)
+    e_loo = cross_val_score(model, X_train, Y_train, scoring='neg_mean_squared_error', cv=2)
+    MSE_loo = -np.mean(e_loo)
 
-#     return {
-#         'e_train': e_train,
-#         'MSE_emp': MSE_emp,
-#         'NMSE': NMSE,
-#         'MSE_loo': MSE_loo,
-#         'Y_train_hat': Y_train_hat,
-#         'Y_test_hat': Y_test_hat,
-#         'model': model,
-#     }
+    Y_test_hat = None
+    if X_test is not None:
+        Y_test_hat = model.predict(X_test)
+
+    return {
+        'e_train': e_train,
+        'beta_hat': [model.intercept_, model.coef_[0]],
+        'MSE_emp': MSE_emp,
+        'NMSE': NMSE,
+        'MSE_loo': MSE_loo,
+        'Y_train_hat': Y_train_hat,
+        'Y_test_hat': Y_test_hat,
+        'model': model,
+    }
+
 
 
 
@@ -216,7 +220,7 @@ def co2i(X,Y, verbose=True):
 
     return I
 
-def rankrho(X, Y, nmax=5, regr=False, verbose=False):
+def rankrho(X, Y, nmax=5, regr=True, verbose=False):
     """
     Perform mutual information ranking between two arrays.
 
@@ -263,9 +267,9 @@ def rankrho(X, Y, nmax=5, regr=False, verbose=False):
     # m = Y.shape[1] #TODO: handle the multivariate case
     N = X.shape[0]
 
-    if np.var(Y) < 0.01:
-        if verbose: print(datetime.now().strftime('%H:%M:%S'),'np.var(Y) < 0.01')
-        return list(range(1, nmax + 1))
+    # if np.var(Y) < 0.01:
+    #     if verbose: print(datetime.now().strftime('%H:%M:%S'),'np.var(Y) < 0.01')
+    #     return list(range(1, nmax + 1))
     
     # Scaling X
     X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
@@ -279,15 +283,31 @@ def rankrho(X, Y, nmax=5, regr=False, verbose=False):
     else:
         if verbose: print(datetime.now().strftime('%H:%M:%S'),'regr')
         for i in range(n):
-            Iy[i] = abs(ridge_regression(X[:, i], Y)['beta_hat'][1])
+            Iy[i] = abs(ridge_regression(X.iloc[:, i], Y)['beta_hat'][1])
 
-    # if m > 1:
-    #     Iy = np.mean(Iy, axis=1)
-
-    return (np.argsort(Iy)[::-1] + 1)[:nmax]
+    argsort = np.argsort(Iy)
+    reverse = argsort[::-1]
+    to_return = reverse[:nmax]
+    return to_return
 
 
 def mRMR(X, Y, nmax, verbose=True):
+    """
+    Max-Relevance Min-Redundancy (mRMR) feature selection method.
+    
+    This function selects features based on maximizing mutual information (MI) with 
+    the target variable Y and minimizing the average mutual information among the 
+    selected features.
+
+    Parameters:
+    - X (pd.DataFrame): Feature matrix with rows as samples and columns as features.
+    - Y (np.array or pd.Series): Target variable.
+    - nmax (int): Maximum number of features to select.
+    - verbose (bool, optional): If True, prints progress and intermediate results. Default is True.
+
+    Returns:
+    - list[int]: List of indices for the selected features.
+    """
 
     if verbose: print(datetime.now().strftime('%H:%M:%S'),'mRMR')
     num_features = X.shape[1]
@@ -542,3 +562,7 @@ def epred(X, Y):
     Y_hat = reg.predict(XX)
     
     return Y_hat
+
+
+def make_name(node_idx):
+    return 'v' + str(node_idx)
