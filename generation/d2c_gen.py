@@ -5,21 +5,13 @@ if __name__ == '__main__':
     sys.path.append("..")
     sys.path.append("../d2c/")
 
-    with open('filtered_observations.pkl', 'rb') as f:
-        observations = pickle.load(f)
+    with open('../data/ts.pkl', 'rb') as f:
+        observations, dags, updated_dags = pickle.load(f)
 
-    with open('filtered_dags.pkl', 'rb') as f:
-        dags = pickle.load(f)
-
-    with open('filtered_updated_dags.pkl', 'rb') as f:
-        updated_dags = pickle.load(f)
-
-    # #select top 10 dags
-    # dags = dags[:10]
-    # updated_dags = updated_dags[:10]
-    # observations = observations[:10]
+    # with open('../data/dag.pkl', 'rb') as f:
+    #     observations, dags = pickle.load(f)
 
     from d2c.D2C import D2C
     d2c = D2C(dags,observations,n_jobs=10)
     d2c.initialize()
-    d2c.save_descriptors_df('filtered_descriptors.csv')
+    d2c.save_descriptors_df('../data/ts_descriptors_using_mrmr.csv')

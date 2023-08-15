@@ -34,18 +34,19 @@ def my_method(data, clf=RandomForestClassifier(n_estimators=100, max_depth=2, ra
 
     data_df = pd.DataFrame(data)
 
-    d2c_test = D2C([None],[data_df])
+    d2c_test = D2C(None,[data_df])
     X_test = d2c_test.compute_descriptors_no_dags()
     
 
 
     test_df = pd.DataFrame(X_test)
-    test_df = test_df.drop(['graph_id', 'edge_source', 'edge_dest'], axis=1)
+    # test_df = test_df.drop(['graph_id', 'edge_source', 'edge_dest'], axis=1)
+    test_df = test_df.drop(['graph_id','edge_source','edge_dest'], axis=1)
     
     
     y_pred = clf.predict_proba(test_df)[:,1]
     returned = pd.concat([pd.DataFrame(X_test), pd.DataFrame(y_pred, columns=['is_causal'])], axis=1)
-    of_interest = returned[['edge_source', 'edge_dest','is_causal']]
+    of_interest = returned[['edge_source','edge_dest','is_causal']]
     
 
     val_matrix = np.zeros((N, N), dtype='float32')
@@ -119,8 +120,8 @@ if __name__ == '__main__':
                                 results['experiment'])
 
     # Setup directories (adjust to your needs)
-    experiment_zip = '../causeme/experiments/%s.zip' % results['experiment']
-    results_file = '../causeme/results/%s.json.bz2' % (save_name)
+    experiment_zip = './experiments/%s.zip' % results['experiment']
+    results_file = './results/%s.json.bz2' % (save_name)
 
     #################################################
 
@@ -147,7 +148,7 @@ if __name__ == '__main__':
         zip_ref.extractall("experiments")
         names = sorted(zip_ref.namelist())
 
-    training_data = pd.read_csv('./filtered_descriptors.csv')
+    training_data = pd.read_csv('../data/ts_descriptors_using_rankrho.csv')
 
     X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
     y_train = training_data['is_causal']

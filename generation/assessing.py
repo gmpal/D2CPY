@@ -5,7 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 import networkx as nx
 
 # assuming df is your dataframe, X are your features, y is your target
-df = pd.read_csv('filtered_descriptors.csv')  # replace with your data file
+df = pd.read_csv('../data/ts_descriptors_using_mrmr.csv')  # replace with your data file
 
 # sampled_ids = df['graph_id'].drop_duplicates().sample(100)
 

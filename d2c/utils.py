@@ -28,15 +28,23 @@ def normalized_conditional_information(y, x1, x2=None):
         Normalized conditional information of x1 to y given x2
         I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
         """
-        if x2 is None:  # I(x1;y)= (H(y)-H(y | x1))/H(y)
+        if (x2 is None) or (x2.empty):  # I(x1;y)= (H(y)-H(y | x1))/H(y)
+
             entropy_y_given_x1 = normalized_prediction(x1, y) 
             return max(0, 1 - entropy_y_given_x1)
         else:  # I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
-            entropy_y_given_x2 = normalized_prediction(x2, y)
-            
-            entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y)
-            
-            return max(0, entropy_y_given_x2 - entropy_y_given_x1_x2 ) / (entropy_y_given_x2 + 0.01)
+            try:
+                if (y is None) or (y.empty) or (x1 is None) or (x1.empty):
+                    return 0
+                
+                entropy_y_given_x2 = normalized_prediction(x2, y)
+                entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y)
+                
+                return max(0, entropy_y_given_x2 - entropy_y_given_x1_x2 ) / (entropy_y_given_x2 + 0.01)
+            except IndexError:
+                print(x1.ndim, x2.ndim, y.ndim)
+                print()
+                return "error"
 
 def normalized_prediction(X, Y):
     """
@@ -52,8 +60,10 @@ def normalized_prediction(X, Y):
 
     X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
     
-    
-    numerator = max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), X, Y, scoring='neg_mean_squared_error', cv=2)))
+    try: 
+        numerator = max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), X, Y, scoring='neg_mean_squared_error', cv=2)))
+    except ValueError:
+        print(X,Y)
     denominator = (1e-3 + np.var(Y))
     return numerator / denominator
 
@@ -220,7 +230,7 @@ def co2i(X,Y, verbose=True):
 
     return I
 
-def rankrho(X, Y, nmax=5, regr=True, verbose=False):
+def rankrho(X, Y, nmax=5, regr=False, verbose=False):
     """
     Perform mutual information ranking between two arrays.
 
@@ -291,7 +301,7 @@ def rankrho(X, Y, nmax=5, regr=True, verbose=False):
     return to_return
 
 
-def mRMR(X, Y, nmax, verbose=True):
+def mRMR(X, Y, nmax, verbose=False):
     """
     Max-Relevance Min-Redundancy (mRMR) feature selection method.
     
@@ -421,7 +431,7 @@ def mRMR(X, Y, nmax, verbose=True):
 
 
 
-def ecdf(data, verbose=True):
+def ecdf(data, verbose=False):
     if verbose: print(datetime.now().strftime('%H:%M:%S'),'ecdf')
     def _ecdf(x):
         return percentileofscore(data, x) / 100
@@ -431,7 +441,7 @@ def ecdf(data, verbose=True):
 
 
 
-def coeff(y, x1, x2=None, verbose=True):
+def coeff(y, x1, x2=None, verbose=False):
     if verbose: print(datetime.now().strftime('%H:%M:%S'),'coeff')
     if x2 is not None:
         X = np.column_stack((x1, x2))

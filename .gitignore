@@ -11,3 +11,4 @@ graph_*
 *descriptors*.csv
 generation/comparing_test.ipynb
 causeme/causeme_method_registration_example.py
+*.txt
