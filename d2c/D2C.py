@@ -127,9 +127,9 @@ class D2C:
         # if self.DAGs is None:
         if self.DAGs is None:
             ind = list(set(np.arange(D.shape[1])) - {variable})
-            if self.boot = "mrmr": 
+            if self.boot == "mrmr": 
                 order = mRMR(D.iloc[:,ind],D.iloc[:,variable],nmax=min(len(ind),5*MB_size),verbose=self.verbose)
-            elif self.boot = "rank":
+            elif self.boot == "rank":
                 order = rankrho(D.iloc[:,ind],D.iloc[:,variable],nmax=min(len(ind),5*MB_size),verbose=self.verbose)
             sorted_ind = [ind[i] for i in order]
             return sorted_ind[:MB_size]

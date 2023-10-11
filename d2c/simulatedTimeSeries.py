@@ -14,8 +14,8 @@ from simulated import Simulated
 
 class SimulatedTimeSeries(Simulated):
     
-    def __init__(self, n_dags: int, n_observations: int, n_variables: int, maxlags: int,  n_jobs: int = 1, random_state: int = 42, function_types: list = ["linear"], sdn: int = 0.001):
-        super().__init__(n_dags, n_observations, n_variables, n_jobs=n_jobs, random_state=random_state, function_types=function_types, sdn=sdn)
+    def __init__(self, n_dags: int, n_observations: int, n_variables: int, not_acyclic: bool = False, maxlags: int = 1,  n_jobs: int = 1, random_state: int = 42, function_types: list = ["linear"], sdn: int = 0.001):
+        super().__init__(n_dags, n_observations, n_variables, not_acyclic=not_acyclic, n_jobs=n_jobs, random_state=random_state, function_types=function_types, sdn=sdn)
         self.list_updated_dags = []
         self.maxlags = maxlags
 
@@ -58,7 +58,6 @@ class SimulatedTimeSeries(Simulated):
             self._generate_timestep_observation(updated_DAG, data)
         return data, initial_DAG, updated_DAG
 
-
     def _update_dag_for_timestep(self, dag: nx.DiGraph, current_lag: int) -> nx.DiGraph:
         """
         Updates the given DAG for a new timestep by adding past values as new nodes.
@@ -97,6 +96,37 @@ class SimulatedTimeSeries(Simulated):
                 if len(successors) > 0:
                     for successor in successors:
                         past_dag.remove_edge(node, successor)
+
+        if self.not_acyclic: #if you want to add relationships between past nodes that would be acyclic when added to the current dag
+                #select a couple of nodes in dag 
+                nodes = list(dag.nodes)
+                random.shuffle(nodes)
+                
+                already_selected_couples = []
+                for _ in range(len(nodes)): #TODO: evaluate number of iterations, are len(nodes) iterations enough?
+                    node1 = random.choice(nodes)
+                    node2 = random.choice(nodes)
+                    while node1 == node2 or (node1,node2) in already_selected_couples or nx.has_path(past_dag, node1, node2): #avoid self loops
+                        node2 = random.choice(nodes)
+                    
+                    already_selected_couples.append((node1, node2))
+        
+        
+                    # print(f"Adding edge between {node1} and {node2}")
+                    for lag in range(1, current_lag + 1):
+                        past_node_1 = f"{node1}_t-{lag}"
+                        if lag > 1:
+                            past_node_2_lag = f"{node2}_t-{lag-1}"
+                        else:
+                            past_node_2_lag = f"{node2}"
+                        #check if the nodes are already in the dag
+                        if past_node_1 not in past_dag.nodes:
+                            past_dag.add_node(past_node_1, **dag.nodes[node1])
+                        if past_node_2_lag not in past_dag.nodes:
+                            past_dag.add_node(past_node_2_lag, **dag.nodes[node2])
+                        # print(f"Adding edge between {past_node_1} and {past_node_2_lag}")
+                        past_dag.add_edge(past_node_1, past_node_2_lag, weight=0, H="linear")
+
         #we avoid edge cases for the moment
         # #number of edges 
         # n_edges = len(past_dag.edges)
@@ -106,9 +136,18 @@ class SimulatedTimeSeries(Simulated):
         # for _ in range(n_edges_to_remove):
         #     edge_to_remove = random.choice(list(past_dag.edges))
         #     past_dag.remove_edge(edge_to_remove[0], edge_to_remove[1])
+        from graphviz import Digraph
 
+        G_dot = Digraph(engine="dot",format='png')
+
+        for node in past_dag.nodes():
+            G_dot.node(str(node))
+        for edge in past_dag.edges():
+            G_dot.edge(str(edge[0]), str(edge[1]))
+
+        # Render the graph in a hierarchical layout
+        G_dot.render(f"pics/{past_dag}_graph.png", view=False)
         return past_dag
-
 
     
     def _generate_timestep_observation(self, dag: nx.DiGraph, data: pd.DataFrame) -> pd.DataFrame:

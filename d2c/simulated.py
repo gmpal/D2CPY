@@ -11,7 +11,7 @@ from utils import print_dag, make_name
 class Simulated(ABC):
 
     #TODO: implement verbosity, quantize
-    def __init__(self, n_dags: int, n_observations: int, n_variables: int, function_types: List[str] = ["linear", "quadratic", "sigmoid"], sdn: int = 0.2,
+    def __init__(self, n_dags: int, n_observations: int, n_variables: int, not_acyclic: bool = False, function_types: List[str] = ["linear", "quadratic", "sigmoid"], sdn: int = 0.2,
                  verbose: bool = True, random_state: int = 42, n_jobs: int = 1):
         """
         SimulatedDAGs is a class to generate directed acyclic graphs (DAGs) and simulate observations on them.
@@ -31,6 +31,8 @@ class Simulated(ABC):
         self.n_dags = n_dags
         self.n_observations = n_observations
         self.n_variables = n_variables
+
+        self.not_acyclic = not_acyclic
         
         self.sdn = sdn
         self.function_types = function_types

@@ -63,7 +63,9 @@ def normalized_prediction(X, Y):
     try: 
         numerator = max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), X, Y, scoring='neg_mean_squared_error', cv=2)))
     except ValueError:
-        print(X,Y)
+        # print(X,Y)
+        print("ValueError")
+        numerator = 0
     denominator = (1e-3 + np.var(Y))
     return numerator / denominator
 

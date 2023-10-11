@@ -16,8 +16,8 @@ from simulated import Simulated
 
 class SimulatedDAGs(Simulated):
 
-    def __init__(self, n_dags: int, n_observations: int, n_variables: int, n_jobs: int = 1, random_state: int = 42, function_types: list = ["linear"], sdn: int = 0.001):
-        super().__init__(n_dags, n_observations, n_variables, n_jobs=n_jobs, random_state=random_state, function_types=function_types, sdn=sdn)
+    def __init__(self, n_dags: int, n_observations: int, n_variables: int, not_acyclic: bool = False, n_jobs: int = 1, random_state: int = 42, function_types: list = ["linear"], sdn: int = 0.001):
+        super().__init__(n_dags, n_observations, n_variables, not_acyclic = not_acyclic, n_jobs=n_jobs, random_state=random_state, function_types=function_types, sdn=sdn)
 
     def generate(self) -> None:
         """Generates ndag number of DAGs."""

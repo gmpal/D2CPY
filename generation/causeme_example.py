@@ -148,7 +148,7 @@ if __name__ == '__main__':
         zip_ref.extractall("experiments")
         names = sorted(zip_ref.namelist())
 
-    training_data = pd.read_csv('../data/ts_descriptors_using_rankrho.csv')
+    training_data = pd.read_csv('../data/ts_descriptors_with_cycles.csv')
 
     X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
     y_train = training_data['is_causal']
