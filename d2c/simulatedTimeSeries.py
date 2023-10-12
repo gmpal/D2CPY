@@ -3,7 +3,6 @@ import networkx as nx
 from networkx.algorithms.dag import is_directed_acyclic_graph
 from multiprocessing import Pool
 import pandas as pd
-import random
 
 
 from typing import List
@@ -33,7 +32,7 @@ class SimulatedTimeSeries(Simulated):
         else:
             with Pool(self.n_jobs) as pool:
                 results = pool.map(self._generate_single_time_series, range(self.n_dags))
-
+            
             for data, initial_DAG, updated_DAG in results:
                 self.list_observations.append(data)
                 self.list_initial_dags.append(initial_DAG)
@@ -46,8 +45,7 @@ class SimulatedTimeSeries(Simulated):
         print(index)
         # Initialize a DataFrame to hold the time series data
         # pick a random lag between 1 and maxlags
-        random.seed(self.random_state + index)
-        np.random.seed(self.random_state + index)
+        # np.random.seed(self.random_state + index)
         current_lag = np.random.randint(1, self.maxlags + 1)
         # print(f"current lag: {current_lag}")
         initial_DAG = self._generate_single_dag()
@@ -56,6 +54,7 @@ class SimulatedTimeSeries(Simulated):
         # print(data)
         for _ in range(1, self.n_observations):
             self._generate_timestep_observation(updated_DAG, data)
+        # print(index, "done")
         return data, initial_DAG, updated_DAG
 
     def _update_dag_for_timestep(self, dag: nx.DiGraph, current_lag: int) -> nx.DiGraph:
@@ -79,7 +78,7 @@ class SimulatedTimeSeries(Simulated):
                 past_node = f"{node}_t-{lag}"
                 past_dag.add_node(past_node, **dag.nodes[node])  # Copy attributes from the original node
                 weight = np.round(np.random.uniform(low=-0.5, high=0.5),5)
-                h = random.choice(self.function_types)
+                h = self.function_types[np.random.randint(0, len(self.function_types))]
                 past_dag.add_edge(past_node, node, weight=weight, H=h)
                 if lag > 1: 
                     past_dag.add_edge(past_node, f"{node}_t-{lag-1}", weight=weight, H=h)
@@ -100,14 +99,15 @@ class SimulatedTimeSeries(Simulated):
         if self.not_acyclic: #if you want to add relationships between past nodes that would be acyclic when added to the current dag
                 #select a couple of nodes in dag 
                 nodes = list(dag.nodes)
-                random.shuffle(nodes)
                 
                 already_selected_couples = []
                 for _ in range(len(nodes)): #TODO: evaluate number of iterations, are len(nodes) iterations enough?
-                    node1 = random.choice(nodes)
-                    node2 = random.choice(nodes)
-                    while node1 == node2 or (node1,node2) in already_selected_couples or nx.has_path(past_dag, node1, node2): #avoid self loops
-                        node2 = random.choice(nodes)
+                    node1 = nodes[np.random.randint(0, len(nodes))]
+                    node2 = nodes[np.random.randint(0, len(nodes))]
+                    counter = 0
+                    while (node1 == node2 or (node1,node2) in already_selected_couples or nx.has_path(past_dag, node1, node2)) and counter < 10 : #avoid self loops
+                        node2 = nodes[np.random.randint(0, len(nodes))]
+                        counter +=1
                     
                     already_selected_couples.append((node1, node2))
         

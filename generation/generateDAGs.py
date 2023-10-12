@@ -8,7 +8,7 @@ import pickle
 import multiprocessing as mp
 
 if __name__ == "__main__":
-    n_dags = 50
+    n_dags = 20
     # Other parameters that might be needed for your class, adjust as needed
     n_observations = 150
     n_variables = 6
