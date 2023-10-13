@@ -9,7 +9,7 @@ if __name__ == '__main__':
         observations, dags, updated_dags = pickle.load(f)
 
     #drop na 
-    observations = [obs.dropna() for obs in observations]
+    # observations = [obs.dropna() for obs in observations]
     
     # with open('../data/dag.pkl', 'rb') as f:
     #     observations, dags = pickle.load(f)

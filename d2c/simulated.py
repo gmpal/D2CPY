@@ -69,9 +69,9 @@ class Simulated(ABC):
         # randomly at 50/50
         G = nx.DiGraph()
         for i in range(self.n_variables):
-            G.add_node(i)
+            G.add_node(f'{i}')
 
-        edges = [(i, j) for i in range(self.n_variables) for j in range(self.n_variables) if i != j]
+        edges = [(f'{i}', f'{j}') for i in range(self.n_variables) for j in range(self.n_variables) if i != j]
             
         G.add_edges_from(edges)
 

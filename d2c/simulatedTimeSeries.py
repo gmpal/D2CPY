@@ -42,14 +42,14 @@ class SimulatedTimeSeries(Simulated):
         """
         Generates a single time series.
         """
-        print(index)
+        # print(index)
         # Initialize a DataFrame to hold the time series data
         # pick a random lag between 1 and maxlags
         # np.random.seed(self.random_state + index)
         current_lag = np.random.randint(1, self.maxlags + 1)
         # print(f"current lag: {current_lag}")
         initial_DAG = self._generate_single_dag()
-        updated_DAG = self._update_dag_for_timestep(initial_DAG, current_lag)
+        updated_DAG = self._update_dag_for_timestep(initial_DAG, current_lag, index)
         data = pd.DataFrame(2*np.random.rand(current_lag, self.n_variables)-1).round(5)
         # print(data)
         for _ in range(1, self.n_observations):
@@ -57,7 +57,7 @@ class SimulatedTimeSeries(Simulated):
         # print(index, "done")
         return data, initial_DAG, updated_DAG
 
-    def _update_dag_for_timestep(self, dag: nx.DiGraph, current_lag: int) -> nx.DiGraph:
+    def _update_dag_for_timestep(self, dag: nx.DiGraph, current_lag: int, index: int) -> nx.DiGraph:
         """
         Updates the given DAG for a new timestep by adding past values as new nodes.
         
@@ -109,23 +109,28 @@ class SimulatedTimeSeries(Simulated):
                         node2 = nodes[np.random.randint(0, len(nodes))]
                         counter +=1
                     
-                    already_selected_couples.append((node1, node2))
-        
-        
-                    # print(f"Adding edge between {node1} and {node2}")
-                    for lag in range(1, current_lag + 1):
-                        past_node_1 = f"{node1}_t-{lag}"
-                        if lag > 1:
-                            past_node_2_lag = f"{node2}_t-{lag-1}"
-                        else:
-                            past_node_2_lag = f"{node2}"
-                        #check if the nodes are already in the dag
-                        if past_node_1 not in past_dag.nodes:
-                            past_dag.add_node(past_node_1, **dag.nodes[node1])
-                        if past_node_2_lag not in past_dag.nodes:
-                            past_dag.add_node(past_node_2_lag, **dag.nodes[node2])
-                        # print(f"Adding edge between {past_node_1} and {past_node_2_lag}")
-                        past_dag.add_edge(past_node_1, past_node_2_lag, weight=0, H="linear")
+                    if counter == 10: 
+                        continue #if we did not find a suitable couple we skip this iteration
+                    else:
+                        already_selected_couples.append((node1, node2))
+            
+                        # print(f"Adding edge between {node1} and {node2}")
+                        for lag in range(1, current_lag + 1):
+                            past_node_1 = f"{node1}_t-{lag}"
+                            if lag > 1:
+                                past_node_2_lag = f"{node2}_t-{lag-1}"
+                            else:
+                                past_node_2_lag = f"{node2}"
+                            #check if the nodes are already in the dag
+                            if past_node_1 not in past_dag.nodes:
+                                print(f"{past_node_1} not in past_dag")
+                                past_dag.add_node(past_node_1, **dag.nodes[node1])
+                            if past_node_2_lag not in past_dag.nodes:
+                                print(f"{past_node_2_lag} not in past_dag")
+                                past_dag.add_node(past_node_2_lag, **dag.nodes[node2])
+                            # print(f"Adding edge between {past_node_1} and {past_node_2_lag}")
+
+                            past_dag.add_edge(past_node_1, past_node_2_lag, weight=0, H="linear")
 
         #we avoid edge cases for the moment
         # #number of edges 
@@ -136,17 +141,17 @@ class SimulatedTimeSeries(Simulated):
         # for _ in range(n_edges_to_remove):
         #     edge_to_remove = random.choice(list(past_dag.edges))
         #     past_dag.remove_edge(edge_to_remove[0], edge_to_remove[1])
-        from graphviz import Digraph
+        # from graphviz import Digraph
 
-        G_dot = Digraph(engine="dot",format='png')
+        # G_dot = Digraph(engine="dot",format='png')
 
-        for node in past_dag.nodes():
-            G_dot.node(str(node))
-        for edge in past_dag.edges():
-            G_dot.edge(str(edge[0]), str(edge[1]))
+        # for node in past_dag.nodes():
+        #     G_dot.node(str(node))
+        # for edge in past_dag.edges():
+        #     G_dot.edge(str(edge[0]), str(edge[1]))
 
-        # Render the graph in a hierarchical layout
-        G_dot.render(f"pics/{past_dag}_graph.png", view=False)
+        # # Render the graph in a hierarchical layout
+        # G_dot.render(f"pics/{index}", view=False, cleanup=True)
         return past_dag
 
     
@@ -160,20 +165,21 @@ class SimulatedTimeSeries(Simulated):
             # print("with bias", dag.nodes[node]['bias'])
             if f"_t-" in str(node):
                 variable = int(str(node)[0])
-                timestamp = int(str(node)[-1])
+                timestamp = int(str(node)[-1]) #TODO: check if this is correct, if more than 9 timestamps it will not work
                 dag.nodes[node]['value'] = data.loc[len(data) - timestamp, variable] 
                 # print("Value",dag.nodes[node]['value'])
             else:
                 parents = list(dag.predecessors(node))
-                data.loc[current_len, node] = 0
+                column = int(node)
+                data.loc[current_len, column] = 0
                 # print("Data now is ", data)
                 # print("parents", parents, "with values", [dag.nodes[parent]['value'] for parent in parents])
                 # print("with edges weight", [dag.edges[parent, node]['weight'] for parent in parents])
                 for parent in parents:
                     
-                    data.loc[current_len, node] += self.compute_value(dag.nodes[node], dag.edges[parent, node], dag.nodes[parent]['value'])
-                data.loc[current_len, node] += dag.nodes[node]['bias']
-                dag.nodes[node]['value'] = data.loc[current_len, node]
+                    data.loc[current_len, column] += self.compute_value(dag.nodes[node], dag.edges[parent, node], dag.nodes[parent]['value'])
+                data.loc[current_len, column] += dag.nodes[node]['bias']
+                dag.nodes[node]['value'] = data.loc[current_len, column]
                 # print("Value",dag.nodes[node]['value'])
 
         

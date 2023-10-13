@@ -88,7 +88,6 @@ class D2C:
         """
         Compute descriptors in parallel for a given observation.
         """
-        print("DAG index", DAG_index)
         X = []
         Y = []
 
@@ -137,7 +136,7 @@ class D2C:
             # return ind[mRMR(D.iloc[:,ind],D.iloc[:,variable],nmax=MB_size,verbose=self.verbose)]  
         else: 
             dag = self.DAGs[DAG_index]
-            node = variable
+            node = str(variable)
             parents = list(dag.predecessors(node))
             children = list(dag.successors(node))
             parents_of_children = []
@@ -153,6 +152,8 @@ class D2C:
                 #TODO: fix this in order to select the top most relevant
                 #random selection
                 MB = np.random.choice(MB, size=MB_size, replace=False)
+
+            MB = [int(i) for i in MB] #TODO: handle the passage between strings and integers in a better way
             return list(MB)
 
 
@@ -181,7 +182,12 @@ class D2C:
         Raises:
         ValueError: If there are missing or infinite values in D.
         """
+
+        ca = int(ca)
+        ef = int(ef)
+
         D = self.observations_from_DAGs[DAG_index]
+        # print(D.columns)
         D = (D - D.mean()) / D.std()
         n_observations, n_features = D.shape
         
@@ -203,11 +209,19 @@ class D2C:
             MBca = self.compute_markov_blanket(DAG_index, D, ca, MB_size)
             MBef = self.compute_markov_blanket(DAG_index, D, ef, MB_size)
 
+        # print("MBca", MBca)
+        # print("MBef", MBef)
+
         common_causes = list(set(MBca).intersection(set(MBef)))
+        # common_causes_columns = None 
+        # if len(common_causes) > 0:
+        #     common_causes_columns = D.iloc[:, common_causes]
 
         # I(cause; effect | common_causes) 
-        com_cau = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, common_causes]) 
-        
+      
+        com_cau = normalized_conditional_information(D.iloc[:, [ef]], D.iloc[:, [ca]], D.iloc[:, common_causes]) 
+
+
         # b: ef = b * (ca + mbef)
         coeff_cause = coeff(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, MBef])
         
