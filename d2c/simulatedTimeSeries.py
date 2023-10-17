@@ -141,17 +141,17 @@ class SimulatedTimeSeries(Simulated):
         # for _ in range(n_edges_to_remove):
         #     edge_to_remove = random.choice(list(past_dag.edges))
         #     past_dag.remove_edge(edge_to_remove[0], edge_to_remove[1])
-        # from graphviz import Digraph
+        from graphviz import Digraph
 
-        # G_dot = Digraph(engine="dot",format='png')
+        G_dot = Digraph(engine="dot",format='png')
 
-        # for node in past_dag.nodes():
-        #     G_dot.node(str(node))
-        # for edge in past_dag.edges():
-        #     G_dot.edge(str(edge[0]), str(edge[1]))
+        for node in past_dag.nodes():
+            G_dot.node(str(node))
+        for edge in past_dag.edges():
+            G_dot.edge(str(edge[0]), str(edge[1]))
 
-        # # Render the graph in a hierarchical layout
-        # G_dot.render(f"pics/{index}", view=False, cleanup=True)
+        # Render the graph in a hierarchical layout
+        G_dot.render(f"pics/{index}", view=False, cleanup=True)
         return past_dag
 
     
