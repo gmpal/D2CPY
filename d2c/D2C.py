@@ -97,9 +97,9 @@ class D2C:
         all_possible_edges = [(i, j) for i in range(nodes) for j in range(nodes) if i != j]
         #if dependency_type == "is.child": #TODO implement other dependencies
         for parent_node, child_node in self.DAGs[DAG_index].edges:
-            child_edge_pairs.append((parent_node, child_node))
+            child_edge_pairs.append((int(parent_node), int(child_node)))
         if self.verbose: print("child_edge_pairs", child_edge_pairs)
-
+        # print(child_edge_pairs)
         for edge_pair in child_edge_pairs:
             parent, child = edge_pair[0], edge_pair[1]
             descriptor = self.compute_descriptors(DAG_index, parent, child)
@@ -114,6 +114,7 @@ class D2C:
         # selected_edges = [all_possible_edges[i] for i in selected_indices]
         for edge_pair in all_possible_edges:
             if edge_pair not in child_edge_pairs:
+                # print("not in children:",edge_pair)
                 parent, child = edge_pair[0], edge_pair[1]
                 descriptor = self.compute_descriptors(DAG_index, parent, child)
                 X.append(descriptor)
@@ -136,7 +137,9 @@ class D2C:
             # return ind[mRMR(D.iloc[:,ind],D.iloc[:,variable],nmax=MB_size,verbose=self.verbose)]  
         else: 
             dag = self.DAGs[DAG_index]
-            node = str(variable)
+            # node = str(variable)
+            #TODO: assess if this is the best way to handle the passage between strings and integers
+            node = variable
             parents = list(dag.predecessors(node))
             children = list(dag.successors(node))
             parents_of_children = []
@@ -258,103 +261,103 @@ class D2C:
         #I(effect; m | cause) for m in MBef
         eff_m_cau = [0] if not MBca else [normalized_conditional_information(D.iloc[:, ef], D.iloc[:, MBca[j]], D.iloc[:, ca]) for j in range(len(MBca))]
 
-        #create all possible couples of MBca and MBef
-        mbca_mbef_couples = list(np.array(np.meshgrid(np.arange(len(MBca)), np.arange(len(MBef)))).T.reshape(-1,2))
+        # #create all possible couples of MBca and MBef
+        # mbca_mbef_couples = list(np.array(np.meshgrid(np.arange(len(MBca)), np.arange(len(MBef)))).T.reshape(-1,2))
 
-        #I(mca ; mef | cause) for (mca,mef) in mbca_mbef_couples
-        mca_mef_cau = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ca]) for i, j in mbca_mbef_couples]
+        # #I(mca ; mef | cause) for (mca,mef) in mbca_mbef_couples
+        # mca_mef_cau = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ca]) for i, j in mbca_mbef_couples]
 
-        #I(mca ; mef| effect) for (mca,mef) in mbca_mbef_couples
-        mca_mef_eff = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) for i, j in mbca_mbef_couples]
+        # #I(mca ; mef| effect) for (mca,mef) in mbca_mbef_couples
+        # mca_mef_eff = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) for i, j in mbca_mbef_couples]
         
-        mbca_couples = list(np.array([(i, j) for i in range(len(MBca)) for j in range(i+1, len(MBca))]))
+        # mbca_couples = list(np.array([(i, j) for i in range(len(MBca)) for j in range(i+1, len(MBca))]))
         
-        #I(mca ; mca| cause) - I(mca ; mca) for (mca,mca) in mbca_couples
-        # mca_mca_cau = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca]) - normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]]) for i, j in mbca_couples]
-        #problem is here
-        mca_mca_cau = [0] if not mbca_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca]) for i, j in mbca_couples]
+        # #I(mca ; mca| cause) - I(mca ; mca) for (mca,mca) in mbca_couples
+        # # mca_mca_cau = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca]) - normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]]) for i, j in mbca_couples]
+        # #problem is here
+        # mca_mca_cau = [0] if not mbca_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca]) for i, j in mbca_couples]
 
-        mbef_couples = list(np.array([(i, j) for i in range(len(MBef)) for j in range(i+1, len(MBef))]))
+        # mbef_couples = list(np.array([(i, j) for i in range(len(MBef)) for j in range(i+1, len(MBef))]))
 
-        #I(mbe ; mbe| effect) - I(mbe ; mbe) for (mbe,mbe) in mbef_couples
-        # mbe_mbe_eff = [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) - normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]]) for i, j in mbef_couples]
-        mbe_mbe_eff = [0] if not mbef_couples else [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) for i, j in mbef_couples]
+        # #I(mbe ; mbe| effect) - I(mbe ; mbe) for (mbe,mbe) in mbef_couples
+        # # mbe_mbe_eff = [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) - normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]]) for i, j in mbef_couples]
+        # mbe_mbe_eff = [0] if not mbef_couples else [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) for i, j in mbef_couples]
         
-        E_ef = pd.DataFrame(ecdf(D.iloc[:, ef])(D.iloc[:, ef])) 
-        E_ca = pd.DataFrame(ecdf(D.iloc[:, ca])(D.iloc[:, ca]))
+        # E_ef = pd.DataFrame(ecdf(D.iloc[:, ef])(D.iloc[:, ef])) 
+        # E_ca = pd.DataFrame(ecdf(D.iloc[:, ca])(D.iloc[:, ca]))
 
-        #I(cause ; ecdf_effect) 
-        gini_ca_ef = normalized_conditional_information(D.iloc[:, ca], E_ef)
+        # #I(cause ; ecdf_effect) 
+        # gini_ca_ef = normalized_conditional_information(D.iloc[:, ca], E_ef)
 
-        #I(cause ; ecdf_effect) 
-        gini_ef_ca = normalized_conditional_information(D.iloc[:, ef], E_ca)
+        # #I(cause ; ecdf_effect) 
+        # gini_ef_ca = normalized_conditional_information(D.iloc[:, ef], E_ca)
 
-        #I(effect ; ecdf_cause | MBeffect)
-        gini_delta = normalized_conditional_information(D.iloc[:, ef], E_ca, D.iloc[:, MBef])  
+        # #I(effect ; ecdf_cause | MBeffect)
+        # gini_delta = normalized_conditional_information(D.iloc[:, ef], E_ca, D.iloc[:, MBef])  
         
-        #I(cause ; ecdf_effect | MBcause)
-        gini_delta2 = normalized_conditional_information(D.iloc[:, ca], E_ef, D.iloc[:, MBca]) 
+        # #I(cause ; ecdf_effect | MBcause)
+        # gini_delta2 = normalized_conditional_information(D.iloc[:, ca], E_ef, D.iloc[:, MBca]) 
 
 
-        if compute_error_descriptors:
-            mfs = [i for i in range(n_features) if i not in [ef]]
-            # if boot == "mimr":
-                # fsef = [mfs[i] for i in mimr(D.iloc[:, mfs], D.iloc[:, ef], nmax=3)]
-            # if boot == "rank":
-            #     fsef = [mfs[i] for i in rankrho(D.iloc[:, mfs], D.iloc[:, ef], nmax=3)]
-            ranking = rankrho(D.iloc[:, mfs], D.iloc[:, ef], nmax=min(n_features-1,3)) 
-            fsef = [mfs[i] for i in ranking]
-            eef = epred(D.iloc[:, fsef], D.iloc[:, ef])
-            if self.verbose: print("eef done")
-            mfs = [i for i in range(n_features) if i not in [ca]]
-            # if boot == "mimr":
-            #     fsca = [mfs[i] for i in mimr(D.iloc[:, mfs], D.iloc[:, ca], nmax=3)]
-            # if boot == "rank":
-            #     fsca = [mfs[i] for i in rankrho(D.iloc[:, mfs], D.iloc[:, ca], nmax=3)]
-            ranking = rankrho(D.iloc[:, mfs], D.iloc[:, ca], nmax=min(n_features-1,3))
-            fsca = [mfs[i] for i in ranking]
-            eca = epred(D.iloc[:, fsca], D.iloc[:, ca])
-            if self.verbose: print("eca done")
-            merged_list = [ca, ef] + fsef + fsca
-            unique_indices = np.unique(merged_list)
-            DD = D.iloc[:, unique_indices]
+        # if compute_error_descriptors:
+        #     mfs = [i for i in range(n_features) if i not in [ef]]
+        #     # if boot == "mimr":
+        #         # fsef = [mfs[i] for i in mimr(D.iloc[:, mfs], D.iloc[:, ef], nmax=3)]
+        #     # if boot == "rank":
+        #     #     fsef = [mfs[i] for i in rankrho(D.iloc[:, mfs], D.iloc[:, ef], nmax=3)]
+        #     ranking = rankrho(D.iloc[:, mfs], D.iloc[:, ef], nmax=min(n_features-1,3)) 
+        #     fsef = [mfs[i] for i in ranking]
+        #     eef = epred(D.iloc[:, fsef], D.iloc[:, ef])
+        #     if self.verbose: print("eef done")
+        #     mfs = [i for i in range(n_features) if i not in [ca]]
+        #     # if boot == "mimr":
+        #     #     fsca = [mfs[i] for i in mimr(D.iloc[:, mfs], D.iloc[:, ca], nmax=3)]
+        #     # if boot == "rank":
+        #     #     fsca = [mfs[i] for i in rankrho(D.iloc[:, mfs], D.iloc[:, ca], nmax=3)]
+        #     ranking = rankrho(D.iloc[:, mfs], D.iloc[:, ca], nmax=min(n_features-1,3))
+        #     fsca = [mfs[i] for i in ranking]
+        #     eca = epred(D.iloc[:, fsca], D.iloc[:, ca])
+        #     if self.verbose: print("eca done")
+        #     merged_list = [ca, ef] + fsef + fsca
+        #     unique_indices = np.unique(merged_list)
+        #     DD = D.iloc[:, unique_indices]
 
-            # Icov2 = np.linalg.pinv(np.cov(DD) + np.diag([0.01] * DD.shape[1]))
+        #     # Icov2 = np.linalg.pinv(np.cov(DD) + np.diag([0.01] * DD.shape[1]))
 
-            eDe = []
+        #     eDe = []
 
-            eef = pd.Series(eef)
-            eca = pd.Series(eca)
+        #     eef = pd.Series(eef)
+        #     eca = pd.Series(eca)
 
-            eDe.append(normalized_conditional_information(eef, eca, D.iloc[:, ca]) - normalized_conditional_information(eef, eca))
-            eDe.append(normalized_conditional_information(eef, eca, D.iloc[:, ef]) - normalized_conditional_information(eef, eca))
-            eDe.append(normalized_conditional_information(eef, D.iloc[:, ca], D.iloc[:, ef]) - normalized_conditional_information(eef, D.iloc[:, ca]))
-            eDe.append(normalized_conditional_information(eca, D.iloc[:, ef], D.iloc[:, ca]) - normalized_conditional_information(eca, D.iloc[:, ef]))
-            eDe.append(normalized_conditional_information(eca, D.iloc[:, ef]))
-            eDe.append(normalized_conditional_information(eef, D.iloc[:, ca]))
+        #     eDe.append(normalized_conditional_information(eef, eca, D.iloc[:, ca]) - normalized_conditional_information(eef, eca))
+        #     eDe.append(normalized_conditional_information(eef, eca, D.iloc[:, ef]) - normalized_conditional_information(eef, eca))
+        #     eDe.append(normalized_conditional_information(eef, D.iloc[:, ca], D.iloc[:, ef]) - normalized_conditional_information(eef, D.iloc[:, ca]))
+        #     eDe.append(normalized_conditional_information(eca, D.iloc[:, ef], D.iloc[:, ca]) - normalized_conditional_information(eca, D.iloc[:, ef]))
+        #     eDe.append(normalized_conditional_information(eca, D.iloc[:, ef]))
+        #     eDe.append(normalized_conditional_information(eef, D.iloc[:, ca]))
             
-            #TODO: understand the need for Icov
-            cov_D = np.cov(D, rowvar=False)  # Get covariance matrix. Set rowvar to False to ensure columns are treated as variables.
-            shifted_cov_D = cov_D + np.eye(D.shape[1]) * 0.01  # Add 0.01 to the diagonal
-            Icov = np.linalg.inv(shifted_cov_D)
-            # Assuming Icov is already defined
-            eDe.extend([
-                Icov[ca, ef],
-                # Icov2[0, 1],
-                np.corrcoef(eef, D.iloc[:, ca])[0, 1],
-                np.corrcoef(eca, D.iloc[:, ef])[0, 1],
-                HOC(eef, eca, 0, 1),
-                HOC(eef, eca, 1, 0),
-                skew(eca),
-                skew(eef)
-            ])
+        #     #TODO: understand the need for Icov
+        #     cov_D = np.cov(D, rowvar=False)  # Get covariance matrix. Set rowvar to False to ensure columns are treated as variables.
+        #     shifted_cov_D = cov_D + np.eye(D.shape[1]) * 0.01  # Add 0.01 to the diagonal
+        #     Icov = np.linalg.inv(shifted_cov_D)
+        #     # Assuming Icov is already defined
+        #     eDe.extend([
+        #         Icov[ca, ef],
+        #         # Icov2[0, 1],
+        #         np.corrcoef(eef, D.iloc[:, ca])[0, 1],
+        #         np.corrcoef(eca, D.iloc[:, ef])[0, 1],
+        #         HOC(eef, eca, 0, 1),
+        #         HOC(eef, eca, 1, 0),
+        #         skew(eca),
+        #         skew(eef)
+        #     ])
 
-            eDe_names = [
-                "M.e1", "M.e2", "M.e3", "M.e4", "M.e5", "M.e6",
-                "M.Icov", "M.Icov2",
-                "M.cor.e1", "M.cor.e2",
-                "B.HOC12.e", "B.HOC21.e", "B.skew.eca", "B.skew.eef"
-            ]
+        #     eDe_names = [
+        #         "M.e1", "M.e2", "M.e3", "M.e4", "M.e5", "M.e6",
+        #         "M.Icov", "M.Icov2",
+        #         "M.cor.e1", "M.cor.e2",
+        #         "B.HOC12.e", "B.HOC21.e", "B.skew.eca", "B.skew.eef"
+        #     ]
 
 
 
@@ -387,26 +390,26 @@ class D2C:
         values.extend(np.quantile(m_eff, q=pq, axis=0).flatten()) 
         values.extend(np.quantile(cau_m_eff, q=pq, axis=0).flatten()) 
         values.extend(np.quantile(eff_m_cau, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(mca_mef_cau, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(mca_mef_eff, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(mca_mca_cau, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(mbe_mbe_eff, q=pq, axis=0).flatten()) 
-        values.extend([gini_delta, gini_delta2,gini_ca_ef, gini_ef_ca])
-        values.extend([
-                n_observations,                
-                n_features,
-                n_features/n_observations,
-                kurtosis(D.iloc[:, ca]),
-                kurtosis(D.iloc[:, ef]),
-                skew(D.iloc[:, ca]),
-                skew(D.iloc[:, ef]),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 2),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 2, 1),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 3),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 3, 1),
-                # stab(D.iloc[:, ca], D.iloc[:, ef]),
-                # stab(D.iloc[:, ef], D.iloc[:, ca])
-                ]) 
+        # values.extend(np.quantile(mca_mef_cau, q=pq, axis=0).flatten()) 
+        # values.extend(np.quantile(mca_mef_eff, q=pq, axis=0).flatten()) 
+        # values.extend(np.quantile(mca_mca_cau, q=pq, axis=0).flatten()) 
+        # values.extend(np.quantile(mbe_mbe_eff, q=pq, axis=0).flatten()) 
+        # values.extend([gini_delta, gini_delta2,gini_ca_ef, gini_ef_ca])
+        # values.extend([
+        #         n_observations,                
+        #         n_features,
+        #         n_features/n_observations,
+        #         kurtosis(D.iloc[:, ca]),
+        #         kurtosis(D.iloc[:, ef]),
+        #         skew(D.iloc[:, ca]),
+        #         skew(D.iloc[:, ef]),
+        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 2),
+        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 2, 1),
+        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 3),
+        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 3, 1),
+        #         # stab(D.iloc[:, ca], D.iloc[:, ef]),
+        #         # stab(D.iloc[:, ef], D.iloc[:, ca])
+        #         ]) 
         
         keys = ['graph_id','edge_source','edge_dest']
         keys = keys + [f"Feature{i}" for i in range(len(values) - len(keys))]

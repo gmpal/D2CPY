@@ -38,8 +38,6 @@ def my_method(data, clf=RandomForestClassifier(n_estimators=100, max_depth=2, ra
     d2c_test = D2C(None,[data_df])
     X_test = d2c_test.compute_descriptors_no_dags()
     
-    X_test = X_test.iloc[:, :int(X_test.shape[1]/2)]
-
 
     test_df = pd.DataFrame(X_test)
     # test_df = test_df.drop(['graph_id', 'edge_source', 'edge_dest'], axis=1)
@@ -150,15 +148,15 @@ if __name__ == '__main__':
         zip_ref.extractall("experiments")
         names = sorted(zip_ref.namelist())
 
-    training_data = pd.read_csv('../data/ts_descriptors_with_cycles.csv')
+    training_data = pd.read_csv('../data/ts5_fixed_descriptors_with_cycles.csv')
 
     X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
 
     #select first half of columns
-    X_train = X_train.iloc[:, :int(X_train.shape[1]/2)]
+    X_train = X_train.iloc[:,:49]
     y_train = training_data['is_causal']
 
-    clf = BalancedRandomForestClassifier(n_estimators=100, max_depth=5, n_jobs=1)
+    clf = BalancedRandomForestClassifier(n_estimators=20, max_depth=10, n_jobs=1)
     clf.fit(X_train, y_train)
 
     args_list = [(name, clf) for name in names]

@@ -5,8 +5,12 @@ from sklearn.ensemble import RandomForestClassifier
 from imblearn.ensemble import BalancedRandomForestClassifier
 import networkx as nx
 
+#ignore future warnings
+import warnings 
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
 # assuming df is your dataframe, X are your features, y is your target
-df = pd.read_csv('../data/ts_descriptors_with_cycles.csv')  # replace with your data file
+df = pd.read_csv('../data/ts_limited_descriptors.csv')  # replace with your data file
 
 # sampled_ids = df['graph_id'].drop_duplicates().sample(100)
 
@@ -37,7 +41,7 @@ y = df['is_causal']
 logo = LeaveOneGroupOut()
 
 # create a Logistic Regression classifier
-classifier = BalancedRandomForestClassifier(n_estimators=200, n_jobs=1)
+classifier = BalancedRandomForestClassifier(n_estimators=50, n_jobs=1)
 
 # use cross_validate and fit it with LOGO cross-validator
 scores = cross_validate(classifier, X, y, cv=logo.split(X, y, df['graph_id']), n_jobs=-1, 
