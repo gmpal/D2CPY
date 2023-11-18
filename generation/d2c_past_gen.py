@@ -37,7 +37,11 @@ if __name__ == '__main__':
         updated_dags_renamed.append(updated_dag)
 
 
-    from d2c.D2C import D2C
+    from d2c.d2c import D2C
     d2c = D2C(updated_dags_renamed, lagged_observations,n_jobs=10)
     d2c.initialize()
-    d2c.save_descriptors_df('../data/fixed_lags_descriptors.csv')
+    d2c.save_descriptors_df('../data/fixed_lags_descriptors_MB_estimated.csv')
+
+    # # pickle lagged_column_names
+    # with open('../data/lagged_column_names.pkl', 'wb') as f:
+    #     pickle.dump(lagged_column_names, f)

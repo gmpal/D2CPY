@@ -14,8 +14,8 @@ from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_sco
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_score, GroupKFold
 
-from d2c.simulatedDAGs import SimulatedDAGs
-from d2c.utils import *
+from simulatedDAGs import SimulatedDAGs
+from utils import *
 
 from datetime import datetime
 
@@ -24,9 +24,13 @@ import pandas as pd
 from scipy.stats import kurtosis, skew
 import pickle
 
+#TODO: improve multiprocessing handling and clean code
+def _process_pair(pair, compute_descriptors):
+    return compute_descriptors(0, pair[0], pair[1])
+
 
 class D2C:
-    def __init__(self, dags, observations, rev: bool = True, boot: str = "rank", verbose=False, random_state: int = 42, n_jobs: int = 1) -> None:
+    def __init__(self, dags, observations, rev: bool = True, boot: str = "rank", verbose=False, random_state: int = 42, n_jobs: int = 1, dynamic: bool = True, n_variables: int = 3, maxlags: int = 3 ) -> None:
         """
         Class for D2C analysis.
 
@@ -52,19 +56,24 @@ class D2C:
         self.n_jobs = n_jobs
         self.random_state = random_state
 
-
+        self.dynamic = dynamic #flag for handling time series data
+        self.n_variables = n_variables #number of variables in the time series #TODO: handle for nontimeseries as well
+        self.maxlags = maxlags
+        
     def compute_descriptors_no_dags(self):
+        if not self.dynamic:
+            pairs = [(i, j) for i in range(self.n_variables) for j in range(self.n_variables) if i != j]
+        else: 
+            pairs = [(i, j) for i in range(self.n_variables,  self.n_variables + self.n_variables * self.maxlags) for j in range(self.n_variables) if i != j]
+        
+        if self.n_jobs == 1:
+            results = [_process_pair(pair, self.compute_descriptors) for pair in pairs]
+        else:
+            with Pool(processes=self.n_jobs) as pool:
+                results = pool.starmap(_process_pair, [(pair, self.compute_descriptors) for pair in pairs])
 
-        #TODO: this assumes to receive a list, but it should handle single observations better
-        num_nodes = self.observations_from_DAGs[0].shape[1]
-        pairs = []
-        X = []
-        for i in range(num_nodes):
-            for j in range(num_nodes):
-                if i != j:
-                    pairs.append((i,j))
-                    X.append(self.compute_descriptors(0, i, j))
-        return X
+        return list(results)
+
 
     def initialize(self) -> None:
         """
@@ -125,7 +134,7 @@ class D2C:
 
     def compute_markov_blanket(self, DAG_index, D, variable, MB_size, verbose=False):
         # if self.DAGs is None:
-        if self.DAGs is None:
+        if True: #TODO: make this conditional
             ind = list(set(np.arange(D.shape[1])) - {variable})
             if self.boot == "mrmr": 
                 order = mRMR(D.iloc[:,ind],D.iloc[:,variable],nmax=min(len(ind),5*MB_size),verbose=self.verbose)
@@ -135,7 +144,7 @@ class D2C:
             return sorted_ind[:MB_size]
             #TODO: at the moment we do not use mRMR, just rankrho.
             # return ind[mRMR(D.iloc[:,ind],D.iloc[:,variable],nmax=MB_size,verbose=self.verbose)]  
-        else: 
+        else: #never executed: the markov blanket needs to be estimated! 
             dag = self.DAGs[DAG_index]
             # node = str(variable)
             #TODO: assess if this is the best way to handle the passage between strings and integers

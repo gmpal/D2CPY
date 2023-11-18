@@ -581,3 +581,34 @@ def epred(X, Y):
 
 def make_name(node_idx):
     return 'v' + str(node_idx)
+
+
+#reconstruct dag from causal_dataframe
+#previously used in D2C vs VAR
+# import networkx as nx
+# import matplotlib.pyplot as plt
+# import numpy as np
+
+# G = nx.DiGraph()
+# G.add_nodes_from(set([index[0] for index in causal_dataframe.index]))
+# mapping = {0:'0_t-1', 1:'1_t-1', 2:'2_t-1', 3:'0_t-2', 4:'1_t-2', 5:'2_t-2', 6:'0_t-3', 7:'1_t-3', 8:'2_t-3'}
+# G = nx.relabel_nodes(G, mapping)
+# G.add_nodes_from(set([index[1] for index in causal_dataframe.index]))
+
+# for index, row in causal_dataframe.iterrows():
+#     if row['is_causal'] == 1:
+#         G.add_edge(mapping[index[0]], index[1], weight=abs(row['value'].round(2)))
+
+
+
+# def flatten_dag(G):
+#     G_flat = nx.DiGraph()
+#     G_flat.add_nodes_from(G.nodes)
+#     for node in G.nodes:
+#         if '_t' not in node:
+#             for parent in G.predecessors(node):
+#                 G_flat.add_edge(parent, node)
+#     return G_flat
+    
+
+    
