@@ -524,21 +524,21 @@ def dag_to_formula(dag):
             formula += f"{bias}\n"
     print(formula)
 
-def show_dag(DAG, weight=True):
-    from graphviz import Digraph
+# def show_dag(DAG, weight=True):
+#     from graphviz import Digraph
 
-    G_dot = Digraph(engine="dot",format='png')
+#     G_dot = Digraph(engine="dot",format='png')
 
-    for node in DAG.nodes():
-        G_dot.node(str(node))
-    for edge in DAG.edges():
-        if weight:
-            G_dot.edge(str(edge[0]), str(edge[1]), label=str(DAG.edges[edge]['weight']))        
-        else:
-            G_dot.edge(str(edge[0]), str(edge[1]))
+#     for node in DAG.nodes():
+#         G_dot.node(str(node))
+#     for edge in DAG.edges():
+#         if weight:
+#             G_dot.edge(str(edge[0]), str(edge[1]), label=str(DAG.edges[edge]['weight']))        
+#         else:
+#             G_dot.edge(str(edge[0]), str(edge[1]))
 
-    # Render the graph in a hierarchical layout
-    return G_dot
+#     # Render the graph in a hierarchical layout
+#     return G_dot
 
 
 import numpy as np
