@@ -6,7 +6,7 @@ import pickle
 # Adjust sys.path
 sys.path.append("..")
 sys.path.append("../d2c/")
-from d2c.D2C import D2C
+from d2c.d2c import D2C
 
 def process_d2c(input_file, output_file, n_jobs=1):
     # Load data from the input file

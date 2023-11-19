@@ -23,7 +23,7 @@ import sys
 sys.path.append("..")
 sys.path.append("../d2c/")
 from d2c.simulatedTimeSeries import SimulatedTimeSeries
-from d2c.D2C import D2C
+from d2c.d2c import D2C
 
 
 # Your method must be called 'my_method'

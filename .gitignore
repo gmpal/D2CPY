@@ -14,3 +14,15 @@ causeme/causeme_method_registration_example.py
 *.txt
 */pics/*.png
 causeme.keys
+
+/competitors/*.csv
+/competitors/*.pkl
+/competitors/*/*.csv
+/competitors/*/*/*.csv
+/competitors/*/*/*/*.csv
+/competitors/notmine/*
+/competitors/TCDF/*
+/temp/*
+/causeme/*
+/data/*.pkl
+/generation/*.csv
