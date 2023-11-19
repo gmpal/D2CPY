@@ -56,6 +56,7 @@ class SimulatedTimeSeries(Simulated):
         
         start_time = time.time()
         initial_DAG = self._generate_single_dag()
+        print(initial_DAG.nodes)
         timestamp = time.time()
         # print(f"Time to generate DAG: {timestamp - start_time}")
         updated_DAG = self._update_dag_for_timestep(initial_DAG, current_lag, index)
@@ -166,7 +167,7 @@ class SimulatedTimeSeries(Simulated):
 
         # # Render the graph in a hierarchical layout
         # G_dot.render(f"pics/{index}", view=False, cleanup=True)
-        # return past_dag
+        return past_dag
 
     
     def _generate_timestep_observation(self, dag: nx.DiGraph, data: pd.DataFrame) -> pd.DataFrame:
@@ -174,6 +175,7 @@ class SimulatedTimeSeries(Simulated):
         #inizialize the first row of the dataframe
 
         current_len = len(data)
+        print(dag.nodes)
         for node in nx.topological_sort(dag):
             # print("Node", node)
             # print("with bias", dag.nodes[node]['bias'])
