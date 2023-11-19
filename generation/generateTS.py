@@ -20,11 +20,12 @@ def check_divergence(multivariate_series):
             return True  # Mean absolute value is too high, which might indicate divergence
 
 def generate_time_series(n_series, n_observations, n_variables, maxlags, not_acyclic, n_jobs, name, random_state):
-    generator = SimulatedTimeSeries(n_series, n_observations, n_variables, not_acyclic=not_acyclic, maxlags=maxlags, n_jobs=n_jobs, random_state=random_state, function_types=['sigmoid'])
+    generator = SimulatedTimeSeries(n_series, n_observations, n_variables, not_acyclic=not_acyclic, maxlags=maxlags, n_jobs=n_jobs, random_state=random_state, function_types=['sigmoid','linear','quadratic','exponential','tanh','polynomial'])
     generator.generate()
     observations = generator.get_observations()
     dags = generator.get_dags()
     updated_dags = generator.get_updated_dags()
+    causal_dfs = generator.get_causal_dfs()
     #pickle everything
     
     for obs_idx, obs in enumerate(observations):
@@ -34,11 +35,16 @@ def generate_time_series(n_series, n_observations, n_variables, maxlags, not_acy
             observations.pop(obs_idx)
             dags.pop(obs_idx)
             updated_dags.pop(obs_idx)
+            causal_dfs.pop(obs_idx)
+
+    for obs_idx, obs in enumerate(observations): #TODO: check why this is necessary  despite previous check
+        # drop nas
+        observations[obs_idx] = obs.dropna()
 
     #print how many left
     print(f'Generated {len(observations)} time series')
     with open(f'../data/{name}.pkl', 'wb') as f:
-        pickle.dump((observations, dags, updated_dags), f)
+        pickle.dump((observations, dags, updated_dags, causal_dfs), f)
 
 
 if __name__ == "__main__":
@@ -51,7 +57,6 @@ if __name__ == "__main__":
     parser.add_argument('--n_jobs', type=int, default=10, help='Number of jobs for parallel processing')
     parser.add_argument('--name', type=str, default='ts3', help='Name of the file to save the data')
     parser.add_argument('--random_state', type=int, default=0, help='Random state for reproducibility')
-
 
     args = parser.parse_args()
 

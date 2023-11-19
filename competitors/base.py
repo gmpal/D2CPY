@@ -1,5 +1,6 @@
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from multiprocessing import Pool
+import numpy as np
 
 class BaseCausalInference:
     def __init__(self, ts_list, maxlags=3, ground_truth=None, n_jobs=1, suffix=''):
@@ -61,12 +62,13 @@ class BaseCausalInference:
             y_hat = self.causal_dfs[ts_idx]['is_causal'].astype(int)
 
             data.append([method_name, 'accuracy', accuracy_score(y_test, y_hat)])
-            data.append([method_name, 'precision', precision_score(y_test, y_hat)])
+            data.append([method_name, 'precision', precision_score(y_test, y_hat,zero_division=np.nan)])
             data.append([method_name, 'recall', recall_score(y_test, y_hat)])
             data.append([method_name, 'f1', f1_score(y_test, y_hat)])   
             if self.returns_proba: 
                 y_prob = self.causal_dfs[ts_idx]['value'].values.astype(float)
-                auc_test = roc_auc_score(y_test, y_prob)
-                data.append([method_name, 'auc', auc_test])
+                if len(np.unique(y_test)) > 1:
+                    auc_test = roc_auc_score(y_test, y_prob)
+                    data.append([method_name, 'auc', auc_test])
 
         return data

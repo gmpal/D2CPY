@@ -3,8 +3,11 @@ import pickle
 import sys 
 import pandas as pd
 import networkx as nx
+import argparse
+
 sys.path.append("..")
 sys.path.append("../d2c/")
+from d2c.d2c import D2C
 
 def create_lagged(observations, lag):
     #create lagged observations
@@ -16,32 +19,34 @@ def create_lagged(observations, lag):
     lagged_column_names = [str(name) + '_lag' + str(i) for i in range(lag+1) for name in names]
     return lagged, lagged_column_names
 
+def generate_descriptors(name:str = 'data', maxlags:int = 3, n_jobs:int=1):
 
-if __name__ == '__main__': 
-
-
-    with open('../data/sigmoid.pkl', 'rb') as f:
-        observations, dags, updated_dags = pickle.load(f)
+    with open('../data/'+name+'.pkl', 'rb') as f:
+        observations, _, updated_dags, _ = pickle.load(f)
     
-    lagged_observations, lagged_column_names, updated_dags_renamed = [], [], []
+    lagged_observations, updated_dags_renamed = [], []
      
     for obs in observations:
-        lagged_obs, lagged_names = create_lagged(obs, 3)
+        lagged_obs, _ = create_lagged(obs, maxlags)
         lagged_observations.append(lagged_obs.dropna())
-        lagged_column_names.append(lagged_names)
 
     for updated_dag in updated_dags:
-        #rename dag nodes
         mapping = {i: index for index,i in enumerate(updated_dag.nodes)}
         updated_dag = nx.relabel_nodes(updated_dag, mapping)
         updated_dags_renamed.append(updated_dag)
 
-
-    from d2c.d2c import D2C
-    d2c = D2C(updated_dags_renamed, lagged_observations,n_jobs=10)
+    d2c = D2C(updated_dags_renamed, lagged_observations, n_jobs=n_jobs)
     d2c.initialize()
-    d2c.save_descriptors_df('../data/sigmoid_descriptors.csv')
+    d2c.save_descriptors_df('../data/'+name+'_descriptors.csv')
 
-    # # pickle lagged_column_names
-    # with open('../data/lagged_column_names.pkl', 'wb') as f:
-    #     pickle.dump(lagged_column_names, f)
+
+if __name__ == '__main__': 
+
+    parser = argparse.ArgumentParser(description='Generate D2C Descriptors')
+    parser.add_argument('--name', type=str, default='data', help='Name of the file to load and save the data')
+    parser.add_argument('--maxlags', type=int, default=3, help='Maximum lags for the time series')
+    parser.add_argument('--n_jobs', type=int, default=10, help='Number of jobs for parallel processing')
+
+    args = parser.parse_args()
+
+    generate_descriptors(args.name, args.maxlags, args.n_jobs)

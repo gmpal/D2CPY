@@ -84,7 +84,8 @@ class Simulated(ABC):
         for node in G.nodes:
             # G.nodes[node]['bias'] = np.round(np.random.uniform(low=-0.1, high=0.1),5)
             G.nodes[node]['bias'] = 0
-            G.nodes[node]['sigma'] = self.sdn
+            #random between 0 and self.sdn
+            G.nodes[node]['sigma'] = np.round(np.random.uniform(low=0, high=self.sdn),5)
             G.nodes[node]['seed'] = self.random_state
 
         for edge in G.edges:

@@ -12,9 +12,9 @@ from d2c import D2C as D2C_
 class D2C(BaseCausalInference):
     def __init__(self, *args, **kwargs):
         self.use_real_MB = kwargs.pop('use_real_MB', False)
+        self.descriptors = pd.read_csv(kwargs.pop('descriptors_path', None))
         super().__init__(*args, **kwargs)
         self.returns_proba = True
-
 
     def create_lagged(self, observations, lag):
         lagged = observations.copy()
@@ -23,29 +23,26 @@ class D2C(BaseCausalInference):
         lagged.columns = [i for i in range(len(lagged.columns))]
         return lagged.dropna()
 
-
     def infer(self, single_ts, **kwargs):
         ts_index = kwargs.get('ts_index', None)
         if ts_index is None:
             raise ValueError('ts_index is required for D2C inference')
-        lagged_obs = self.create_lagged(single_ts, self.maxlags)
-        d2c_test = D2C_(None, [lagged_obs], n_jobs=1, dynamic=True, n_variables = single_ts.shape[1], maxlags=self.maxlags) #TODO: parallelism is handled at another spot
-        X_test = d2c_test.compute_descriptors_no_dags()
-        test_df = pd.DataFrame(X_test).drop(['graph_id','edge_source','edge_dest'], axis=1)
         
-        training_data = pd.read_csv('../data/fixed_lags_descriptors_MB_estimated.csv')
-        # training_data = pd.read_csv('../data/fixed_lags_descriptors.csv')
-        training_data = training_data.loc[training_data['graph_id'] != ts_index] 
+        data = self.descriptors
+        training_data = data.loc[data['graph_id'] != ts_index] 
+        testing_data = data.loc[data['graph_id'] == ts_index]
+        #flattening
+        testing_data = testing_data[(testing_data['edge_dest'] < 3) & (testing_data['edge_source'] > 2)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index(drop=True)
 
         X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
         y_train = training_data['is_causal']
+        X_test = testing_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
 
         clf = BalancedRandomForestClassifier(n_estimators=20, max_depth=10, n_jobs=1, sampling_strategy='all',replacement=True)
         clf.fit(X_train, y_train)
 
-        y_pred = clf.predict_proba(test_df)[:,1]
-        returned = pd.concat([pd.DataFrame(X_test)[['edge_source','edge_dest']], pd.DataFrame(y_pred, columns=['is_causal'])], axis=1)
-      
+        y_pred = clf.predict_proba(X_test)[:,1]
+        returned = pd.concat([pd.DataFrame(testing_data)[['edge_source','edge_dest']], pd.DataFrame(y_pred, columns=['is_causal'])], axis=1)
         return returned
     
     def build_causal_df(self, results, n_variables):

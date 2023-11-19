@@ -1,3 +1,4 @@
+import argparse
 import pandas as pd
 import pickle
 
@@ -14,34 +15,30 @@ from varlingam import VARLiNGAM
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+#suppress FutureWarning
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
-if __name__ == "__main__":
 
-    with open('../data/fixed_lags.pkl', 'rb') as f:
-        observations, dags, updated_dags = pickle.load(f)
+def test(name:str = 'data', maxlags:int = 3, n_jobs:int=1):
+    
+    descriptors_path = '../data/'+name+'_descriptors.csv'
+    data_path = '../data/'+name+'.pkl'
 
-    df = pd.read_csv('../data/fixed_lags_descriptors.csv')
-    df = pd.read_csv('../data/fixed_lags_descriptors_MB_estimated.csv')
+    with open(data_path, 'rb') as f:
+        data, dags, updated_dags, causal_dfs = pickle.load(f)
 
-    #flattening
-    ground_truth_df = df[(df['edge_dest'] < 3) & (df['edge_source'] > 2)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index()[['graph_id','is_causal']]
+    df = pd.read_csv(descriptors_path)
 
-    #select last 5 graphs
-    ground_truth_df = ground_truth_df.loc[ground_truth_df['graph_id'] > len(ground_truth_df['graph_id'].unique()) - 21]
+    ground_truth = [df['is_causal'].values for df in causal_dfs]
 
-    ground_truth = []
-    for value in ground_truth_df['graph_id'].unique():
-        ground_truth.append(ground_truth_df.loc[ground_truth_df['graph_id'] == value]['is_causal'].values)  
-
-    data = observations[-20:]
-
-    d2c_eval = D2C(data, maxlags=3, n_jobs=10, ground_truth=ground_truth).run().evaluate()
-    dyno_eval = DYNOTEARS(data, maxlags=3, ground_truth=ground_truth).run().evaluate()
-    granger_eval = Granger(data, maxlags=3, ground_truth=ground_truth).run().evaluate()
-    pcmci_eval = PCMCI(data, maxlags=3, ground_truth=ground_truth).run().evaluate()
-    var_eval = VAR(data, maxlags=3, ground_truth=ground_truth).run().evaluate()
-    varlingam_eval = VARLiNGAM(data, maxlags=3, ground_truth=ground_truth).run().evaluate()
+    d2c_eval = D2C(data, maxlags=maxlags, n_jobs=n_jobs, ground_truth=ground_truth,descriptors_path=descriptors_path).run().evaluate()
+    dyno_eval = DYNOTEARS(data, maxlags=maxlags, ground_truth=ground_truth).run().evaluate()
+    granger_eval = Granger(data, maxlags=maxlags, ground_truth=ground_truth).run().evaluate()
+    pcmci_eval = PCMCI(data, maxlags=maxlags, ground_truth=ground_truth).run().evaluate()
+    var_eval = VAR(data, maxlags=maxlags, ground_truth=ground_truth).run().evaluate()
+    varlingam_eval = VARLiNGAM(data, maxlags=maxlags, ground_truth=ground_truth).run().evaluate()
 
 
     all_eval = [d2c_eval, dyno_eval, granger_eval, pcmci_eval, var_eval, varlingam_eval]
@@ -51,11 +48,27 @@ if __name__ == "__main__":
 
 
     df_scores = pd.DataFrame(df_all_eval, columns=['Model', 'Metric', 'Score'])
-
+    #save
+    df_scores.to_csv('../data/'+name+'_scores.csv', index=False)
     # Plotting
     sns.set_style("whitegrid")
     plt.figure(figsize=(12, 6))
     sns.boxplot(x='Metric', y='Score', hue='Model', data=df_scores)
     plt.title("Comparison of methods Across Different Metrics")
-    plt.show()
+    plt.legend(loc='upper right')
+    #save
+    plt.savefig('../data/'+name+'_scores.png')
+    # plt.show()
+
+
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description='Test Causal Inference Methods')
+    parser.add_argument('--name', type=str, default='data', help='Name of the file to load and save the data')
+    parser.add_argument('--maxlags', type=int, default=3, help='Maximum lags for the time series')
+    parser.add_argument('--n_jobs', type=int, default=10, help='Number of jobs for parallel processing')
+
+    args = parser.parse_args()
+
+    test(args.name, args.maxlags, args.n_jobs)    
 

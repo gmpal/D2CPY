@@ -262,26 +262,64 @@ class SimulatedTimeSeries(Simulated):
         """
         Returns the causal dataframes.
         """
-        #TODO: complete
-        return self.list_causal_dfs
+        list_causal_dfs = []
+        for dag in self.list_updated_dags:
+            pairs = [(source, effect) for source in range(self.n_variables, self.n_variables * self.maxlags + self.n_variables) for effect in range(self.n_variables)]
+            multi_index = pd.MultiIndex.from_tuples(pairs, names=['source', 'target'])
+            causal_dataframe = pd.DataFrame(index=multi_index, columns=['is_causal'])
+
+            causal_dataframe['is_causal'] = 0
+
+            # print(causal_dataframe)
+            
+            for parent_node, child_node in dag.edges:
+                
+                if '-' not in child_node:
+                    child_variable = int(child_node)
+                    child_lag = 0
+                else:
+                    child_variable = int(child_node.split("_")[0])
+                    child_lag = int(child_node.split("-")[1])
+                
+                if child_variable < self.n_variables:
+                    corresponding_value_child = child_variable 
+                    parent_variable = int(parent_node.split("_")[0])
+                    parent_lag = int(parent_node.split("-")[1])
+                    corresponding_value_parent = parent_lag * self.n_variables + parent_variable
+
+                    causal_dataframe.loc[(corresponding_value_parent, corresponding_value_child), 'is_causal'] = 1
+                
+            list_causal_dfs.append(causal_dataframe)
+
+        return list_causal_dfs
 
 if __name__ == "__main__":
     from graphviz import Digraph
     # from utils import print_DAG
 
-    n_dags = 5  # You can change this as needed
-    n_observations = 1000
-    n_variables = 5
-    maxlags = 4
+    n_dags = 1  # You can change this as needed
+    n_observations = 300
+    n_variables = 3
+    maxlags = 3
     # # Testing with a single process
-    generator = SimulatedTimeSeries(n_dags, n_observations, n_variables, maxlags, n_jobs=5)
+    generator = SimulatedTimeSeries(n_dags, n_observations=n_observations, n_variables=n_variables, maxlags=maxlags, n_jobs=5)
     
     start_time = time.time()
     generator.generate()
     end_time = time.time()
     print(f"Time taken to generate time series: {end_time - start_time} seconds")
 
-    print(generator.get_observations()[0])
+    print(generator.get_causal_dfs()[0])
+    
+    DAG = generator.get_updated_dags()[0]
+    G_dot = Digraph(engine="dot",format='png')
+    for node in DAG.nodes():
+        G_dot.node(str(node))
+    for edge in DAG.edges():
+        G_dot.edge(str(edge[0]), str(edge[1]))
+    G_dot.render("graph", view=True, cleanup=True)
+
+
     # dags = generator.get_dags()
     # DAGs = generator.get_updated_dags()
     # data = generator.get_observations()[0]
