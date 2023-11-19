@@ -9,6 +9,7 @@ from lingam.varma_lingam import VARMALiNGAM as VARMALiNGAM_
 class VARMALiNGAM(BaseCausalInference):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        #TODO: self.returns_proba = True
 
     def infer(self, single_ts,**kwargs):
         model = VARMALiNGAM_(order=(self.maxlags,0), criterion='bic', prune=True)

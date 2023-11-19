@@ -11,8 +11,10 @@ from d2c import D2C as D2C_
 
 class D2C(BaseCausalInference):
     def __init__(self, *args, **kwargs):
+        self.use_real_MB = kwargs.pop('use_real_MB', False)
         super().__init__(*args, **kwargs)
         self.returns_proba = True
+
 
     def create_lagged(self, observations, lag):
         lagged = observations.copy()

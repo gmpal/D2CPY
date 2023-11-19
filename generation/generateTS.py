@@ -7,15 +7,39 @@ from d2c.simulated import Simulated
 from d2c.simulatedTimeSeries import SimulatedTimeSeries
 import pickle
 
+DIVERGENCE_THRESHOLD = 1e3
+
+def check_divergence(multivariate_series):
+    for i in range(multivariate_series.shape[1]):
+        series = multivariate_series.iloc[:, i]
+        if np.any(np.isnan(series)) or np.any(np.isinf(series)):
+            return True  # Found NaN or Inf, indicating divergence
+        if np.var(series) > DIVERGENCE_THRESHOLD:
+            return True  # Variance is too high, indicating potential divergence
+        if np.mean(np.abs(series)) > DIVERGENCE_THRESHOLD:
+            return True  # Mean absolute value is too high, which might indicate divergence
+
 def generate_time_series(n_series, n_observations, n_variables, maxlags, not_acyclic, n_jobs, name, random_state):
-    generator = SimulatedTimeSeries(n_series, n_observations, n_variables, not_acyclic=not_acyclic, maxlags=maxlags, n_jobs=n_jobs, random_state=random_state)
+    generator = SimulatedTimeSeries(n_series, n_observations, n_variables, not_acyclic=not_acyclic, maxlags=maxlags, n_jobs=n_jobs, random_state=random_state, function_types=['sigmoid'])
     generator.generate()
     observations = generator.get_observations()
     dags = generator.get_dags()
     updated_dags = generator.get_updated_dags()
     #pickle everything
+    
+    for obs_idx, obs in enumerate(observations):
+        if check_divergence(obs):
+            print(f'WARNING: Series {obs_idx} is divergent')
+            #pop the divergent series
+            observations.pop(obs_idx)
+            dags.pop(obs_idx)
+            updated_dags.pop(obs_idx)
+
+    #print how many left
+    print(f'Generated {len(observations)} time series')
     with open(f'../data/{name}.pkl', 'wb') as f:
         pickle.dump((observations, dags, updated_dags), f)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Generate Simulated Time Series')

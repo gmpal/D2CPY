@@ -9,9 +9,10 @@ class DYNOTEARS(BaseCausalInference):
     #TODO: parameters of PCMCI
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.returns_proba = True
 
     def infer(self, single_ts,**kwargs):
-        results = from_pandas_dynamic(single_ts, p=self.maxlags, w_threshold=0.01, tabu_parent_nodes=[0,1,2])
+        results = from_pandas_dynamic(single_ts, p=self.maxlags)
         return results
     
     def build_causal_df(self, results, n_variables):
@@ -28,10 +29,11 @@ class DYNOTEARS(BaseCausalInference):
             source = int(edge[0][0])
             effect = int(edge[1][0])
             lag = int(edge[0][-1]) - 1
-            value = results.get_edge_data(*edge)['weight']
-            causal_dataframe.loc[(n_variables+source+lag*n_variables, effect), 'is_causal'] = 1
-            causal_dataframe.loc[(n_variables+source+lag*n_variables, effect), 'value'] = abs(value)
-            causal_dataframe.loc[(n_variables+source+lag*n_variables, effect), 'pvalue'] = 0
+            if lag > 0: #we ignore contemporaneous relations for the moment
+                value = results.get_edge_data(*edge)['weight']
+                causal_dataframe.loc[(n_variables+source+lag*n_variables, effect), 'is_causal'] = 1
+                causal_dataframe.loc[(n_variables+source+lag*n_variables, effect), 'value'] = abs(value)
+                causal_dataframe.loc[(n_variables+source+lag*n_variables, effect), 'pvalue'] = 0
 
 
         return causal_dataframe
@@ -39,7 +41,7 @@ class DYNOTEARS(BaseCausalInference):
 
 if __name__ == "__main__":
     # Usage
-    with open('data/fixed_lags.pkl', 'rb') as f:
+    with open('../data/fixed_lags.pkl', 'rb') as f:
         observations, dags, updated_dags = pickle.load(f)
 
     causal_method = DYNOTEARS(observations[:5], maxlags=3)

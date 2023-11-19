@@ -20,7 +20,7 @@ def create_lagged(observations, lag):
 if __name__ == '__main__': 
 
 
-    with open('../data/fixed_lags.pkl', 'rb') as f:
+    with open('../data/sigmoid.pkl', 'rb') as f:
         observations, dags, updated_dags = pickle.load(f)
     
     lagged_observations, lagged_column_names, updated_dags_renamed = [], [], []
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     from d2c.d2c import D2C
     d2c = D2C(updated_dags_renamed, lagged_observations,n_jobs=10)
     d2c.initialize()
-    d2c.save_descriptors_df('../data/fixed_lags_descriptors_MB_estimated.csv')
+    d2c.save_descriptors_df('../data/sigmoid_descriptors.csv')
 
     # # pickle lagged_column_names
     # with open('../data/lagged_column_names.pkl', 'wb') as f:

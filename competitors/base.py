@@ -2,13 +2,14 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from multiprocessing import Pool
 
 class BaseCausalInference:
-    def __init__(self, ts_list, maxlags=3, ground_truth=None, n_jobs=1):
+    def __init__(self, ts_list, maxlags=3, ground_truth=None, n_jobs=1, suffix=''):
         self.ts_list = ts_list
         self.maxlags = maxlags
         self.causal_dfs = {}
         self.ground_truth = ground_truth
         self.returns_proba = False #TODO: in subclasses
         self.n_jobs = n_jobs
+        self.suffix = suffix
         
 
     def standardize(self, single_ts):
@@ -55,7 +56,7 @@ class BaseCausalInference:
         data = []
         for ts_idx in range(len(self.ts_list)):
             
-            method_name = self.__class__.__name__
+            method_name = self.__class__.__name__ + self.suffix
             y_test = self.ground_truth[ts_idx].astype(int)
             y_hat = self.causal_dfs[ts_idx]['is_causal'].astype(int)
 

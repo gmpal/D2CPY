@@ -3,6 +3,7 @@ import networkx as nx
 from networkx.algorithms.dag import is_directed_acyclic_graph
 from multiprocessing import Pool
 import pandas as pd
+import time
 
 
 from typing import List
@@ -52,13 +53,22 @@ class SimulatedTimeSeries(Simulated):
         current_lag = 3
 
         # print(f"current lag: {current_lag}")
+        
+        start_time = time.time()
         initial_DAG = self._generate_single_dag()
+        timestamp = time.time()
+        # print(f"Time to generate DAG: {timestamp - start_time}")
         updated_DAG = self._update_dag_for_timestep(initial_DAG, current_lag, index)
+        timestamp2 = time.time()
+        # print(f"Time to update DAG: {timestamp2 - timestamp}")
         data = pd.DataFrame(2*np.random.rand(current_lag, self.n_variables)-1).round(5)
         # print(data)
+        timestamp3 = time.time()
         for _ in range(1, self.n_observations):
             self._generate_timestep_observation(updated_DAG, data)
         # print(index, "done")
+        timestamp4 = time.time()
+        # print(f"Time to generate observations: {timestamp4 - timestamp3}")
         return data, initial_DAG, updated_DAG
 
     def _update_dag_for_timestep(self, dag: nx.DiGraph, current_lag: int, index: int) -> nx.DiGraph:
@@ -169,24 +179,39 @@ class SimulatedTimeSeries(Simulated):
             # print("with bias", dag.nodes[node]['bias'])
             if f"_t-" in str(node):
                 variable = int(str(node)[0])
-                timestamp = int(str(node)[-1]) #TODO: check if this is correct, if more than 9 timestamps it will not work
+                timestamp = int(str(node).split("-")[1])
                 dag.nodes[node]['value'] = data.loc[len(data) - timestamp, variable] 
                 # print("Value",dag.nodes[node]['value'])
             else:
                 parents = list(dag.predecessors(node))
                 column = int(node)
-                data.loc[current_len, column] = 0
+                value = 0
                 # print("Data now is ", data)
                 # print("parents", parents, "with values", [dag.nodes[parent]['value'] for parent in parents])
                 # print("with edges weight", [dag.edges[parent, node]['weight'] for parent in parents])
                 for parent in parents:
                     
-                    data.loc[current_len, column] += self.compute_value(dag.nodes[node], dag.edges[parent, node], dag.nodes[parent]['value'])
-                data.loc[current_len, column] += dag.nodes[node]['bias']
+                    value += self.compute_value(dag.nodes[node], dag.edges[parent, node], dag.nodes[parent]['value'])
+                data.loc[current_len, column] = value + dag.nodes[node]['bias']
                 dag.nodes[node]['value'] = data.loc[current_len, column]
                 # print("Value",dag.nodes[node]['value'])
 
-        
+        # for node in range(self.n_variables):
+        #     node = str(node)
+
+        #     parents = list(dag.predecessors(node))
+        #     column = int(node)
+        #     value = 0
+        #     # print("Data now is ", data)
+        #     # print("parents", parents, "with values", [dag.nodes[parent]['value'] for parent in parents])
+        #     # print("with edges weight", [dag.edges[parent, node]['weight'] for parent in parents])
+        #     for parent in parents:
+                
+        #         value += self.compute_value(dag.nodes[node], dag.edges[parent, node], data.loc[len(data) - int(str(parent).split("-")[1]), int(str(parent)[0])] )
+        #     data.loc[current_len, column] = value + dag.nodes[node]['bias']
+        #     dag.nodes[node]['value'] = data.loc[current_len, column]
+        #     # print("Value",dag.nodes[node]['value'])
+
 
     def compute_value(self, node_data, edge_data, parent_value):
         sigma = node_data['sigma']
@@ -195,6 +220,17 @@ class SimulatedTimeSeries(Simulated):
         value = 0
         if H == "linear":
             value += parent_value * weight
+        elif H == "logarithmic":
+            value += np.log(np.abs(parent_value) + 1) * weight  # +1 to handle log(0)
+        elif H == "exponential":
+            value += np.exp(min(parent_value, 5)) * weight  # Limit to avoid explosion
+        elif H == "sigmoid":
+            value += (1 / (1 + np.exp(-parent_value))) * weight
+        elif H == "tanh":
+            value += np.tanh(parent_value) * weight
+        elif H == "polynomial":
+            value += (parent_value ** 2) * weight  # Quadratic transformation
+
         value += np.random.normal(scale=sigma)
         return np.round(value,5)
 
@@ -222,32 +258,43 @@ class SimulatedTimeSeries(Simulated):
         """
         return self.list_updated_dags
 
+    def get_causal_dfs(self) -> List[pd.DataFrame]:
+        """
+        Returns the causal dataframes.
+        """
+        #TODO: complete
+        return self.list_causal_dfs
 
 if __name__ == "__main__":
     from graphviz import Digraph
-    from utils import print_DAG
+    # from utils import print_DAG
 
     n_dags = 5  # You can change this as needed
-    n_observations = 5
+    n_observations = 1000
     n_variables = 5
     maxlags = 4
-    # Testing with a single process
-    generator = SimulatedTimeSeries(n_dags, n_observations, n_variables, maxlags)
+    # # Testing with a single process
+    generator = SimulatedTimeSeries(n_dags, n_observations, n_variables, maxlags, n_jobs=5)
+    
+    start_time = time.time()
     generator.generate()
-    dags = generator.get_dags()
-    DAGs = generator.get_updated_dags()
-    data = generator.get_observations()[0]
+    end_time = time.time()
+    print(f"Time taken to generate time series: {end_time - start_time} seconds")
+
+    print(generator.get_observations()[0])
+    # dags = generator.get_dags()
+    # DAGs = generator.get_updated_dags()
+    # data = generator.get_observations()[0]
     
 
-    for idx, DAG in enumerate(dags):
-        G_dot = Digraph(engine="dot",format='png')
+    # for idx, DAG in enumerate(dags):
+    #     G_dot = Digraph(engine="dot",format='png')
 
-        for node in DAG.nodes():
-            G_dot.node(str(node))
-        for edge in DAG.edges():
-            G_dot.edge(str(edge[0]), str(edge[1]))
+    #     for node in DAG.nodes():
+    #         G_dot.node(str(node))
+    #     for edge in DAG.edges():
+    #         G_dot.edge(str(edge[0]), str(edge[1]))
 
-        # Render the graph in a hierarchical layout
-        #save the graph
-        G_dot.render(f"graph_{idx}", view=True)
-
+    #     # Render the graph in a hierarchical layout
+    #     #save the graph
+    #     G_dot.render(f"graph_{idx}", view=True)

@@ -48,10 +48,10 @@ class Granger(BaseCausalInference):
 
 if __name__ == "__main__":
     # Usage
-    with open('data/fixed_lags.pkl', 'rb') as f:
+    with open('../data/fixed_lags.pkl', 'rb') as f:
         observations, dags, updated_dags = pickle.load(f)
 
     causal_method = Granger(observations[:5], maxlags=3)
     causal_method.run()
     results = causal_method.get_causal_dfs()
-    
+    print(results)

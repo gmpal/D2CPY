@@ -30,7 +30,7 @@ def _process_pair(pair, compute_descriptors):
 
 
 class D2C:
-    def __init__(self, dags, observations, rev: bool = True, boot: str = "rank", verbose=False, random_state: int = 42, n_jobs: int = 1, dynamic: bool = True, n_variables: int = 3, maxlags: int = 3 ) -> None:
+    def __init__(self, dags, observations, rev: bool = True, boot: str = "rank", verbose=False, random_state: int = 42, n_jobs: int = 1, dynamic: bool = True, n_variables: int = 3, maxlags: int = 3 , use_real_MB: bool = False ) -> None:
         """
         Class for D2C analysis.
 
@@ -59,6 +59,8 @@ class D2C:
         self.dynamic = dynamic #flag for handling time series data
         self.n_variables = n_variables #number of variables in the time series #TODO: handle for nontimeseries as well
         self.maxlags = maxlags
+
+        self.use_real_MB = use_real_MB
         
     def compute_descriptors_no_dags(self):
         if not self.dynamic:
@@ -99,7 +101,7 @@ class D2C:
         """
         X = []
         Y = []
-
+        print("DAG_index", DAG_index)
         nodes = len(self.DAGs[DAG_index].nodes)
 
         child_edge_pairs = []
@@ -134,7 +136,7 @@ class D2C:
 
     def compute_markov_blanket(self, DAG_index, D, variable, MB_size, verbose=False):
         # if self.DAGs is None:
-        if True: #TODO: make this conditional
+        if not self.use_real_MB: 
             ind = list(set(np.arange(D.shape[1])) - {variable})
             if self.boot == "mrmr": 
                 order = mRMR(D.iloc[:,ind],D.iloc[:,variable],nmax=min(len(ind),5*MB_size),verbose=self.verbose)
@@ -144,7 +146,7 @@ class D2C:
             return sorted_ind[:MB_size]
             #TODO: at the moment we do not use mRMR, just rankrho.
             # return ind[mRMR(D.iloc[:,ind],D.iloc[:,variable],nmax=MB_size,verbose=self.verbose)]  
-        else: #never executed: the markov blanket needs to be estimated! 
+        else: 
             dag = self.DAGs[DAG_index]
             # node = str(variable)
             #TODO: assess if this is the best way to handle the passage between strings and integers

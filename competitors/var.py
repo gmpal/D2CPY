@@ -7,6 +7,7 @@ import statsmodels.tsa.api as tsa
 class VAR(BaseCausalInference):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.returns_proba = True
 
     def infer(self, single_ts,**kwargs):
         model = tsa.var.var_model.VAR(single_ts.values)
@@ -29,7 +30,7 @@ class VAR(BaseCausalInference):
                     current_value = values[lag][effect][source]
 
                     is_causal = 0 if current_pvalue > 0.05 else 0 if abs(current_value) < 0.1 else 1
-                    causal_dataframe.loc[(n_variables + source+lag*n_variables, effect)] = is_causal, current_value, current_pvalue
+                    causal_dataframe.loc[(n_variables + source+lag*n_variables, effect)] = is_causal, abs(current_value), current_pvalue
 
         return causal_dataframe
 

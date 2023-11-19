@@ -28,13 +28,13 @@ if __name__ == "__main__":
     ground_truth_df = df[(df['edge_dest'] < 3) & (df['edge_source'] > 2)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index()[['graph_id','is_causal']]
 
     #select last 5 graphs
-    ground_truth_df = ground_truth_df.loc[ground_truth_df['graph_id'] > len(ground_truth_df['graph_id'].unique()) - 11]
+    ground_truth_df = ground_truth_df.loc[ground_truth_df['graph_id'] > len(ground_truth_df['graph_id'].unique()) - 21]
 
     ground_truth = []
     for value in ground_truth_df['graph_id'].unique():
         ground_truth.append(ground_truth_df.loc[ground_truth_df['graph_id'] == value]['is_causal'].values)  
 
-    data = observations[-10:]
+    data = observations[-20:]
 
     d2c_eval = D2C(data, maxlags=3, n_jobs=10, ground_truth=ground_truth).run().evaluate()
     dyno_eval = DYNOTEARS(data, maxlags=3, ground_truth=ground_truth).run().evaluate()

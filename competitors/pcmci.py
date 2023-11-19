@@ -11,6 +11,7 @@ class PCMCI(BaseCausalInference):
     #TODO: parameters of PCMCI
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.returns_proba = True
 
     def infer(self, single_ts,**kwargs):
         dataframe = pp.DataFrame(single_ts.values)
@@ -34,17 +35,17 @@ class PCMCI(BaseCausalInference):
                     current_pvalue = pvalues[source][effect][lag]
                     current_value = values[source][effect][lag]
                     is_causal = 0 if current_pvalue > 0.05 else 0 if abs(current_value) < 0.1 else 1
-                    causal_dataframe.loc[(n_variables + source+lag*n_variables, effect)] = is_causal, current_value, current_pvalue
+                    causal_dataframe.loc[(n_variables + source+lag*n_variables, effect)] = is_causal, abs(current_value), current_pvalue
 
         return causal_dataframe
 
 
 if __name__ == "__main__":
     # Usage
-    with open('data/fixed_lags.pkl', 'rb') as f:
+    with open('../data/fixed_lags.pkl', 'rb') as f:
         observations, dags, updated_dags = pickle.load(f)
 
     causal_method = PCMCI(observations[:5], maxlags=3)
     causal_method.run()
     results = causal_method.get_causal_dfs()
-    
+    print(results)

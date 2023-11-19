@@ -24,5 +24,4 @@ causeme.keys
 /competitors/TCDF/*
 /temp/*
 /causeme/*
-/data/*.pkl
 /generation/*.csv
