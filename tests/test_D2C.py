@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import Mock, patch
 from d2c.simulatedDAGs import SimulatedDAGs
-from d2c.D2C import D2C
+from d2c.d2c import D2C
 import pandas as pd
 import numpy as np
 

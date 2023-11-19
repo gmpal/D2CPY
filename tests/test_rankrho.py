@@ -8,7 +8,7 @@ sys.path.append("../d2c/")
 # Generating random data for the test
 np.random.seed(42)  # Seed for reproducibility
 from utils import *
-from d2c import D2C
+from d2c import d2c
 
 
 
