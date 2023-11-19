@@ -28,14 +28,18 @@ def generate_time_series(n_series, n_observations, n_variables, maxlags, not_acy
     causal_dfs = generator.get_causal_dfs()
     #pickle everything
     
+    divergent_series_indices = []
     for obs_idx, obs in enumerate(observations):
         if check_divergence(obs):
             print(f'WARNING: Series {obs_idx} is divergent')
-            #pop the divergent series
-            observations.pop(obs_idx)
-            dags.pop(obs_idx)
-            updated_dags.pop(obs_idx)
-            causal_dfs.pop(obs_idx)
+            divergent_series_indices.append(obs_idx)
+
+    # Reverse sort indices and remove them from the end to avoid index shifting
+    for idx in sorted(divergent_series_indices, reverse=True):
+        observations.pop(idx)
+        dags.pop(idx)
+        updated_dags.pop(idx)
+        causal_dfs.pop(idx)
 
     for obs_idx, obs in enumerate(observations): #TODO: check why this is necessary  despite previous check
         # drop nas
