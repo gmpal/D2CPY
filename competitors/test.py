@@ -33,12 +33,42 @@ def test(name:str = 'data', maxlags:int = 3, n_jobs:int=1):
 
     ground_truth = [df['is_causal'].values for df in causal_dfs]
 
-    d2c_eval = D2C(data, maxlags=maxlags, n_jobs=n_jobs, ground_truth=ground_truth,descriptors_path=descriptors_path).run().evaluate()
-    dyno_eval = DYNOTEARS(data, maxlags=maxlags, ground_truth=ground_truth).run().evaluate()
-    granger_eval = Granger(data, maxlags=maxlags, ground_truth=ground_truth).run().evaluate()
-    pcmci_eval = PCMCI(data, maxlags=maxlags, ground_truth=ground_truth).run().evaluate()
-    var_eval = VAR(data, maxlags=maxlags, ground_truth=ground_truth).run().evaluate()
-    varlingam_eval = VARLiNGAM(data, maxlags=maxlags, ground_truth=ground_truth).run().evaluate()
+    for train_ratio in [0.1, 0.3, 0.5, 0.7, 0.9]:
+        d2c = D2C(data, maxlags=maxlags, n_jobs=n_jobs, ground_truth=ground_truth,descriptors_path=descriptors_path, train_ratio=train_ratio, suffix=train_ratio).run()
+        d2c_causal_dfs = d2c.get_causal_dfs() 
+        with open('../data/'+name+'_d2c_causal_dfs_'+str(train_ratio)+'.pkl', 'wb') as f:
+            pickle.dump(d2c_causal_dfs, f)
+        d2c_eval = d2c.evaluate()
+
+    dyno = DYNOTEARS(data, maxlags=maxlags, ground_truth=ground_truth).run()
+    dyno_causal_dfs = dyno.get_causal_dfs()
+    with open('../data/'+name+'_dyno_causal_dfs.pkl', 'wb') as f:
+        pickle.dump(dyno_causal_dfs, f)
+    dyno_eval = dyno.evaluate()
+
+    granger = Granger(data, maxlags=maxlags, ground_truth=ground_truth).run()
+    granger_causal_dfs = granger.get_causal_dfs()
+    with open('../data/'+name+'_granger_causal_dfs.pkl', 'wb') as f:
+        pickle.dump(granger_causal_dfs, f)
+    granger_eval = granger.evaluate()
+
+    pcmci = PCMCI(data, maxlags=maxlags, ground_truth=ground_truth).run()
+    pcmci_causal_dfs = pcmci.get_causal_dfs()
+    with open('../data/'+name+'_pcmci_causal_dfs.pkl', 'wb') as f:
+        pickle.dump(pcmci_causal_dfs, f)
+    pcmci_eval = pcmci.evaluate()
+    
+    var = VAR(data, maxlags=maxlags, ground_truth=ground_truth).run()
+    var_causal_dfs = var.get_causal_dfs()
+    with open('../data/'+name+'_var_causal_dfs.pkl', 'wb') as f:
+        pickle.dump(var_causal_dfs, f)
+    var_eval = var.evaluate()
+
+    varlingam = VARLiNGAM(data, maxlags=maxlags, ground_truth=ground_truth).run()
+    varlingam_causal_dfs = varlingam.get_causal_dfs()
+    with open('../data/'+name+'_varlingam_causal_dfs.pkl', 'wb') as f:
+        pickle.dump(varlingam_causal_dfs, f)
+    varlingam_eval = varlingam.evaluate()
 
 
     all_eval = [d2c_eval, dyno_eval, granger_eval, pcmci_eval, var_eval, varlingam_eval]

@@ -12,6 +12,7 @@ from d2c import D2C as D2C_
 class D2C(BaseCausalInference):
     def __init__(self, *args, **kwargs):
         self.use_real_MB = kwargs.pop('use_real_MB', False)
+        self.train_ratio = kwargs.pop('train_ratio', 1)
         self.descriptors = pd.read_csv(kwargs.pop('descriptors_path', None))
         super().__init__(*args, **kwargs)
         self.returns_proba = True
@@ -30,6 +31,16 @@ class D2C(BaseCausalInference):
         
         data = self.descriptors
         training_data = data.loc[data['graph_id'] != ts_index] 
+
+        # Sampling respecting the class distribution, to try various training ratios
+        sampled_training_data = pd.DataFrame()
+        for class_value in training_data['is_causal'].unique():
+            # Filter the data for the current class
+            class_data = training_data[training_data['class_column'] == class_value]
+            sampled_class_data = class_data.sample(frac=self.train_ratio, replace=True, random_state=1)
+            sampled_training_data = pd.concat([sampled_training_data, sampled_class_data])
+        training_data = sampled_training_data
+
         testing_data = data.loc[data['graph_id'] == ts_index]
         #flattening
         testing_data = testing_data[(testing_data['edge_dest'] < 3) & (testing_data['edge_source'] > 2)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index(drop=True)

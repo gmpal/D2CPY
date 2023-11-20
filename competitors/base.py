@@ -1,4 +1,4 @@
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, balanced_accuracy_score
 from multiprocessing import Pool
 import numpy as np
 
@@ -64,7 +64,8 @@ class BaseCausalInference:
             data.append([method_name, 'accuracy', accuracy_score(y_test, y_hat)])
             data.append([method_name, 'precision', precision_score(y_test, y_hat,zero_division=np.nan)])
             data.append([method_name, 'recall', recall_score(y_test, y_hat)])
-            data.append([method_name, 'f1', f1_score(y_test, y_hat)])   
+            data.append([method_name, 'f1', f1_score(y_test, y_hat)])
+            data.append([method_name, 'balanced_error', 1 - balanced_accuracy_score(y_test, y_hat)])   
             if self.returns_proba: 
                 y_prob = self.causal_dfs[ts_idx]['value'].values.astype(float)
                 if len(np.unique(y_test)) > 1:
