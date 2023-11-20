@@ -33,12 +33,14 @@ def test(name:str = 'data', maxlags:int = 3, n_jobs:int=1):
 
     ground_truth = [df['is_causal'].values for df in causal_dfs]
 
+    d2c_evals = []
     for train_ratio in [0.1, 0.3, 0.5, 0.7, 0.9]:
         d2c = D2C(data, maxlags=maxlags, n_jobs=n_jobs, ground_truth=ground_truth,descriptors_path=descriptors_path, train_ratio=train_ratio, suffix=train_ratio).run()
         d2c_causal_dfs = d2c.get_causal_dfs() 
         with open('../data/'+name+'_d2c_causal_dfs_'+str(train_ratio)+'.pkl', 'wb') as f:
             pickle.dump(d2c_causal_dfs, f)
         d2c_eval = d2c.evaluate()
+        d2c_evals.append(d2c_eval)
 
     dyno = DYNOTEARS(data, maxlags=maxlags, ground_truth=ground_truth).run()
     dyno_causal_dfs = dyno.get_causal_dfs()
@@ -71,7 +73,8 @@ def test(name:str = 'data', maxlags:int = 3, n_jobs:int=1):
     varlingam_eval = varlingam.evaluate()
 
 
-    all_eval = [d2c_eval, dyno_eval, granger_eval, pcmci_eval, var_eval, varlingam_eval]
+    all_eval = [dyno_eval, granger_eval, pcmci_eval, var_eval, varlingam_eval]
+    all_eval.extend(d2c_evals)
     df_all_eval = pd.DataFrame(columns=['Model', 'Metric', 'Score'])
     for eval in all_eval:
         df_all_eval = pd.concat([df_all_eval,pd.DataFrame(eval,columns=['Model', 'Metric', 'Score'])])
