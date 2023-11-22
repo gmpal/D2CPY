@@ -101,7 +101,7 @@ class D2C:
         """
         X = []
         Y = []
-        print("DAG_index", DAG_index)
+        print("DAG_index start", DAG_index)
         nodes = len(self.DAGs[DAG_index].nodes)
 
         child_edge_pairs = []
@@ -132,6 +132,7 @@ class D2C:
                 Y.append(0)  # Label edge as "not a child"
 
         #pickle the couple X,Y
+        print("DAG_index end", DAG_index)
         return X, Y
 
     def compute_markov_blanket(self, DAG_index, D, variable, MB_size, verbose=False):
