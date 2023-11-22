@@ -93,4 +93,54 @@ class Simulated(ABC):
             G.edges[edge]['H'] = random.choice(self.function_types)
 
         return G
+    
+
+    def _generate_TS_dag(self, dag_index: int = 1) -> nx.DiGraph:
+        """
+        Generates a single directed acyclic graph (DAG).
+
+        Args:
+            index (int): The index number for the DAG.
+
+        Returns:
+            nx.DiGraph: Generated DAG.
+        """
+
+        # randomly at 50/50
+        G = nx.DiGraph()
+        for i in range(self.n_variables):
+            G.add_node(f'{i}')
+            for lag in range(1, self.maxlags + 1):
+                past_node = f"{i}_t-{lag}"
+                G.add_node(past_node)
+                
+        max_iterations = self.n_variables * self.n_variables * self.maxlags
+        num_iteration = random.randint(1, max_iterations + 1)
+        for _ in range(num_iteration):
+            #select random couple of self.n_variables
+            random_couple = random.sample(range(self.n_variables), 2)
+            #select random lag
+            random_lag = random.randint(1, self.maxlags + 1)
+            #check if the edge is already in the graph
+            if (f'{random_couple[0]}_t-{random_lag}', f'{random_couple[1]}') not in G.edges:
+                G.add_edge(f'{random_couple[0]}_t-{random_lag}', f'{random_couple[1]}')
+                for delay in range(1, self.maxlags - random_lag + 1):
+                    G.add_edge(f'{random_couple[0]}_t-{random_lag + delay}', f'{random_couple[1]}_t-{delay}' )
+
+
+
+        for node in G.nodes:
+            # G.nodes[node]['bias'] = np.round(np.random.uniform(low=-0.1, high=0.1),5)
+            G.nodes[node]['bias'] = 0
+            #random between 0 and self.sdn
+            G.nodes[node]['sigma'] = np.round(np.random.uniform(low=0, high=self.sdn),5)
+            G.nodes[node]['seed'] = self.random_state
+
+        for edge in G.edges:
+            G.edges[edge]['weight'] = np.round(np.random.uniform(low=-0.5, high=0.5),5)
+            G.edges[edge]['H'] = random.choice(self.function_types)
+
+        return G
+
+
 

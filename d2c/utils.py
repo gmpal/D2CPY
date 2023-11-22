@@ -524,22 +524,36 @@ def dag_to_formula(dag):
             formula += f"{bias}\n"
     print(formula)
 
-# def show_dag(DAG, weight=True):
-#     from graphviz import Digraph
+def custom_layout(G, n_nodes, t_lag):
+    """
+    Create a custom layout for the graph where nodes with the same identifier
+    are aligned in the same column, regardless of their connections.
+    """
+    pos = {}
+    width = 1.0 / (n_nodes - 1)
+    height = 1.0 / (t_lag - 1)
 
-#     G_dot = Digraph(engine="dot",format='png')
+    for node in G.nodes():
+        if '_t-' in node:
+            i, t = map(int, node.split('_t-'))
+        else:
+            i, t = int(node), 0
+        pos[node] = (i * width, t * height)
 
-#     for node in DAG.nodes():
-#         G_dot.node(str(node))
-#     for edge in DAG.edges():
-#         if weight:
-#             G_dot.edge(str(edge[0]), str(edge[1]), label=str(DAG.edges[edge]['weight']))        
-#         else:
-#             G_dot.edge(str(edge[0]), str(edge[1]))
+    # Scale and center the positions
+    pos = {node: (x * 10, y * 3) for node, (x, y) in pos.items()}
+    return pos
 
-#     # Render the graph in a hierarchical layout
-#     return G_dot
 
+def show_DAG(G):
+    import networkx as nx
+    import matplotlib.pyplot as plt
+    # Using the custom layout for plotting
+    plt.figure(figsize=(10, 6))
+    pos_custom = custom_layout(G, 3, 3)
+    nx.draw(G, pos_custom, with_labels=True, node_size=1000, node_color="lightpink", font_size=10, arrowsize=10)
+    plt.title("Time Series DAG with Custom Layout")
+    plt.show()
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
