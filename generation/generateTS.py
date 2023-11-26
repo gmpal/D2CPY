@@ -65,4 +65,4 @@ if __name__ == "__main__":
     parser.add_argument('--function_types', nargs='+', default=['sigmoid','linear','quadratic','exponential','tanh','polynomial'], help='Types of functions to use in the time series')
     args = parser.parse_args()
 
-    generate_time_series(args.n_series, args.n_observations, args.n_variables, args.maxlags, args.not_acyclic, args.n_jobs, args.name, args.random_state, args.function_types)
+    generate_time_series(args.n_series, args.n_observations, args.n_variables, args.maxlags, args.not_acyclic, args.n_jobs, args.noise, args.name, args.random_state, args.function_types)
