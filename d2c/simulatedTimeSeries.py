@@ -16,7 +16,7 @@ from simulated import Simulated
 class SimulatedTimeSeries(Simulated):
     
     def __init__(self, n_dags: int, n_observations: int, n_variables: int, not_acyclic: bool = False, maxlags: int = 1,  n_jobs: int = 1, random_state: int = 42, function_types: list = ["linear"], sdn: int = 0.001):
-        super().__init__(n_dags, n_observations, n_variables, not_acyclic=not_acyclic, n_jobs=n_jobs, random_state=random_state, function_types=function_types, sdn=sdn)
+        super().__init__(n_dags, n_observations,n_variables, not_acyclic=not_acyclic, n_jobs=n_jobs, random_state=random_state, function_types=function_types, sdn=sdn)
         self.list_updated_dags = []
         self.maxlags = maxlags
 
@@ -78,7 +78,7 @@ class SimulatedTimeSeries(Simulated):
             # G.nodes[node]['bias'] = np.round(np.random.uniform(low=-0.1, high=0.1),5)
             G.nodes[node]['bias'] = 0
             #random between 0 and self.sdn
-            G.nodes[node]['sigma'] = np.round(np.random.uniform(low=0, high=0.2),5)
+            G.nodes[node]['sigma'] = np.round(np.random.uniform(low=0, high=self.sdn),5)
             G.nodes[node]['seed'] = 4
 
         for edge in G.edges:

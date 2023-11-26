@@ -19,8 +19,8 @@ def check_divergence(multivariate_series):
         if np.mean(np.abs(series)) > DIVERGENCE_THRESHOLD:
             return True  # Mean absolute value is too high, which might indicate divergence
 
-def generate_time_series(n_series, n_observations, n_variables, maxlags, not_acyclic, n_jobs, name, random_state, function_types):
-    generator = SimulatedTimeSeries(n_series, n_observations, n_variables, not_acyclic=not_acyclic, maxlags=maxlags, n_jobs=n_jobs, random_state=random_state, function_types=function_types)
+def generate_time_series(n_series, n_observations, n_variables, maxlags, not_acyclic, n_jobs, noise, name, random_state, function_types):
+    generator = SimulatedTimeSeries(n_series, n_observations, n_variables, not_acyclic=not_acyclic, maxlags=maxlags, n_jobs=n_jobs, sdn=noise, random_state=random_state, function_types=function_types)
     generator.generate()
     observations = generator.get_observations()
     dags = generator.get_dags()
@@ -59,6 +59,7 @@ if __name__ == "__main__":
     parser.add_argument('--maxlags', type=int, default=3, help='Maximum lags for the time series')
     parser.add_argument('--not_acyclic', type=bool, default=True, help='Whether the DAGs should allow cyclic cause-effect pairs when looking at the past')
     parser.add_argument('--n_jobs', type=int, default=10, help='Number of jobs for parallel processing')
+    parser.add_argument('--noise', type=float, default=0.1, help='Noise level for the time series')
     parser.add_argument('--name', type=str, default='ts3', help='Name of the file to save the data')
     parser.add_argument('--random_state', type=int, default=0, help='Random state for reproducibility')
     parser.add_argument('--function_types', nargs='+', default=['sigmoid','linear','quadratic','exponential','tanh','polynomial'], help='Types of functions to use in the time series')
