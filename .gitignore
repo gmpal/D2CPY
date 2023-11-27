@@ -1,4 +1,7 @@
 *.env
+*.pkl
+Untitled.ipynb
+.ipynb_checkpoints/
 temp/
 __pycache__/
 test.ipynb

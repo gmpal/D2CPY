@@ -19,6 +19,12 @@ def check_divergence(multivariate_series):
         if np.mean(np.abs(series)) > DIVERGENCE_THRESHOLD:
             return True  # Mean absolute value is too high, which might indicate divergence
 
+def check_zero(multivariate_series):
+    for i in range(multivariate_series.shape[1]):
+        series = multivariate_series.iloc[:, i]
+        if series.values[-1] == 0:
+            return True   # Found Zero, indicating convergence to zero
+
 def generate_time_series(n_series, n_observations, n_variables, maxlags, not_acyclic, n_jobs, noise, name, random_state, function_types):
     generator = SimulatedTimeSeries(n_series, n_observations, n_variables, not_acyclic=not_acyclic, maxlags=maxlags, n_jobs=n_jobs, sdn=noise, random_state=random_state, function_types=function_types)
     generator.generate()
@@ -32,6 +38,10 @@ def generate_time_series(n_series, n_observations, n_variables, maxlags, not_acy
     for obs_idx, obs in enumerate(observations):
         if check_divergence(obs):
             print(f'WARNING: Series {obs_idx} is divergent')
+            divergent_series_indices.append(obs_idx)
+            
+        if check_zero(obs):
+            print(f'WARNING: Series {obs_idx} is zero')
             divergent_series_indices.append(obs_idx)
 
     # Reverse sort indices and remove them from the end to avoid index shifting

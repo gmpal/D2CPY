@@ -60,7 +60,8 @@ class SimulatedTimeSeries(Simulated):
                 G.add_node(past_node)
                 
         max_iterations = n_variables * n_variables * maxlags
-        num_iteration = random.randint(1, max_iterations//4) #TODO: regulate this factor
+        #num_iteration = random.randint(max_iterations//2, max_iterations) #TODO: regulate this factor
+        num_iteration = max_iterations
         for _ in range(num_iteration):
             #select random couple of n_variables
             random_couple = random.choices(range(n_variables), k=2)
@@ -208,7 +209,7 @@ class SimulatedTimeSeries(Simulated):
         #inizialize the first row of the dataframe
 
         current_len = len(data)
-        print(dag.nodes)
+        
         for node in nx.topological_sort(dag):
             # print("Node", node)
             # print("with bias", dag.nodes[node]['bias'])
