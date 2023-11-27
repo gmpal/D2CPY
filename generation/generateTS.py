@@ -26,6 +26,7 @@ def check_zero(multivariate_series):
             return True   # Found Zero, indicating convergence to zero
 
 def generate_time_series(n_series, n_observations, n_variables, maxlags, not_acyclic, n_jobs, noise, name, random_state, function_types):
+    print(function_types)
     generator = SimulatedTimeSeries(n_series, n_observations, n_variables, not_acyclic=not_acyclic, maxlags=maxlags, n_jobs=n_jobs, sdn=noise, random_state=random_state, function_types=function_types)
     generator.generate()
     observations = generator.get_observations()
