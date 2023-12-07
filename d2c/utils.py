@@ -36,7 +36,6 @@ def normalized_conditional_information(y, x1, x2=None):
             try:
                 if (y is None) or (y.empty) or (x1 is None) or (x1.empty):
                     return 0
-                
                 entropy_y_given_x2 = normalized_prediction(x2, y)
                 entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y)
                 
@@ -62,9 +61,15 @@ def normalized_prediction(X, Y):
     
     try: 
         numerator = max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), X, Y, scoring='neg_mean_squared_error', cv=2)))
-    except ValueError:
+    except ValueError as e:
         # print(X,Y)
-        print("ValueError")
+        print(e)
+        print(X.shape, Y.shape)
+        #print stacktrace
+        import traceback
+        traceback.print_exc()
+
+        
         numerator = 0
     denominator = (1e-3 + np.var(Y))
     return numerator / denominator

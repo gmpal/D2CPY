@@ -14,7 +14,12 @@ class D2C(BaseCausalInference):
         self.use_real_MB = kwargs.pop('use_real_MB', False)
         self.train_ratio = kwargs.pop('train_ratio', 1)
         self.flattening = kwargs.pop('flattening', False)
-        self.descriptors = pd.read_csv(kwargs.pop('descriptors_path', None))
+        self.n_variables = kwargs.pop('n_variables', 6)
+        self.recompute_descriptors = kwargs.pop('recompute_descriptors', False)
+            
+        descriptors_path = kwargs.pop('descriptors_path', None)
+        with open(descriptors_path, 'rb') as f:
+            self.descriptors = pickle.load(f)
         super().__init__(*args, **kwargs)
         self.returns_proba = True
 
@@ -30,11 +35,15 @@ class D2C(BaseCausalInference):
         if ts_index is None:
             raise ValueError('ts_index is required for D2C inference')
         
+
+        ############################
+        ########TRAINING############
+        ############################
         data = self.descriptors
         training_data = data.loc[data['graph_id'] != ts_index] 
         #flattening
         if self.flattening:
-            training_data = training_data[(training_data['edge_dest'] < 3) & (training_data['edge_source'] > 2)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index(drop=True)
+            training_data = training_data[(training_data['edge_dest'] < self.n_variables) & (training_data['edge_source'] >= self.n_variables)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index(drop=True)
 
         if self.train_ratio != 1:
             # Sampling respecting the class distribution, to try various training ratios
@@ -46,23 +55,39 @@ class D2C(BaseCausalInference):
                 sampled_training_data = pd.concat([sampled_training_data, sampled_class_data])
             training_data = sampled_training_data
 
-        testing_data = data.loc[data['graph_id'] == ts_index]
-        #flattening
-        testing_data = testing_data[(testing_data['edge_dest'] < 3) & (testing_data['edge_source'] > 2)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index(drop=True)
-
         X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
         y_train = training_data['is_causal']
-        X_test = testing_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
-
-        clf = BalancedRandomForestClassifier(n_estimators=20, max_depth=10, n_jobs=1, sampling_strategy='all',replacement=True)
+        # print('#################')
+        # print(self.flattening, self.train_ratio)
+        # print(X_train.shape)
+        # print('#################')
+        clf = BalancedRandomForestClassifier(n_estimators=10, n_jobs=10, sampling_strategy='all',replacement=True)
         clf.fit(X_train, y_train)
 
-        y_pred = clf.predict_proba(X_test)[:,1]
-        returned = pd.concat([pd.DataFrame(testing_data)[['edge_source','edge_dest']], pd.DataFrame(y_pred, columns=['is_causal'])], axis=1)
+
+        ############################
+        ########TESTING############
+        ############################
+
+        if self.recompute_descriptors:
+            # Recompute descriptors for the test data
+            lagged = self.create_lagged(single_ts, self.maxlags)
+            d2c_test = D2C_(None,[lagged], maxlags=self.maxlags, use_real_MB=self.use_real_MB,n_variables=self.n_variables,dynamic=True)
+            X_test = d2c_test.compute_descriptors_no_dags()
+            X_test = X_test.drop(['graph_id', 'edge_source', 'edge_dest'], axis=1)
+            y_pred = clf.predict_proba(X_test)[:,1]
+            returned = pd.DataFrame(y_pred,index=X_test.index, columns=['is_causal'])
+        else:
+            #flattening
+            testing_data = data.loc[data['graph_id'] == ts_index]
+            testing_data = testing_data[(testing_data['edge_dest'] < self.n_variables) & (testing_data['edge_source'] >= self.n_variables)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index(drop=True)
+            X_test = testing_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
+            y_pred = clf.predict_proba(X_test)[:,1]
+            returned = pd.concat([pd.DataFrame(testing_data)[['edge_source','edge_dest']], pd.DataFrame(y_pred, columns=['is_causal'])], axis=1, sort=True)
         return returned
     
     def build_causal_df(self, results, n_variables):
-        results.set_index(['edge_source','edge_dest'], inplace=True)
+        # results.set_index(['edge_source','edge_dest'], inplace=True) #Already set
         results['value'] = results['is_causal']
         results['is_causal'] = results['is_causal'].apply(lambda x: 1 if x > 0.5 else 0)
         results['pvalue'] = 0
@@ -71,9 +96,11 @@ class D2C(BaseCausalInference):
 
 if __name__ == "__main__":
     # Usage
-    with open('../data/fixed_lags.pkl', 'rb') as f:
-        observations, dags, updated_dags = pickle.load(f)
+    with open('../data/100_known_ts_all_20_variables.pkl', 'rb') as f:
+        observations, dags, updated_dags, causal_dfs = pickle.load(f)
 
-    causal_method = D2C(observations[-5:], maxlags=3)
+    causal_method = D2C(observations[-2:], maxlags=3,descriptors_path='../data/100_known_ts_all_descriptors_20_variables.pkl', n_variables=20)
     causal_method.run()
     results = causal_method.get_causal_dfs()
+    print("eee")
+    print(results[1])

@@ -27,8 +27,10 @@ class BaseCausalInference:
 
     def process_ts(self, ts_tuple):
         ts_index, ts = ts_tuple
+        print('\rProcessing', ts_index, 'of', len(self.ts_list), end='', flush=True)
         results = self.infer(self.standardize(ts), ts_index=ts_index)
         causal_df = self.build_causal_df(results, len(ts.columns))
+        print('\rProcessed', ts_index, 'of', len(self.ts_list), end='', flush=True)
         return ts_index, causal_df
 
     def run(self):
@@ -56,15 +58,15 @@ class BaseCausalInference:
     def evaluate(self):
         data = []
         for ts_idx in range(len(self.ts_list)):
-            
+            print('\revaluating', ts_idx, 'of', len(self.ts_list), end='', flush=True)
             method_name = self.__class__.__name__ + self.suffix
             y_test = self.ground_truth[ts_idx].astype(int)
             y_hat = self.causal_dfs[ts_idx]['is_causal'].astype(int)
 
             data.append([method_name, 'accuracy', accuracy_score(y_test, y_hat)])
-            data.append([method_name, 'precision', precision_score(y_test, y_hat,zero_division=np.nan)])
-            data.append([method_name, 'recall', recall_score(y_test, y_hat)])
-            data.append([method_name, 'f1', f1_score(y_test, y_hat)])
+            data.append([method_name, 'precision', precision_score(y_test, y_hat, zero_division=np.nan)])
+            data.append([method_name, 'recall', recall_score(y_test, y_hat, zero_division=np.nan)])
+            data.append([method_name, 'f1', f1_score(y_test, y_hat, zero_division=np.nan)])
             data.append([method_name, 'balanced_error', 1 - balanced_accuracy_score(y_test, y_hat)])   
             if self.returns_proba: 
                 y_prob = self.causal_dfs[ts_idx]['value'].values.astype(float)

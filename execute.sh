@@ -3,81 +3,20 @@
 # Navigate to the 'generation' directory from the project root
 cd generation
 
-# Run the first Python script with specified arguments
-python ./generateTS.py --n_series=1000 --n_observations=150 --name=mixed --n_jobs=50 --function_types sigmoid linear quadratic exponential tanh polynomial
-
-
-# Run the second Python script with specified arguments
-python ./d2c_past_gen.py --name=mixed --maxlags=3 --n_jobs=50
-
-# Navigate to the 'competitors' directory from the project root
-cd ../competitors
-
-# Run the third Python script with specified arguments
-python test.py --name=mixed --maxlags=3 --n_jobs=50
-
-
-# Navigate to the 'generation' directory from the project root
-cd ../generation
-
-# Run the first Python script with specified arguments
-python ./generateTS.py --n_series=1000 --n_observations=150 --name=linear --n_jobs=50 --function_types linear
-
-
-# Run the second Python script with specified arguments
-python ./d2c_past_gen.py --name=linear --maxlags=3 --n_jobs=50
-
-# Navigate to the 'competitors' directory from the project root
-cd ../competitors
-
-# Run the third Python script with specified arguments
-python test.py --name=linear --maxlags=3 --n_jobs=50
-
-# Navigate to the 'generation' directory from the project root
-cd ../generation
-
-# Run the first Python script with specified arguments
-python ./generateTS.py --n_series=1000 --n_observations=150 --name=quadratic --n_jobs=50 --function_types quadratic
-
-
-# Run the second Python script with specified arguments
-python ./d2c_past_gen.py --name=quadratic --maxlags=3 --n_jobs=50
-
-# Navigate to the 'competitors' directory from the project root
-cd ../competitors
-
-# Run the third Python script with specified arguments
-python test.py --name=quadratic --maxlags=3 --n_jobs=50
-
-
-# Navigate to the 'generation' directory from the project root
-cd ../generation
-
-# Run the first Python script with specified arguments
-python ./generateTS.py --n_series=1000 --n_observations=150 --name=polynomial --n_jobs=50 --function_types polynomial
-
-
-# Run the second Python script with specified arguments
-python ./d2c_past_gen.py --name=polynomial --maxlags=3 --n_jobs=50
-
-# Navigate to the 'competitors' directory from the project root
-cd ../competitors
-
-# Run the third Python script with specified arguments
-python test.py --name=polynomial --maxlags=3 --n_jobs=50
-
-# Navigate to the 'generation' directory from the project root
-cd ../generation
-
-# Run the first Python script with specified arguments
-python ./generateTS.py --n_series=1000 --n_observations=150 --name=tanh --n_jobs=50 --function_types tanh
-
-
-# Run the second Python script with specified arguments
-python ./d2c_past_gen.py --name=tanh --maxlags=3 --n_jobs=50
-
-# Navigate to the 'competitors' directory from the project root
-cd ../competitors
-
-# Run the third Python script with specified arguments
-python test.py --name=tanh --maxlags=3 --n_jobs=50
+python d2c_past_gen.py --name=100_known_ts_1_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_2_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_3_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_4_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_5_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_6_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_7_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_8_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_9_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_10_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_11_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_12_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_13_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_14_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_15_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_16_20_variables --maxlags=3 --n_jobs=25 --for_test=True
+python d2c_past_gen.py --name=100_known_ts_17_20_variables --maxlags=3 --n_jobs=25 --for_test=True

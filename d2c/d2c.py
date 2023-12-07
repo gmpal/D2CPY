@@ -24,13 +24,24 @@ import pandas as pd
 from scipy.stats import kurtosis, skew
 import pickle
 
+import time
+from tqdm import tqdm
+
 #TODO: improve multiprocessing handling and clean code
-def _process_pair(pair, compute_descriptors):
-    return compute_descriptors(0, pair[0], pair[1])
+def _process_idx(idx, pairs, compute_descriptors):
+    print('Processing ',idx)
+    start = time.time()
+    X_list = []
+    for pair in pairs:
+        X_pair = compute_descriptors(idx, pair[0], pair[1])
+        X_list.append(X_pair)
+    X = pd.concat([pd.DataFrame(X) for X in X_list], axis=0)
+    print('Processed ',idx, ' in ', time.time() - start, ' seconds')
+    return X
 
 
 class D2C:
-    def __init__(self, dags, observations, rev: bool = True, boot: str = "rank", verbose=False, random_state: int = 42, n_jobs: int = 1, dynamic: bool = True, n_variables: int = 3, maxlags: int = 3 , use_real_MB: bool = False ) -> None:
+    def __init__(self, dags, observations, rev: bool = True, boot: str = "rank", verbose=False, random_state: int = 42, n_jobs: int = 1, dynamic: bool = True, n_variables: int = 3, maxlags: int = 3 , use_real_MB: bool = False, balanced: bool = True ) -> None:
         """
         Class for D2C analysis.
 
@@ -61,7 +72,9 @@ class D2C:
         self.maxlags = maxlags
 
         self.use_real_MB = use_real_MB
-        
+        self.balanced = balanced
+
+   
     def compute_descriptors_no_dags(self):
         if not self.dynamic:
             pairs = [(i, j) for i in range(self.n_variables) for j in range(self.n_variables) if i != j]
@@ -69,12 +82,13 @@ class D2C:
             pairs = [(i, j) for i in range(self.n_variables,  self.n_variables + self.n_variables * self.maxlags) for j in range(self.n_variables) if i != j]
         
         if self.n_jobs == 1:
-            results = [_process_pair(pair, self.compute_descriptors) for pair in pairs]
+            results = [_process_idx(idx, pairs, self.compute_descriptors) for idx in self.DAGs_index]
         else:
             with Pool(processes=self.n_jobs) as pool:
-                results = pool.starmap(_process_pair, [(pair, self.compute_descriptors) for pair in pairs])
+                results = pool.starmap(_process_idx, [(idx, pairs, self.compute_descriptors) for idx in self.DAGs_index])
 
-        return list(results)
+        X = pd.concat([pd.DataFrame(X) for X in results], axis=0)
+        return X
 
 
     def initialize(self) -> None:
@@ -103,26 +117,54 @@ class D2C:
         Y = []
         print("DAG_index start", DAG_index)
         nodes = len(self.DAGs[DAG_index].nodes)
+        # print(self.DAGs[DAG_index].nodes)
 
         child_edge_pairs = []
-        all_possible_edges = [(i, j) for i in range(nodes) for j in range(nodes) if i != j]
+        
+        if not self.dynamic:
+            all_possible_edges = [(i, j) for i in range(self.n_variables) for j in range(self.n_variables) if i != j]
+        else: 
+            all_possible_edges = [(i, j) for i in range(self.n_variables,  self.n_variables + self.n_variables * self.maxlags) for j in range(self.n_variables) if i != j]
+        
+
         #if dependency_type == "is.child": #TODO implement other dependencies
         for parent_node, child_node in self.DAGs[DAG_index].edges:
             child_edge_pairs.append((int(parent_node), int(child_node)))
+
+        num_rows = len(child_edge_pairs)  # Number of rows in the 2D array
+        num_samples = min(num_rows, 20)  # Number of samples to pick, ensuring it's not more than the number of rows
+
+        # Generate random indices
+        random_indices = np.random.choice(num_rows, size=num_samples, replace=False)
+        # Select the rows corresponding to these indices
+        selected_rows = [child_edge_pairs[i] for i in random_indices]
+
+        child_edge_pairs = selected_rows
+
+        
         if self.verbose: print("child_edge_pairs", child_edge_pairs)
         # print(child_edge_pairs)
         for edge_pair in child_edge_pairs:
             parent, child = edge_pair[0], edge_pair[1]
+            # print("Coppia giusta ",parent,child)
             descriptor = self.compute_descriptors(DAG_index, parent, child)
             X.append(descriptor)
             Y.append(1)  # Label edge as "is.child"
 
+        for edge_pair in child_edge_pairs:
+            parent, child = edge_pair[0], edge_pair[1]
+            # print("Coppia giusta ",parent,child)
+            descriptor = self.compute_descriptors(DAG_index, child, parent)
+            X.append(descriptor)
+            Y.append(0)  # Label edge as "is
+
         # For all remaining edges that are not in the DAG, compute descriptors and label them as "not a child"
-        
+                                        
         # selected_indices = np.random.choice(len(all_possible_edges), size=len(child_edge_pairs), replace=False)
 
         # Use list comprehension to select edges
         # selected_edges = [all_possible_edges[i] for i in selected_indices]
+        counter=0
         for edge_pair in all_possible_edges:
             if edge_pair not in child_edge_pairs:
                 # print("not in children:",edge_pair)
@@ -130,8 +172,12 @@ class D2C:
                 descriptor = self.compute_descriptors(DAG_index, parent, child)
                 X.append(descriptor)
                 Y.append(0)  # Label edge as "not a child"
+                
+                counter+=1
+                if counter == len(child_edge_pairs):
+                    break #TODO: for A -> B, we keep B -> A and another one, it's slightly unbalanced
 
-        #pickle the couple X,Y
+        #pickle the couple X,Y  
         print("DAG_index end", DAG_index)
         return X, Y
 
@@ -273,27 +319,27 @@ class D2C:
         #I(effect; m | cause) for m in MBef
         eff_m_cau = [0] if not MBca else [normalized_conditional_information(D.iloc[:, ef], D.iloc[:, MBca[j]], D.iloc[:, ca]) for j in range(len(MBca))]
 
-        # #create all possible couples of MBca and MBef
-        # mbca_mbef_couples = list(np.array(np.meshgrid(np.arange(len(MBca)), np.arange(len(MBef)))).T.reshape(-1,2))
+        #create all possible couples of MBca and MBef
+        mbca_mbef_couples = list(np.array(np.meshgrid(np.arange(len(MBca)), np.arange(len(MBef)))).T.reshape(-1,2))
 
-        # #I(mca ; mef | cause) for (mca,mef) in mbca_mbef_couples
-        # mca_mef_cau = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ca]) for i, j in mbca_mbef_couples]
+        #I(mca ; mef | cause) for (mca,mef) in mbca_mbef_couples
+        mca_mef_cau = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ca]) for i, j in mbca_mbef_couples]
 
-        # #I(mca ; mef| effect) for (mca,mef) in mbca_mbef_couples
-        # mca_mef_eff = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) for i, j in mbca_mbef_couples]
+        #I(mca ; mef| effect) for (mca,mef) in mbca_mbef_couples
+        mca_mef_eff = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) for i, j in mbca_mbef_couples]
         
-        # mbca_couples = list(np.array([(i, j) for i in range(len(MBca)) for j in range(i+1, len(MBca))]))
+        mbca_couples = list(np.array([(i, j) for i in range(len(MBca)) for j in range(i+1, len(MBca))]))
         
         # #I(mca ; mca| cause) - I(mca ; mca) for (mca,mca) in mbca_couples
         # # mca_mca_cau = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca]) - normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]]) for i, j in mbca_couples]
         # #problem is here
-        # mca_mca_cau = [0] if not mbca_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca]) for i, j in mbca_couples]
+        mca_mca_cau = [0] if not mbca_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca]) for i, j in mbca_couples]
 
-        # mbef_couples = list(np.array([(i, j) for i in range(len(MBef)) for j in range(i+1, len(MBef))]))
+        mbef_couples = list(np.array([(i, j) for i in range(len(MBef)) for j in range(i+1, len(MBef))]))
 
-        # #I(mbe ; mbe| effect) - I(mbe ; mbe) for (mbe,mbe) in mbef_couples
-        # # mbe_mbe_eff = [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) - normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]]) for i, j in mbef_couples]
-        # mbe_mbe_eff = [0] if not mbef_couples else [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) for i, j in mbef_couples]
+        #I(mbe ; mbe| effect) - I(mbe ; mbe) for (mbe,mbe) in mbef_couples
+        # mbe_mbe_eff = [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) - normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]]) for i, j in mbef_couples]
+        mbe_mbe_eff = [0] if not mbef_couples else [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) for i, j in mbef_couples]
         
         # E_ef = pd.DataFrame(ecdf(D.iloc[:, ef])(D.iloc[:, ef])) 
         # E_ca = pd.DataFrame(ecdf(D.iloc[:, ca])(D.iloc[:, ca]))
@@ -402,26 +448,26 @@ class D2C:
         values.extend(np.quantile(m_eff, q=pq, axis=0).flatten()) 
         values.extend(np.quantile(cau_m_eff, q=pq, axis=0).flatten()) 
         values.extend(np.quantile(eff_m_cau, q=pq, axis=0).flatten()) 
-        # values.extend(np.quantile(mca_mef_cau, q=pq, axis=0).flatten()) 
-        # values.extend(np.quantile(mca_mef_eff, q=pq, axis=0).flatten()) 
-        # values.extend(np.quantile(mca_mca_cau, q=pq, axis=0).flatten()) 
-        # values.extend(np.quantile(mbe_mbe_eff, q=pq, axis=0).flatten()) 
+        values.extend(np.quantile(mca_mef_cau, q=pq, axis=0).flatten()) 
+        values.extend(np.quantile(mca_mef_eff, q=pq, axis=0).flatten()) 
+        values.extend(np.quantile(mca_mca_cau, q=pq, axis=0).flatten()) 
+        values.extend(np.quantile(mbe_mbe_eff, q=pq, axis=0).flatten()) 
         # values.extend([gini_delta, gini_delta2,gini_ca_ef, gini_ef_ca])
-        # values.extend([
-        #         n_observations,                
-        #         n_features,
-        #         n_features/n_observations,
-        #         kurtosis(D.iloc[:, ca]),
-        #         kurtosis(D.iloc[:, ef]),
-        #         skew(D.iloc[:, ca]),
-        #         skew(D.iloc[:, ef]),
-        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 2),
-        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 2, 1),
-        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 3),
-        #         HOC(D.iloc[:, ca], D.iloc[:, ef], 3, 1),
-        #         # stab(D.iloc[:, ca], D.iloc[:, ef]),
-        #         # stab(D.iloc[:, ef], D.iloc[:, ca])
-        #         ]) 
+        values.extend([
+                n_observations,                
+                n_features,
+                n_features/n_observations,
+                kurtosis(D.iloc[:, ca]),
+                kurtosis(D.iloc[:, ef]),
+                skew(D.iloc[:, ca]),
+                skew(D.iloc[:, ef]),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 2),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 2, 1),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 3),
+                HOC(D.iloc[:, ca], D.iloc[:, ef], 3, 1),
+                # stab(D.iloc[:, ca], D.iloc[:, ef]),
+                # stab(D.iloc[:, ef], D.iloc[:, ca])
+                ]) 
         
         keys = ['graph_id','edge_source','edge_dest']
         keys = keys + [f"Feature{i}" for i in range(len(values) - len(keys))]

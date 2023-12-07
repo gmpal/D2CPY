@@ -12,24 +12,23 @@ class VARLiNGAM(BaseCausalInference):
         self.returns_proba = True
         
     def infer(self, single_ts,**kwargs):
-        model = VARLiNGAM_(lags=self.maxlags, criterion='bic', prune=True)
+        model = VARLiNGAM_(lags=self.maxlags, criterion=None, prune=False)
         model.fit(single_ts)
         return model.adjacency_matrices_
     
     def build_causal_df(self, results, n_variables):
-
         #initialization
         pairs = [(source, effect) for source in range(n_variables, n_variables * self.maxlags + n_variables) for effect in range(n_variables)]
         multi_index = pd.MultiIndex.from_tuples(pairs, names=['source', 'target'])
         causal_dataframe = pd.DataFrame(index=multi_index, columns=['is_causal', 'value', 'pvalue'])
-
-        for lag in range(self.maxlags):
+        
+        for lag in range(1,self.maxlags+1):
             for source in range(n_variables):
                 for effect in range(n_variables):
                     current_value = results[lag][effect][source]
-
+                    
                     is_causal = 0 if abs(current_value) < 0.1 else 1
-                    causal_dataframe.loc[(n_variables + source+lag*n_variables, effect)] = is_causal, abs(current_value), 0
+                    causal_dataframe.loc[(n_variables + source+(lag-1)*n_variables, effect)] = is_causal, abs(current_value), 0
 
         return causal_dataframe
 

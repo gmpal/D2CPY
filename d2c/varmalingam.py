@@ -17,17 +17,17 @@ class VARMALiNGAM(BaseCausalInference):
         return model.adjacency_matrices_
     
     def build_causal_df(self, results, n_variables):
-
+        print(results)
         #initialization
         pairs = [(source, effect) for source in range(n_variables, n_variables * self.maxlags + n_variables) for effect in range(n_variables)]
         multi_index = pd.MultiIndex.from_tuples(pairs, names=['source', 'target'])
         causal_dataframe = pd.DataFrame(index=multi_index, columns=['is_causal', 'value', 'pvalue'])
 
-        for lag in range(self.maxlags):
+        for lag in range(self.maxlags + 1):
             for source in range(n_variables):
                 for effect in range(n_variables):
+                    print(lag,source,effect)
                     current_value = results[lag][effect][source]
-
                     is_causal = 0 if abs(current_value) < 0.1 else 1
                     causal_dataframe.loc[(n_variables + source+lag*n_variables, effect)] = is_causal, current_value, 0
 
@@ -36,8 +36,8 @@ class VARMALiNGAM(BaseCausalInference):
 
 if __name__ == "__main__":
     # Usage
-    with open('data/fixed_lags.pkl', 'rb') as f:
-        observations, dags, updated_dags = pickle.load(f)
+    with open('../data/known_ts_1_250.pkl', 'rb') as f:
+        observations, dags, updated_dags, causal_df = pickle.load(f)
 
     causal_method = VARMALiNGAM(observations[:5], maxlags=3)
     causal_method.run()
