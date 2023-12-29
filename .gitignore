@@ -6,14 +6,11 @@ temp/
 __pycache__/
 test.ipynb
 generation/*.pkl
-causeme/experiments/*.txt
-causeme/results/*.bz2
 *graph_*.png
 *graph*.png
 graph_*
 *descriptors*.csv
 generation/comparing_test.ipynb
-causeme/causeme_method_registration_example.py
 *.txt
 */pics/*.png
 causeme.keys
@@ -38,3 +35,7 @@ d2c/lwr.ipynb
 
 
 tests/.old
+data/
+gnn/
+causeme/
+temp/
