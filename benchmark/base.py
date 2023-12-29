@@ -1,6 +1,7 @@
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, balanced_accuracy_score
 from multiprocessing import Pool
 import numpy as np
+import pickle
 
 class BaseCausalInference:
     def __init__(self, ts_list, maxlags=3, ground_truth=None, n_jobs=1, suffix=''):
@@ -54,14 +55,42 @@ class BaseCausalInference:
     
     def get_causal_dfs(self):
         return self.causal_dfs
+
+    def set_causal_dfs(self, causal_dfs):
+        self.causal_dfs = causal_dfs
     
+    def set_ground_truth(self, causal_dfs):
+        self.ground_truth = causal_dfs
+    
+    def filter_causal_dfs(self, d2c_causal_dfs):
+        indexes = {}
+        for i, df in d2c_causal_dfs.items():
+            indexes[i] = list(df.index)
+
+        updated_causal_dfs = {}
+        for i, idx_i in indexes.items():
+            updated_causal_dfs[i] = self.causal_dfs[i].loc[idx_i]
+
+        updated_ground_truths = {}
+        for i, idx_i in indexes.items():
+            updated_ground_truths[i] = self.ground_truth[i].loc[idx_i]
+
+        self.set_causal_dfs(updated_causal_dfs)
+        self.set_ground_truth(updated_ground_truths)
+
+
+
     def evaluate(self):
         data = []
         for ts_idx in range(len(self.ts_list)):
             print('\revaluating', ts_idx, 'of', len(self.ts_list), end='', flush=True)
             method_name = self.__class__.__name__ + self.suffix
-            y_test = self.ground_truth[ts_idx].astype(int)
+            y_test = self.ground_truth[ts_idx]['is_causal'].astype(int)
+            
+            # y_test = self.causal_dfs[ts_idx]['truth'].astype(int)
             y_hat = self.causal_dfs[ts_idx]['is_causal'].astype(int)
+            
+            y_test = y_test.loc[y_hat.index]
 
             data.append([method_name, 'accuracy', accuracy_score(y_test, y_hat)])
             data.append([method_name, 'precision', precision_score(y_test, y_hat, zero_division=np.nan)])
@@ -75,3 +104,8 @@ class BaseCausalInference:
                     data.append([method_name, 'auc', auc_test])
 
         return data
+
+    def save_causal_dfs(self, name):
+        method_name = self.__class__.__name__ + self.suffix
+        with open('../data/'+name+'_'+method_name+'_causal_dfs.pkl', 'wb') as f:
+            pickle.dump(self.causal_dfs, f)

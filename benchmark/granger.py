@@ -1,4 +1,4 @@
-from base import BaseCausalInference
+from benchmark.base import BaseCausalInference
 
 from statsmodels.tsa.stattools import grangercausalitytests
 import numpy as np

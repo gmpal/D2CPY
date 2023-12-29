@@ -20,6 +20,10 @@ import statsmodels.api as sm
 
 from datetime import datetime
 
+# from lowess import LOWESS
+
+import time
+
 COUNTER = 0
 
 
@@ -45,6 +49,7 @@ def normalized_conditional_information(y, x1, x2=None):
                 print()
                 return "error"
 
+
 def normalized_prediction(X, Y):
     """
     Normalized mean squared error of the dependency.
@@ -53,16 +58,21 @@ def normalized_prediction(X, Y):
     If X can predict Y perfectly, then the NMSE will be close to zero. This would indicate that X provides a lot of information about Y, or in other words, the mutual information between X and Y is high.
     Conversely, if X is a poor predictor of Y, then the NMSE will be high, indicating that the mutual information between X and Y is low.
     """
-
     if isinstance(X, pd.Series): X = pd.DataFrame(X)
     if isinstance(Y, pd.DataFrame): Y = Y.iloc[:,0]
+
+    #cut in half to speed up
+    X = X.iloc[-int(len(X)/20):]
+    Y = Y.iloc[-int(len(Y)/20):]
 
     X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
     
     try: 
         numerator = max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), X, Y, scoring='neg_mean_squared_error', cv=2)))
+        # numerator = max(1e-3, -np.mean(cross_val_score(LOWESS(tau=0.2), X, Y, scoring='neg_mean_squared_error', cv=2)))
     except ValueError as e:
         # print(X,Y)
+        print('############')
         print(e)
         print(X.shape, Y.shape)
         #print stacktrace
@@ -73,7 +83,6 @@ def normalized_prediction(X, Y):
         numerator = 0
     denominator = (1e-3 + np.var(Y))
     return numerator / denominator
-
     #TODO: implement the nonlinear case
 
 ############################################################################################################

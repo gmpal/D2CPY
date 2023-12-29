@@ -1,45 +1,44 @@
 
-from base import BaseCausalInference
+from benchmark.base import BaseCausalInference
 import pandas as pd
 import pickle
-from lingam.varma_lingam import VARMALiNGAM as VARMALiNGAM_
+from lingam import VARLiNGAM as VARLiNGAM_
 
 
 
-class VARMALiNGAM(BaseCausalInference):
+class VARLiNGAM(BaseCausalInference):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        #TODO: self.returns_proba = True
-
+        self.returns_proba = True
+        
     def infer(self, single_ts,**kwargs):
-        model = VARMALiNGAM_(order=(self.maxlags,0), criterion='bic', prune=True)
-        model.fit(single_ts.values)
+        model = VARLiNGAM_(lags=self.maxlags, criterion=None, prune=False)
+        model.fit(single_ts)
         return model.adjacency_matrices_
     
     def build_causal_df(self, results, n_variables):
-        print(results)
         #initialization
         pairs = [(source, effect) for source in range(n_variables, n_variables * self.maxlags + n_variables) for effect in range(n_variables)]
         multi_index = pd.MultiIndex.from_tuples(pairs, names=['source', 'target'])
         causal_dataframe = pd.DataFrame(index=multi_index, columns=['is_causal', 'value', 'pvalue'])
-
-        for lag in range(self.maxlags + 1):
+        
+        for lag in range(1,self.maxlags+1):
             for source in range(n_variables):
                 for effect in range(n_variables):
-                    print(lag,source,effect)
                     current_value = results[lag][effect][source]
+                    
                     is_causal = 0 if abs(current_value) < 0.1 else 1
-                    causal_dataframe.loc[(n_variables + source+lag*n_variables, effect)] = is_causal, current_value, 0
+                    causal_dataframe.loc[(n_variables + source+(lag-1)*n_variables, effect)] = is_causal, abs(current_value), 0
 
         return causal_dataframe
 
 
 if __name__ == "__main__":
     # Usage
-    with open('../data/known_ts_1_250.pkl', 'rb') as f:
-        observations, dags, updated_dags, causal_df = pickle.load(f)
+    with open('../data/fixed_lags.pkl', 'rb') as f:
+        observations, dags, updated_dags = pickle.load(f)
 
-    causal_method = VARMALiNGAM(observations[:5], maxlags=3)
+    causal_method = VARLiNGAM(observations[:5], maxlags=3)
     causal_method.run()
     results = causal_method.get_causal_dfs()
     print(results)

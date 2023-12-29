@@ -1,4 +1,4 @@
-from base import BaseCausalInference
+from benchmark.base import BaseCausalInference
 import pandas as pd
 import pickle
 
@@ -40,6 +40,7 @@ class D2C(BaseCausalInference):
         ########TRAINING############
         ############################
         data = self.descriptors
+        # print(data)
         training_data = data.loc[data['graph_id'] != ts_index] 
         #flattening
         if self.flattening:
@@ -61,7 +62,9 @@ class D2C(BaseCausalInference):
         # print(self.flattening, self.train_ratio)
         # print(X_train.shape)
         # print('#################')
-        clf = BalancedRandomForestClassifier(n_estimators=10, n_jobs=10, sampling_strategy='all',replacement=True)
+        # print("Shape of training data", training_data.shape)
+
+        clf = BalancedRandomForestClassifier(n_estimators=10, n_jobs=1, sampling_strategy='all',replacement=True)
         clf.fit(X_train, y_train)
 
 
@@ -79,15 +82,24 @@ class D2C(BaseCausalInference):
             returned = pd.DataFrame(y_pred,index=X_test.index, columns=['is_causal'])
         else:
             #flattening
+            # print(ts_index)
+            # print('Unique graph ids', data['graph_id'].unique())
             testing_data = data.loc[data['graph_id'] == ts_index]
             testing_data = testing_data[(testing_data['edge_dest'] < self.n_variables) & (testing_data['edge_source'] >= self.n_variables)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index(drop=True)
+            # print("Shape of testing data", testing_data.shape,"Shape of training data", training_data.shape)
             X_test = testing_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
+            y_test = testing_data['is_causal']
+            # print('#################')
+            # print(X_test)
+            # print('#################')
             y_pred = clf.predict_proba(X_test)[:,1]
-            returned = pd.concat([pd.DataFrame(testing_data)[['edge_source','edge_dest']], pd.DataFrame(y_pred, columns=['is_causal'])], axis=1, sort=True)
+            # returned = pd.concat([pd.DataFrame(testing_data)[['edge_source','edge_dest']], pd.DataFrame(y_pred, columns=['is_causal'])], axis=1, sort=True)
+            returned = pd.concat([pd.DataFrame(testing_data)[['edge_source','edge_dest']], pd.DataFrame(y_pred, columns=['is_causal']),pd.DataFrame(y_test.values, columns=['truth'])], axis=1, sort=True)
         return returned
     
     def build_causal_df(self, results, n_variables):
-        # results.set_index(['edge_source','edge_dest'], inplace=True) #Already set
+        
+        results.set_index(['edge_source','edge_dest'], inplace=True) #Already set
         results['value'] = results['is_causal']
         results['is_causal'] = results['is_causal'].apply(lambda x: 1 if x > 0.5 else 0)
         results['pvalue'] = 0
@@ -99,8 +111,10 @@ if __name__ == "__main__":
     with open('../data/100_known_ts_all_20_variables.pkl', 'rb') as f:
         observations, dags, updated_dags, causal_dfs = pickle.load(f)
 
-    causal_method = D2C(observations[-2:], maxlags=3,descriptors_path='../data/100_known_ts_all_descriptors_20_variables.pkl', n_variables=20)
+    causal_method = D2C(observations[-4:], maxlags=3,descriptors_path='../data/100_known_ts_all_descriptors_20_variables.pkl', n_variables=20)
     causal_method.run()
     results = causal_method.get_causal_dfs()
     print("eee")
-    print(results[1])
+
+    
+    print(results[2].index)

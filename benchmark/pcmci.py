@@ -1,4 +1,4 @@
-from base import BaseCausalInference
+from benchmark.base import BaseCausalInference
 
 from tigramite.pcmci import PCMCI as PCMCI_
 from tigramite.independence_tests.parcorr import ParCorr

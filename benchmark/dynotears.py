@@ -1,4 +1,4 @@
-from base import BaseCausalInference
+from benchmark.base import BaseCausalInference
 
 from causalnex.structure.dynotears import from_pandas_dynamic
 

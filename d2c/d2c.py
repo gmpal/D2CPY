@@ -14,8 +14,8 @@ from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_sco
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import cross_val_score, GroupKFold
 
-from simulatedDAGs import SimulatedDAGs
-from utils import *
+# from simulatedDAGs import SimulatedDAGs
+from d2c.utils import *
 
 from datetime import datetime
 
@@ -29,14 +29,13 @@ from tqdm import tqdm
 
 #TODO: improve multiprocessing handling and clean code
 def _process_idx(idx, pairs, compute_descriptors):
-    print('Processing ',idx)
+    print('\rProcessing ',idx, ' of ', len(pairs), end='', flush=True)
     start = time.time()
     X_list = []
     for pair in pairs:
         X_pair = compute_descriptors(idx, pair[0], pair[1])
         X_list.append(X_pair)
     X = pd.concat([pd.DataFrame(X) for X in X_list], axis=0)
-    print('Processed ',idx, ' in ', time.time() - start, ' seconds')
     return X
 
 
@@ -73,6 +72,9 @@ class D2C:
 
         self.use_real_MB = use_real_MB
         self.balanced = balanced
+
+
+        self.test_couples = []
 
    
     def compute_descriptors_no_dags(self):
@@ -117,7 +119,6 @@ class D2C:
         Y = []
         print("DAG_index start", DAG_index)
         nodes = len(self.DAGs[DAG_index].nodes)
-        # print(self.DAGs[DAG_index].nodes)
 
         child_edge_pairs = []
         
@@ -131,16 +132,20 @@ class D2C:
         for parent_node, child_node in self.DAGs[DAG_index].edges:
             child_edge_pairs.append((int(parent_node), int(child_node)))
 
+
+        #TODO: the selection of edges is too much hardcoded ! 
         num_rows = len(child_edge_pairs)  # Number of rows in the 2D array
         num_samples = min(num_rows, 20)  # Number of samples to pick, ensuring it's not more than the number of rows
 
         # Generate random indices
+        # np.seed(42)
         random_indices = np.random.choice(num_rows, size=num_samples, replace=False)
         # Select the rows corresponding to these indices
         selected_rows = [child_edge_pairs[i] for i in random_indices]
 
         child_edge_pairs = selected_rows
 
+        self.test_couples.extend(child_edge_pairs)
         
         if self.verbose: print("child_edge_pairs", child_edge_pairs)
         # print(child_edge_pairs)
@@ -167,21 +172,36 @@ class D2C:
         counter=0
         for edge_pair in all_possible_edges:
             if edge_pair not in child_edge_pairs:
+
+                if counter == num_samples:
+                    break #TODO: for A -> B, we keep B -> A and another one, it's slightly unbalanced
+                
                 # print("not in children:",edge_pair)
                 parent, child = edge_pair[0], edge_pair[1]
+                self.test_couples.extend([edge_pair])
                 descriptor = self.compute_descriptors(DAG_index, parent, child)
                 X.append(descriptor)
                 Y.append(0)  # Label edge as "not a child"
                 
+                
                 counter+=1
-                if counter == len(child_edge_pairs):
-                    break #TODO: for A -> B, we keep B -> A and another one, it's slightly unbalanced
-
+                
         #pickle the couple X,Y  
         print("DAG_index end", DAG_index)
         return X, Y
 
     def compute_markov_blanket(self, DAG_index, D, variable, MB_size, verbose=False):
+        '''
+        Compute the Markov Blanket of a variable in a dataset under the assumption that one variable is the cause and the other the effect.
+
+        Parameters:
+        DAG_index (int): Index of the DAG in the list of DAGs. (Used only if we compute the real MB)
+        D (pd.DataFrame): The dataset.
+        variable (int): Node index of the putative cause. Must be in the range [0, n).
+        ns (int, optional): Size of the Markov Blanket. Defaults to min(4, n - 2).
+        
+
+        '''
         # if self.DAGs is None:
         if not self.use_real_MB: 
             ind = list(set(np.arange(D.shape[1])) - {variable})
@@ -517,74 +537,8 @@ class D2C:
             path (str): The path to the CSV file.
 
         """
-        concatenated_df = self.get_descriptors_df()
-        concatenated_df.to_csv(path, index=False)
+        self.get_descriptors_df().to_csv(path, index=False)
 
-    def get_score(self, model: RandomForestClassifier = RandomForestClassifier(), n_splits: int = 10, metric: str = "accuracy") -> Union[float, None]:
-
+    def get_test_couples(self):
+        return self.test_couples
         
-        dataframe = self.get_descriptors_df()
-        X = dataframe.drop(columns=['graph_id', 'is_causal'])
-        y = dataframe['is_causal']
-        groups = dataframe['graph_id']
-
-        rf_classifier = model
-
-        group_kfold = GroupKFold(n_splits=n_splits)  # You can change the number of splits (e.g., 5-fold cross-validation)
-
-        # Perform cross-validation
-        cv_scores = cross_val_score(rf_classifier, X, y, cv=group_kfold, groups=groups, scoring=metric)
-
-        mean_f1 = cv_scores.mean()
-        return mean_f1
-
-        
-    def test(self, model: RandomForestClassifier = RandomForestClassifier(), metric:str = 'accuracy', test_df: pd.DataFrame = None, reconstruct: bool = False): 
-        """
-        Test the performance of a D2C model on a Pandas Dataframe of descriptors from another D2C object. 
-        Optionally reconctructs the DAG according to the predictions of the model.
-
-        Parameters:
-            d2c (D2C): The D2C object to test.
-            metric (str): The metric to use for evaluation. Defaults to 'accuracy'.
-            test_df (pd.DataFrame): The DataFrame of descriptors to use for testing. Defaults to None.
-            reconstruct (bool): Whether to reconstruct the DAG. Defaults to False.
-
-        Returns:
-            float: The score of the model.
-            nx.DiGraph: The reconstructed DAG.
-
-        """
-        dataframe = self.get_descriptors_df()
-        X_train = dataframe.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
-        y_train = dataframe['is_causal']
-        
-        X_test = test_df.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
-        y_test = test_df['is_causal']
-
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
-
-        G = None
-        if reconstruct: 
-            # Assuming df is your DataFrame
-            G = nx.DiGraph()  # Creates a directed graph
-            test_df['is_causal'] = y_pred
-            for index, row in test_df.iterrows():
-                if row['is_causal']:
-                    G.add_edge(row['edge_source'], row['edge_dest'])
-            
-        if metric == 'accuracy':
-            score = accuracy_score(y_test, y_pred)
-        elif metric == 'f1':
-            score =  f1_score(y_test, y_pred)
-        elif metric == 'precision':
-            score =  precision_score(y_test, y_pred)
-        elif metric == 'recall':
-            score =  recall_score(y_test, y_pred)
-        elif metric == 'roc_auc':
-            score =  roc_auc_score(y_test, y_pred)
-        else:
-            raise ValueError("Metric not supported")
-        
-        return score, G

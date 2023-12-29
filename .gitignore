@@ -25,6 +25,16 @@ causeme.keys
 /competitors/*/*/*/*.csv
 /competitors/notmine/*
 /competitors/TCDF/*
-/temp/*
+
 /causeme/*
 /generation/*.csv
+
+/data/
+/new_data/
+/temp/
+/gnn/
+
+d2c/lwr.ipynb
+
+
+tests/.old
