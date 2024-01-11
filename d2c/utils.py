@@ -20,28 +20,28 @@ import statsmodels.api as sm
 
 from datetime import datetime
 
-# from lowess import LOWESS
+from d2c.lowess import LOWESS
 
 import time
 
 COUNTER = 0
 
-
-def normalized_conditional_information(y, x1, x2=None):
+#TODO: move this back to the main class D2C and remove proxy from the function arguments
+def normalized_conditional_information(y, x1, x2=None, proxy='Ridge'):
         """
         Normalized conditional information of x1 to y given x2
         I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
         """
         if (x2 is None) or (x2.empty):  # I(x1;y)= (H(y)-H(y | x1))/H(y)
 
-            entropy_y_given_x1 = normalized_prediction(x1, y) 
+            entropy_y_given_x1 = normalized_prediction(x1, y, proxy) 
             return max(0, 1 - entropy_y_given_x1)
         else:  # I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
             try:
                 if (y is None) or (y.empty) or (x1 is None) or (x1.empty):
                     return 0
-                entropy_y_given_x2 = normalized_prediction(x2, y)
-                entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y)
+                entropy_y_given_x2 = normalized_prediction(x2, y, proxy)
+                entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y, proxy)
                 
                 return max(0, entropy_y_given_x2 - entropy_y_given_x1_x2 ) / (entropy_y_given_x2 + 0.01)
             except IndexError:
@@ -50,7 +50,7 @@ def normalized_conditional_information(y, x1, x2=None):
                 return "error"
 
 
-def normalized_prediction(X, Y):
+def normalized_prediction(X, Y, proxy='Ridge'):
     """
     Normalized mean squared error of the dependency.
     Replies to the question: How much information about Y is contained in X?
@@ -61,15 +61,17 @@ def normalized_prediction(X, Y):
     if isinstance(X, pd.Series): X = pd.DataFrame(X)
     if isinstance(Y, pd.DataFrame): Y = Y.iloc[:,0]
 
-    #cut in half to speed up
-    X = X.iloc[-int(len(X)/20):]
-    Y = Y.iloc[-int(len(Y)/20):]
+    #cut in half to speed up!!! #TODO: fix this
+    X = X.iloc[-int(len(X)/2):]
+    Y = Y.iloc[-int(len(Y)/2):]
 
     X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
     
     try: 
-        numerator = max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), X, Y, scoring='neg_mean_squared_error', cv=2)))
-        # numerator = max(1e-3, -np.mean(cross_val_score(LOWESS(tau=0.2), X, Y, scoring='neg_mean_squared_error', cv=2)))
+        if proxy == 'Ridge':
+            numerator = max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), X, Y, scoring='neg_mean_squared_error', cv=2)))
+        elif proxy == 'LOWESS':
+            numerator = max(1e-3, -np.mean(cross_val_score(LOWESS(tau=0.2), X, Y, scoring='neg_mean_squared_error', cv=2)))
     except ValueError as e:
         # print(X,Y)
         print('############')
@@ -130,6 +132,35 @@ def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3):
         'model': model,
     }
 
+
+def from_dict_of_lists_to_list(dict_of_lists):
+    list_of_lists = []
+    sorted_keys = sorted(dict_of_lists.keys(), key=lambda x: int(x))
+    for key in sorted_keys:
+        list_of_lists.extend(dict_of_lists[key])
+    return list_of_lists
+
+def rename_dags(dags,n_variables):
+    import networkx as nx
+    #rename the nodes of the dags to use the same convention as the descriptors
+    updated_dags = []
+    for dag in dags:
+        mapping = {node: int(node.split('_')[0]) + int(node.split('-')[1]) * n_variables for node in dag.nodes()} #from x_(t-y) to x + y*n_variables
+        dag = nx.relabel_nodes(dag, mapping)
+        updated_dags.append(dag)
+    return updated_dags
+
+
+def create_lagged_multiple_ts(observations, maxlags):
+    #create lagged observations for all the available time series
+    lagged_observations = []
+    for obs in observations:
+        lagged = obs.copy()
+        for i in range(1,maxlags+1):
+            lagged = pd.concat([lagged, obs.shift(i)], axis=1)
+        lagged.columns = [i for i in range(len(lagged.columns))]
+        lagged_observations.append(lagged.dropna())
+    return lagged_observations
 
 
 

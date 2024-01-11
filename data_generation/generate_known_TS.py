@@ -16,7 +16,7 @@ class TSBuilder():
 
     """
 
-    def __init__(self, timesteps=3, maxlags=3, n_variables=20, n_iterations=100, processes_to_use = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], verbose = True):
+    def __init__(self, timesteps=3, maxlags=3, n_variables=20, n_iterations=100, processes_to_use = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17], verbose = True):
         self.timesteps = timesteps
         self.maxlags = maxlags
         self.processes_to_use = processes_to_use
@@ -76,7 +76,10 @@ class TSBuilder():
             self.dags_dict[i] = dags
             self.causal_dfs_dict[i] = causal_dfs
 
-    def save(self, output_folder = 'data/'):
+    def save(self, output_folder = 'data/', single_file = False):
+        if single_file:
+            with open(output_folder + f'data.pkl', 'wb') as handle:
+                pickle.dump((self.observations_list_dict, self.dags_dict, self.causal_dfs_dict), handle)
         for i in self.processes_to_use:
             with open(output_folder + f'data_{i}.pkl', 'wb') as handle:
                 pickle.dump((self.observations_list_dict[i], self.dags_dict[i], self.causal_dfs_dict[i]), handle)

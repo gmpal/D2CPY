@@ -23,11 +23,11 @@ def generate_time_series(output_folder, series_time_lag, n_variables, timesteps_
     ts_builder = TSBuilder(timesteps=timesteps_per_series, maxlags=series_time_lag, 
                            n_variables=n_variables, n_iterations=n_series_per_generative_process)
     ts_builder.build()
-    ts_builder.save(output_folder=output_folder)
+    ts_builder.save(output_folder=output_folder,single_file=True)
     return ts_builder
 
 
-def compute_descriptors(ts_builder, n_jobs, output_folder):
+def compute_descriptors(ts_builder = None, data_path = None, n_jobs=1, output_folder= 'new_data/', mutual_information_proxy='Ridge'):
     """
     Computes the descriptors for the time series data.
 
@@ -39,15 +39,15 @@ def compute_descriptors(ts_builder, n_jobs, output_folder):
     Returns:
         DescriptorsGenerator: An instance of DescriptorsGenerator with computed descriptors.
     """
-    descr_gen = DescriptorsGenerator(ts_builder=ts_builder, n_jobs=n_jobs)
+    descr_gen = DescriptorsGenerator(ts_builder=ts_builder, data_path = data_path, n_jobs=n_jobs, mutual_information_proxy=mutual_information_proxy)    
+    descr_gen.generate()
+    descr_gen.save(output_folder=output_folder)
     data = descr_gen.get_observations()
     ground_truth = descr_gen.get_causal_dfs()
-    # Optionally save the descriptors
-    # descr_gen.save(output_folder=output_folder)
     return descr_gen, data, ground_truth
 
 
-def run_benchmarks(data, ground_truth, series_time_lag, n_jobs, output_folder, descriptors_path, n_variables, suffix):
+def run_benchmarks(data, ground_truth, series_time_lag, n_jobs, output_folder, descriptors_paths_list, n_variables, suffix):
     """
     Runs various benchmark algorithms on the time series data.
 
@@ -61,14 +61,29 @@ def run_benchmarks(data, ground_truth, series_time_lag, n_jobs, output_folder, d
         n_variables (int): The number of variables in the time series.
         suffix (str): A suffix to be used in naming the output files.
     """
-    benchmarks = [
-        D2C(data, maxlags=series_time_lag, n_jobs=n_jobs, ground_truth=ground_truth, 
-            descriptors_path=descriptors_path, n_variables=n_variables, suffix=suffix),
+    benchmarks = []
+    for descriptors_path in descriptors_paths_list:
+        suffix = descriptors_path.split('/')[-1].split('_')[1].split('.')[0]
+        d2c = D2C(data, maxlags=series_time_lag, n_jobs=n_jobs, ground_truth=ground_truth, 
+            descriptors_path=descriptors_path, n_variables=n_variables, suffix=suffix)
+        benchmarks.append(d2c)
+
+    benchmarks.extend([
         Granger(data, maxlags=series_time_lag, n_jobs=n_jobs, ground_truth=ground_truth),
         PCMCI(data, maxlags=series_time_lag, n_jobs=n_jobs, ground_truth=ground_truth),
         VAR(data, maxlags=series_time_lag, n_jobs=n_jobs, ground_truth=ground_truth),
         VARLiNGAM(data, maxlags=series_time_lag, n_jobs=n_jobs, ground_truth=ground_truth)
-    ]
+    ])
+
+    
+    # benchmarks = [
+    #     D2C(data, maxlags=series_time_lag, n_jobs=n_jobs, ground_truth=ground_truth, 
+    #         descriptors_path=descriptors_path, n_variables=n_variables, suffix=suffix),
+    #     Granger(data, maxlags=series_time_lag, n_jobs=n_jobs, ground_truth=ground_truth),
+    #     PCMCI(data, maxlags=series_time_lag, n_jobs=n_jobs, ground_truth=ground_truth),
+    #     VAR(data, maxlags=series_time_lag, n_jobs=n_jobs, ground_truth=ground_truth),
+    #     VARLiNGAM(data, maxlags=series_time_lag, n_jobs=n_jobs, ground_truth=ground_truth)
+    # ]
 
     runner = BenchmarkRunner(data=data, ground_truth=ground_truth, benchmarks=benchmarks,
                              name='test_run', maxlags=series_time_lag, n_jobs=n_jobs)
@@ -80,24 +95,42 @@ def run_benchmarks(data, ground_truth, series_time_lag, n_jobs, output_folder, d
 if __name__ == "__main__":
     # Configuration
     series_time_lag = 3
-    n_variables = 3 
-    timesteps_per_series = 200
-    n_series_per_generative_process = 2
-    n_jobs = 15
-    output_folder = 'new_data/'
+    n_variables = 5 
+    timesteps_per_series = 100
+    n_series_per_generative_process = 20
+    n_jobs = 50
+    output_folder = f'small_data_lag{series_time_lag}_variables{n_variables}/'
+    
+
+    import os
+    os.makedirs(output_folder, exist_ok=True)
 
      # Additional parameters for D2C
-    descriptors_path = output_folder + 'descriptors.pkl'
+    descriptors_paths_list = [output_folder + 'descriptors_LOWESS.pkl',output_folder + 'descriptors_Ridge.pkl']
+    # descriptors_paths_list = [output_folder + 'descriptors_Ridge.pkl']
     suffix = 'linear'
+
+    data_path = output_folder
+    mutual_information_proxy = 'Ridge'
 
 
     # PART 1: Generation of observations
-    ts_builder = generate_time_series(output_folder, series_time_lag, n_variables, 
-                                      timesteps_per_series, n_series_per_generative_process)
+    # ts_builder = generate_time_series(output_folder, series_time_lag, n_variables, 
+                                    #   timesteps_per_series, n_series_per_generative_process)
 
     # PART 2: Computation of descriptors
-    descr_gen, data, ground_truth = compute_descriptors(ts_builder, n_jobs, output_folder)
+    # descr_gen, data, ground_truth = compute_descriptors(ts_builder = ts_builder, n_jobs = n_jobs, output_folder = output_folder, mutual_information_proxy='Ridge')
+    # descr_gen, data, ground_truth = compute_descriptors(ts_builder = ts_builder, n_jobs = n_jobs, output_folder = output_folder, mutual_information_proxy='LOWESS')
+    
+    #from data
+    # descr_gen, data, ground_truth = compute_descriptors(data_path = data_path, n_jobs = n_jobs, output_folder = output_folder, mutual_information_proxy='Ridge')
+    # descr_gen, data, ground_truth = compute_descriptors(data_path = data_path, n_jobs = n_jobs, output_folder = output_folder, mutual_information_proxy='LOWESS')
 
     # PART 3: Computation of causal graphs
-    run_benchmarks(data, ground_truth, series_time_lag, n_jobs, output_folder, descriptors_path, n_variables, suffix)
+
+    descr_gen = DescriptorsGenerator(data_path = data_path, n_jobs=n_jobs, mutual_information_proxy=mutual_information_proxy)    
+    data = descr_gen.get_observations()
+    ground_truth = descr_gen.get_causal_dfs()
+    run_benchmarks(data, ground_truth, series_time_lag, n_jobs, output_folder, descriptors_paths_list, n_variables, suffix)
+
 

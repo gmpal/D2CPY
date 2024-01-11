@@ -3,6 +3,7 @@ import pandas as pd
 import pickle
 
 from imblearn.ensemble import BalancedRandomForestClassifier
+from sklearn.metrics import roc_auc_score
 
 import sys
 sys.path.append('../d2c')
@@ -88,14 +89,17 @@ class D2C(BaseCausalInference):
             testing_data = testing_data[(testing_data['edge_dest'] < self.n_variables) & (testing_data['edge_source'] >= self.n_variables)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index(drop=True)
             # print("Shape of testing data", testing_data.shape,"Shape of training data", training_data.shape)
             X_test = testing_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
-            y_test = testing_data['is_causal']
             # print('#################')
             # print(X_test)
             # print('#################')
             y_pred = clf.predict_proba(X_test)[:,1]
+
+            testing_data['truth'] = testing_data['is_causal']
+            testing_data['is_causal'] = y_pred
+            # print('AUC', roc_auc_score(y_test, y_pred))
             # returned = pd.concat([pd.DataFrame(testing_data)[['edge_source','edge_dest']], pd.DataFrame(y_pred, columns=['is_causal'])], axis=1, sort=True)
-            returned = pd.concat([pd.DataFrame(testing_data)[['edge_source','edge_dest']], pd.DataFrame(y_pred, columns=['is_causal']),pd.DataFrame(y_test.values, columns=['truth'])], axis=1, sort=True)
-        return returned
+            
+        return testing_data[['edge_source','edge_dest','truth','is_causal']]
     
     def build_causal_df(self, results, n_variables):
         
@@ -114,7 +118,3 @@ if __name__ == "__main__":
     causal_method = D2C(observations[-4:], maxlags=3,descriptors_path='../data/100_known_ts_all_descriptors_20_variables.pkl', n_variables=20)
     causal_method.run()
     results = causal_method.get_causal_dfs()
-    print("eee")
-
-    
-    print(results[2].index)

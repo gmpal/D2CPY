@@ -4,24 +4,42 @@ import sys
 import pandas as pd
 import networkx as nx
 import argparse
+import os 
 
 sys.path.append("..")
 sys.path.append("../d2c/")
 from d2c.d2c import D2C
+from d2c.utils import from_dict_of_lists_to_list, rename_dags, create_lagged_multiple_ts
 
 class DescriptorsGenerator():
     
-    def __init__(self, ts_builder = None, data_path = None, maxlags = 3, n_jobs = 1):
+    def __init__(self, ts_builder = None, data_path = None, maxlags = 3, n_jobs = 1, mutual_information_proxy = 'linear'):
         if ts_builder is not None: 
-            self.observations = self.from_dict_of_lists_to_list(ts_builder.get_observations())
-            self.dags = self.from_dict_of_lists_to_list(ts_builder.get_dags())
-            self.causal_dfs = self.from_dict_of_lists_to_list(ts_builder.get_causal_dfs())
+            self.observations = from_dict_of_lists_to_list(ts_builder.get_observations())
+            self.dags = from_dict_of_lists_to_list(ts_builder.get_dags())
+            self.causal_dfs = from_dict_of_lists_to_list(ts_builder.get_causal_dfs())
             self.maxlags = ts_builder.get_maxlags()
             self.n_variables = ts_builder.get_n_variables()    
+    
 
         elif data_path is not None:
-            with open(data_path, 'rb') as f:
-                self.observations, self.dags, self.causal_dfs = pickle.load(f)
+            # for each file starting with 'data' in the folder data_path
+            # load the data and append it to the list of observations
+            
+            loaded_observations = {}
+            loaded_dags = {}
+            loaded_causal_dfs = {}
+            for file in os.listdir(data_path):
+                if file.startswith('data'):
+                    index = file.split('_')[1].split('.')[0]
+                    with open(data_path+file, 'rb') as f:
+                        loaded_observations[index], loaded_dags[index], loaded_causal_dfs[index] = pickle.load(f)
+            
+            #TODO: add the case of single data file, consider moving always to single data file
+
+            self.observations = from_dict_of_lists_to_list(loaded_observations)
+            self.dags = from_dict_of_lists_to_list(loaded_dags)
+            self.causal_dfs = from_dict_of_lists_to_list(loaded_causal_dfs)
             self.maxlags = maxlags        
             self.n_variables = self.observations[0].shape[1] #TODO: assumption of constant number of variables
         else:
@@ -31,20 +49,16 @@ class DescriptorsGenerator():
         self.lagged_observations = []
         self.updated_dags = []
         self.are_testing_descriptors_unseen = False #TODO: when is this actually useful? 
+        self.mutual_information_proxy = mutual_information_proxy
         self.d2c = None
 
-    def from_dict_of_lists_to_list(self, dict_of_lists):
-        list_of_lists = []
-        for key in dict_of_lists.keys():
-            list_of_lists.extend(dict_of_lists[key])
-        return list_of_lists
 
     def generate(self):
         if len(self.updated_dags) == 0 or len(self.lagged_observations) == 0:
-            self.create_lagged_multiple_ts()
-            self.rename_dags()
+            self.lagged_observations = create_lagged_multiple_ts(self.observations, self.maxlags)
+            self.updated_dags = rename_dags(self.dags, self.n_variables)
         
-        self.d2c = D2C(self.updated_dags, self.lagged_observations, n_jobs=self.n_jobs, n_variables=self.n_variables, maxlags=self.maxlags)
+        self.d2c = D2C(self.updated_dags, self.lagged_observations, n_jobs=self.n_jobs, n_variables=self.n_variables, maxlags=self.maxlags, mutual_information_proxy=self.mutual_information_proxy)
         self.d2c.initialize()
         # if self.are_testing_descriptors_unseen: #TODO: when is this actually useful? 
         #     causal_dataframe = d2c.compute_descriptors_no_dags()
@@ -57,32 +71,9 @@ class DescriptorsGenerator():
 
     def save(self, output_folder):
         descriptors_df = self.d2c.get_descriptors_df()
-        with open(output_folder+'descriptors.pkl', 'wb') as f:
+        with open(output_folder+'descriptors_'+self.mutual_information_proxy+'.pkl', 'wb') as f:
             pickle.dump(descriptors_df, f)
 
-
-    def create_lagged(self, observations, lag):
-        #create lagged observations
-        lagged = observations.copy()
-        names = observations.columns
-        for i in range(1,lag+1):
-            lagged = pd.concat([lagged, observations.shift(i)], axis=1)
-        lagged.columns = [i for i in range(len(lagged.columns))]
-        lagged_column_names = [str(name) + '_lag' + str(i) for i in range(lag+1) for name in names]
-        return lagged, lagged_column_names
-
-    def create_lagged_multiple_ts(self):
-        #create lagged observations for all the available time series
-        for obs in self.observations:
-            lagged_obs, _ = self.create_lagged(obs, self.maxlags)
-            self.lagged_observations.append(lagged_obs.dropna())
-
-    def rename_dags(self):
-        #rename the nodes of the dags to use the same convention as the descriptors
-        for dag in self.dags:
-            mapping = {node: int(node.split('_')[0]) + int(node.split('-')[1]) * self.n_variables for node in dag.nodes()} #from x_(t-y) to x + y*n_variables
-            dag = nx.relabel_nodes(dag, mapping)
-            self.updated_dags.append(dag)
 
     def get_descriptors_df(self):
         return self.d2c.get_descriptors_df()

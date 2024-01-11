@@ -87,9 +87,7 @@ class BaseCausalInference:
             method_name = self.__class__.__name__ + self.suffix
             y_test = self.ground_truth[ts_idx]['is_causal'].astype(int)
             
-            # y_test = self.causal_dfs[ts_idx]['truth'].astype(int)
             y_hat = self.causal_dfs[ts_idx]['is_causal'].astype(int)
-            
             y_test = y_test.loc[y_hat.index]
 
             data.append([method_name, 'accuracy', accuracy_score(y_test, y_hat)])
@@ -100,6 +98,7 @@ class BaseCausalInference:
             if self.returns_proba: 
                 y_prob = self.causal_dfs[ts_idx]['value'].values.astype(float)
                 if len(np.unique(y_test)) > 1:
+                    print('AUC', roc_auc_score(y_test, y_prob))
                     auc_test = roc_auc_score(y_test, y_prob)
                     data.append([method_name, 'auc', auc_test])
 
