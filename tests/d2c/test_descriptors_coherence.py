@@ -1,7 +1,7 @@
 # test_descriptors_coherence.py
 import os
 import pickle
-from typing import Any
+from typing import Any, Tuple
 import pandas as pd
 import pytest
 

@@ -16,6 +16,7 @@ class D2C(BaseCausalInference):
         self.train_ratio = kwargs.pop('train_ratio', 1)
         self.flattening = kwargs.pop('flattening', False)
         self.n_variables = kwargs.pop('n_variables', 6)
+        self.n_gen_proc = kwargs.pop('n_gen_proc', 17)
         self.recompute_descriptors = kwargs.pop('recompute_descriptors', False)
             
         descriptors_path = kwargs.pop('descriptors_path', None)
@@ -23,6 +24,10 @@ class D2C(BaseCausalInference):
             self.descriptors = pickle.load(f)
         super().__init__(*args, **kwargs)
         self.returns_proba = True
+
+        n_graphs = len(self.descriptors.graph_id.unique())
+        n_graphs_per_process = n_graphs // self.n_gen_proc
+        self.descriptors['process_id'] = self.descriptors['graph_id'] // n_graphs_per_process + 1
 
     def create_lagged(self, observations, lag):
         lagged = observations.copy()
@@ -36,67 +41,45 @@ class D2C(BaseCausalInference):
         if ts_index is None:
             raise ValueError('ts_index is required for D2C inference')
         
+        data = self.descriptors
+
+        testing_data = data.loc[data['graph_id'] == ts_index] #TODO: this would not work if self.recompute_descriptors!
+        
+        generative_process = testing_data.iloc[0]['process_id']
+        training_data = data.loc[data['process_id'] != generative_process] 
 
         ############################
         ########TRAINING############
         ############################
-        data = self.descriptors
-        # print(data)
-        training_data = data.loc[data['graph_id'] != ts_index] 
-        #flattening
-        if self.flattening:
-            training_data = training_data[(training_data['edge_dest'] < self.n_variables) & (training_data['edge_source'] >= self.n_variables)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index(drop=True)
-
-        if self.train_ratio != 1:
-            # Sampling respecting the class distribution, to try various training ratios
-            sampled_training_data = pd.DataFrame()
-            for class_value in training_data['is_causal'].unique():
-                # Filter the data for the current class
-                class_data = training_data[training_data['is_causal'] == class_value]
-                sampled_class_data = class_data.sample(frac=self.train_ratio, replace=True, random_state=1)
-                sampled_training_data = pd.concat([sampled_training_data, sampled_class_data])
-            training_data = sampled_training_data
-
-        X_train = training_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
+       
+        X_train = training_data.drop(['process_id','graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
         y_train = training_data['is_causal']
-        # print('#################')
-        # print(self.flattening, self.train_ratio)
-        # print(X_train.shape)
-        # print('#################')
-        # print("Shape of training data", training_data.shape)
-
-        clf = BalancedRandomForestClassifier(n_estimators=10, n_jobs=1, sampling_strategy='all',replacement=True)
+       
+        clf = BalancedRandomForestClassifier(n_estimators=20, n_jobs=1, sampling_strategy='all',replacement=True)
         clf.fit(X_train, y_train)
 
-
-        ############################
+        ###########################
         ########TESTING############
-        ############################
+        ###########################
 
         if self.recompute_descriptors:
+            pass #TODO: when testing on data for which descriptors are not available
             # Recompute descriptors for the test data
-            lagged = self.create_lagged(single_ts, self.maxlags)
-            d2c_test = D2C_(None,[lagged], maxlags=self.maxlags, use_real_MB=self.use_real_MB,n_variables=self.n_variables,dynamic=True)
-            X_test = d2c_test.compute_descriptors_no_dags()
-            X_test = X_test.drop(['graph_id', 'edge_source', 'edge_dest'], axis=1)
-            y_pred = clf.predict_proba(X_test)[:,1]
-            returned = pd.DataFrame(y_pred,index=X_test.index, columns=['is_causal'])
+            # lagged = self.create_lagged(single_ts, self.maxlags)
+            # d2c_test = D2C_(None,[lagged], maxlags=self.maxlags, use_real_MB=self.use_real_MB,n_variables=self.n_variables,dynamic=True)
+            # X_test = d2c_test.compute_descriptors_no_dags()
+            # X_test = X_test.drop(['graph_id', 'edge_source', 'edge_dest'], axis=1)
+            # y_pred = clf.predict_proba(X_test)[:,1]
+            # returned = pd.DataFrame(y_pred,index=X_test.index, columns=['is_causal'])
         else:
-            #flattening
-            # print(ts_index)
-            # print('Unique graph ids', data['graph_id'].unique())
-            testing_data = data.loc[data['graph_id'] == ts_index]
+            # for fairness in the comparison, we test only on pairs that all methods have seen
             testing_data = testing_data[(testing_data['edge_dest'] < self.n_variables) & (testing_data['edge_source'] >= self.n_variables)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index(drop=True)
-            # print("Shape of testing data", testing_data.shape,"Shape of training data", training_data.shape)
-            X_test = testing_data.drop(['graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
-            # print('#################')
-            # print(X_test)
-            # print('#################')
+
+            X_test = testing_data.drop(['process_id','graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
             y_pred = clf.predict_proba(X_test)[:,1]
 
             testing_data['truth'] = testing_data['is_causal']
             testing_data['is_causal'] = y_pred
-            # print('AUC', roc_auc_score(y_test, y_pred))
             # returned = pd.concat([pd.DataFrame(testing_data)[['edge_source','edge_dest']], pd.DataFrame(y_pred, columns=['is_causal'])], axis=1, sort=True)
             
         return testing_data[['edge_source','edge_dest','truth','is_causal']]

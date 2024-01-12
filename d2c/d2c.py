@@ -126,7 +126,6 @@ class D2C:
         # with open("DAG_edges.pkl", "wb") as f:
         #     pickle.dump(self.DAGs[DAG_index].edges, f)
 
-        print(self.DAGs[DAG_index].edges)
 
         child_edge_pairs = []
         
