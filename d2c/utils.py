@@ -27,21 +27,21 @@ import time
 COUNTER = 0
 
 #TODO: move this back to the main class D2C and remove proxy from the function arguments
-def normalized_conditional_information(y, x1, x2=None, proxy='Ridge'):
+def normalized_conditional_information(y, x1, x2=None, proxy='Ridge', proxy_params=None):
         """
         Normalized conditional information of x1 to y given x2
         I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
         """
         if (x2 is None) or (x2.empty):  # I(x1;y)= (H(y)-H(y | x1))/H(y)
 
-            entropy_y_given_x1 = normalized_prediction(x1, y, proxy) 
+            entropy_y_given_x1 = normalized_prediction(x1, y, proxy, proxy_params) 
             return max(0, 1 - entropy_y_given_x1)
         else:  # I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
             try:
                 if (y is None) or (y.empty) or (x1 is None) or (x1.empty):
                     return 0
-                entropy_y_given_x2 = normalized_prediction(x2, y, proxy)
-                entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y, proxy)
+                entropy_y_given_x2 = normalized_prediction(x2, y, proxy, proxy_params)
+                entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y, proxy, proxy_params)
                 
                 return max(0, entropy_y_given_x2 - entropy_y_given_x1_x2 ) / (entropy_y_given_x2 + 0.01)
             except IndexError:
@@ -50,7 +50,7 @@ def normalized_conditional_information(y, x1, x2=None, proxy='Ridge'):
                 return "error"
 
 
-def normalized_prediction(X, Y, proxy='Ridge'):
+def normalized_prediction(X, Y, proxy='Ridge', proxy_params=None):
     """
     Normalized mean squared error of the dependency.
     Replies to the question: How much information about Y is contained in X?
@@ -69,9 +69,20 @@ def normalized_prediction(X, Y, proxy='Ridge'):
     
     try: 
         if proxy == 'Ridge':
-            numerator = max(1e-3, -np.mean(cross_val_score(Ridge(alpha=1e-3), X, Y, scoring='neg_mean_squared_error', cv=2)))
+            if proxy_params is not None:
+                alpha = proxy_params['alpha']
+            else:
+                alpha = 1e-3
+            numerator = max(1e-3, -np.mean(cross_val_score(Ridge(alpha=alpha), X, Y, scoring='neg_mean_squared_error', cv=2)))
         elif proxy == 'LOWESS':
-            numerator = max(1e-3, -np.mean(cross_val_score(LOWESS(tau=0.2), X, Y, scoring='neg_mean_squared_error', cv=2)))
+            if proxy_params is not None:
+                tau = proxy_params['tau']
+            else:
+                tau = 1e-3
+            numerator = max(1e-3, -np.mean(cross_val_score(LOWESS(tau=tau), X, Y, scoring='neg_mean_squared_error', cv=2)))
+        elif proxy == 'RF':
+            from sklearn.ensemble import RandomForestRegressor
+            numerator = max(1e-3, -np.mean(cross_val_score(RandomForestRegressor(n_estimators=5,max_depth=5), X, Y, scoring='neg_mean_squared_error', cv=2)))
     except ValueError as e:
         # print(X,Y)
         print('############')

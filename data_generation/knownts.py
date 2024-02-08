@@ -47,7 +47,7 @@ def build_DAG_time_series_1(T, N_j, N):
         for j in range(N):
             # if t > 0:
                 # Add edges from the current and previous Y to the next Y
-                for nj in N_j:
+                for nj in N_j[j]:
                     G.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
                     if t != T-1:
                         G.add_edge(f"Y[{t}][{nj}]", f"Y[{t+2}][{j}]")
@@ -89,7 +89,7 @@ def build_DAG_time_series_2(T, N_j, N):
     for t in range(T):
         for j in range(N):
             
-            for nj in N_j: 
+            for nj in N_j[j]: 
                 if t >= 1:
                     G2.add_edge(f"Y[{t-1}][{nj}]", f"Y[{t+1}][{j}]")
                 if t >= 2:
@@ -126,7 +126,7 @@ def build_DAG_time_series_3(T, N_j, N):
         for j in range(N):
 
             # Add edges from the previous and the one before last Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 if t >= 1:
                     G3.add_edge(f"Y[{t-1}][{nj}]", f"Y[{t+1}][{j}]")
                 if t >= 2:
@@ -166,7 +166,7 @@ def build_DAG_time_series_4(T, N_j, N):
     for t in range(T):  # Start from t=1 since the formula depends on t and t-1
         for j in range(N):
             # Add edges from the current and previous Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 G4.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
                 if t >= 1:
                     G4.add_edge(f"Y[{t-1}][{nj}]", f"Y[{t+1}][{j}]")
@@ -202,7 +202,7 @@ def build_DAG_time_series_5(T, N_j, N):
     for t in range(T):  
         for j in range(N):
             # Add edges from the current Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 G5.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
             
 
@@ -237,7 +237,7 @@ def build_DAG_time_series_6(T, N_j, N):
     # Add nodes and edges to the DAG based on the dependencies for the sixth formula
     for t in range(T):
         for j in range(N):
-            for nj in N_j:
+            for nj in N_j[j]:
                 G6.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
                 if t >= 2:
                     G6.add_edge(f"Y[{t-2}][{nj}]", f"Y[{t+1}][{j}]")
@@ -273,7 +273,7 @@ def build_DAG_time_series_7(T, N_j, N):
     # Add nodes and edges to the DAG based on the dependencies for the seventh formula
     for t in range(T):
         for j in range(N):
-            for nj in N_j:
+            for nj in N_j[j]:
                 if t >= 2:
                     G7.add_edge(f"Y[{t-2}][{nj}]", f"Y[{t+1}][{j}]")
                 if t >= 1:
@@ -309,7 +309,7 @@ def build_DAG_time_series_8(T, N_j, N):
     # Add nodes and edges for the eighth formula
     for t in range(T):  # Start from t=2 since the formula depends on t and t-2
         for j in range(N):
-            for nj in N_j:
+            for nj in N_j[j]:
                 G8.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
                 if t >= 2:
                     G8.add_edge(f"Y[{t-2}][{nj}]", f"Y[{t+1}][{j}]")
@@ -349,7 +349,7 @@ def build_DAG_time_series_9(T, N_j, N):
     for t in range(T):  # Start from t=1 since the formula depends on t and t-1
         for j in range(N):
             # Add edges from the current and previous Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 G9.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
                 if t >= 1:
                     G9.add_edge(f"Y[{t-1}][{nj}]", f"Y[{t+1}][{j}]")
@@ -381,7 +381,7 @@ def build_DAG_time_series_10(T, N_j, N):
     for t in range(T):  # Start from t=1 since the formula depends on t
         for j in range(N):
             # Add edges from the current Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 G10.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
             
 
@@ -416,7 +416,7 @@ def build_DAG_time_series_11(T, N_j, N):
         for j in range(N):
 
             # Add edges from the current Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 G11.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
             
 
@@ -454,7 +454,7 @@ def build_DAG_time_series_12(T, N_j, N):
         for j in range(N):
 
             # Add edges from the current and previous Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 G12.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
                 if t >= 1:
                     G12.add_edge(f"Y[{t-1}][{nj}]", f"Y[{t+1}][{j}]")
@@ -490,7 +490,7 @@ def build_DAG_time_series_13(T, N_j, N):
             # Add the current and previous Y nodes if not already present
 
             # Add edges from the current and previous Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 G13.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
                 if t >= 1:
                     G13.add_edge(f"Y[{t-1}][{nj}]", f"Y[{t+1}][{j}]")
@@ -526,7 +526,7 @@ def build_DAG_time_series_14(T, N_j, N):
             # Add the current and previous Y nodes if not already present
 
             # Add edges from the current and previous Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 G14.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
             
     return G14
@@ -560,7 +560,7 @@ def build_DAG_time_series_15(T, N_j, N):
             # Add the current and previous Y nodes if not already present
 
             # Add edges from the current and previous Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 G15.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
             
     return G15
@@ -597,7 +597,7 @@ def build_DAG_time_series_16(T, N_j, N):
         for j in range(N):
 
             # Add edges from the current and previous Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 G16.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
             
     return G16
@@ -639,7 +639,7 @@ def build_DAG_time_series_17(T, N_j, N):
         for j in range(N):
 
             # Add edges from the current and previous three Y to the next Y
-            for nj in N_j:
+            for nj in N_j[j]:
                 G17.add_edge(f"Y[{t}][{nj}]", f"Y[{t+1}][{j}]")
                 if t >= 1:
                     G17.add_edge(f"Y[{t-1}][{nj}]", f"Y[{t+1}][{j}]")

@@ -29,18 +29,19 @@ from tqdm import tqdm
 
 #TODO: improve multiprocessing handling and clean code
 def _process_idx(idx, pairs, compute_descriptors):
-    print('\rProcessing ',idx, ' of ', len(pairs), end='', flush=True)
+
     start = time.time()
     X_list = []
-    for pair in pairs:
+    for pair_idx, pair in enumerate(pairs):
+        # print('\rCouple ',pair_idx, ' of ', len(pairs), end='', flush=True)
         X_pair = compute_descriptors(idx, pair[0], pair[1])
         X_list.append(X_pair)
-    X = pd.concat([pd.DataFrame(X) for X in X_list], axis=0)
+    X = pd.concat([pd.DataFrame([X]) for X in X_list], axis=0).reset_index(drop=True)
     return X
 
 
 class D2C:
-    def __init__(self, dags, observations, rev: bool = True, boot: str = "rank", verbose=False, random_state: int = 42, n_jobs: int = 1, dynamic: bool = True, n_variables: int = 3, maxlags: int = 3 , use_real_MB: bool = False, balanced: bool = True, mutual_information_proxy='Ridge') -> None:
+    def __init__(self, dags, observations, rev: bool = True, boot: str = "rank", verbose=False, random_state: int = 42, n_jobs: int = 1, dynamic: bool = True, n_variables: int = 3, maxlags: int = 3 , use_real_MB: bool = False, balanced: bool = True, mutual_information_proxy='Ridge', proxy_params = None, family={'basic': True ,'var_var': True, 'var_mb':True, 'var_mb_given_var':True,'mb_mb_given_var':True,'structural':True}) -> None:
         """
         Class for D2C analysis.
 
@@ -77,6 +78,9 @@ class D2C:
         self.test_couples = []
 
         self.mutual_information_proxy = mutual_information_proxy
+        self.proxy_params = proxy_params
+
+        self.family = family
 
    
     def compute_descriptors_no_dags(self):
@@ -90,7 +94,6 @@ class D2C:
         else:
             with Pool(processes=self.n_jobs) as pool:
                 results = pool.starmap(_process_idx, [(idx, pairs, self.compute_descriptors) for idx in self.DAGs_index])
-
         X = pd.concat([pd.DataFrame(X) for X in results], axis=0)
         return X
 
@@ -113,7 +116,7 @@ class D2C:
         self.X = pd.concat([pd.DataFrame(X) for X in X_list], axis=0)
         self.Y = pd.concat([pd.DataFrame(Y) for Y in Y_list], axis=0)
 
-    def _compute_descriptors_for_edge_pairs(self, DAG_index: Any) -> Tuple[list, list]:
+    def _compute_descriptors_for_edge_pairs(self, DAG_index) -> Tuple[list, list]:
         """
         Compute descriptors in parallel for a given observation.
         """
@@ -286,6 +289,8 @@ class D2C:
             MB_size = min(4, n_features-2)
             if self.verbose: print(MB_size)
 
+        MB_size = 2 #TODO: remove
+
         # Initializations of Markov Blankets
         MBca = list(set(np.arange(n_features)) - {ca})
         MBef = list(set(np.arange(n_features)) - {ef})
@@ -304,68 +309,75 @@ class D2C:
         #     common_causes_columns = D.iloc[:, common_causes]
 
         # I(cause; effect | common_causes) 
+
+        if self.family['var_var']:
       
-        com_cau = normalized_conditional_information(D.iloc[:, [ef]], D.iloc[:, [ca]], D.iloc[:, common_causes], proxy=self.mutual_information_proxy) 
+            com_cau = normalized_conditional_information(D.iloc[:, [ef]], D.iloc[:, [ca]], D.iloc[:, common_causes], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) 
 
 
-        # b: ef = b * (ca + mbef)
-        coeff_cause = coeff(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, MBef])
-        
-        # b: ca = b * (ef + mbca)
-        coeff_eff = coeff(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:, MBca])
-        
-        #I(cause; effect) 
-        cau_eff = normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], proxy=self.mutual_information_proxy) 
+            # b: ef = b * (ca + mbef)
+            coeff_cause = coeff(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, MBef])
+            
+            # b: ca = b * (ef + mbca)
+            coeff_eff = coeff(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:, MBca])
+            
+            #I(cause; effect) 
+            cau_eff = normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) 
 
-        #I(effect; cause)
-        eff_cau = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], proxy=self.mutual_information_proxy)  
+            #I(effect; cause)
+            eff_cau = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params)  
 
-        #I(effect; cause | MBeffect) 
-        eff_cau_mbeff = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, MBef], proxy=self.mutual_information_proxy) 
+            #I(effect; cause | MBeffect) 
+            eff_cau_mbeff = normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, MBef], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) 
 
-        #I(cause; effect | MBcause)
-        cau_eff_mbcau = normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:, MBca], proxy=self.mutual_information_proxy) 
+            #I(cause; effect | MBcause)
+            cau_eff_mbcau = normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:, MBca], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) 
 
-        #I(effect; cause | arrays_m_plus_MBca)
-        eff_cau_mbcau_plus = [0] if not MBef else [normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, np.unique(np.concatenate(([m], MBca))).tolist()], proxy=self.mutual_information_proxy) for m in MBef]
+            #I(effect; cause | arrays_m_plus_MBca)
+            eff_cau_mbcau_plus = [0] if not MBef else [normalized_conditional_information(D.iloc[:, ef], D.iloc[:, ca], D.iloc[:, np.unique(np.concatenate(([m], MBca))).tolist()], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) for m in MBef]
 
-        #I(cause; effect | arrays_m_plus_MBef)
-        cau_eff_mbeff_plus = [0] if not MBca else [normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:, np.unique(np.concatenate(([m], MBef))).tolist()], proxy=self.mutual_information_proxy) for m in MBca]
-        
-        #I(m; cause) for m in MBef
-        m_cau = [0] if not MBef else [normalized_conditional_information(D.iloc[:, MBef[j]], D.iloc[:, ca], proxy=self.mutual_information_proxy) for j in range(len(MBef))]
+            #I(cause; effect | arrays_m_plus_MBef)
+            cau_eff_mbeff_plus = [0] if not MBca else [normalized_conditional_information(D.iloc[:, ca], D.iloc[:, ef], D.iloc[:, np.unique(np.concatenate(([m], MBef))).tolist()], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) for m in MBca]
 
-        #I(m; effect) for m in MBca
-        m_eff = [0] if not MBca else [normalized_conditional_information(D.iloc[:, MBca[j]], D.iloc[:, ef], proxy=self.mutual_information_proxy) for j in range(len(MBca))]
+        if self.family['var_mb']:    
+            #I(m; cause) for m in MBef
+            m_cau = [0] if not MBef else [normalized_conditional_information(D.iloc[:, MBef[j]], D.iloc[:, ca], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) for j in range(len(MBef))]
 
-        #I(cause; m | effect) for m in MBef
-        cau_m_eff = [0] if not MBef else [normalized_conditional_information(D.iloc[:, ca], D.iloc[:, MBef[j]], D.iloc[:, ef], proxy=self.mutual_information_proxy) for j in range(len(MBef))]
-        
-        #I(effect; m | cause) for m in MBef
-        eff_m_cau = [0] if not MBca else [normalized_conditional_information(D.iloc[:, ef], D.iloc[:, MBca[j]], D.iloc[:, ca], proxy=self.mutual_information_proxy) for j in range(len(MBca))]
+            #I(m; effect) for m in MBca
+            m_eff = [0] if not MBca else [normalized_conditional_information(D.iloc[:, MBca[j]], D.iloc[:, ef], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) for j in range(len(MBca))]
+
+        if self.family['var_mb_given_var']:
+            #I(cause; m | effect) for m in MBef
+            cau_m_eff = [0] if not MBef else [normalized_conditional_information(D.iloc[:, ca], D.iloc[:, MBef[j]], D.iloc[:, ef], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) for j in range(len(MBef))]
+            
+            #I(effect; m | cause) for m in MBca
+            eff_m_cau = [0] if not MBca else [normalized_conditional_information(D.iloc[:, ef], D.iloc[:, MBca[j]], D.iloc[:, ca], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) for j in range(len(MBca))]
 
         #create all possible couples of MBca and MBef
         mbca_mbef_couples = list(np.array(np.meshgrid(np.arange(len(MBca)), np.arange(len(MBef)))).T.reshape(-1,2))
 
-        #I(mca ; mef | cause) for (mca,mef) in mbca_mbef_couples
-        mca_mef_cau = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ca], proxy=self.mutual_information_proxy) for i, j in mbca_mbef_couples]
+        if self.family['mb_mb_given_var']:
 
-        #I(mca ; mef| effect) for (mca,mef) in mbca_mbef_couples
-        mca_mef_eff = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ef], proxy=self.mutual_information_proxy) for i, j in mbca_mbef_couples]
+            #I(mca ; mef | cause) for (mca,mef) in mbca_mbef_couples
+            mca_mef_cau = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ca], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) for i, j in mbca_mbef_couples]
+
+            #I(mca ; mef| effect) for (mca,mef) in mbca_mbef_couples
+            mca_mef_eff = [0] if not mbca_mbef_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBef[j]], D.iloc[:, ef], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) for i, j in mbca_mbef_couples]
         
         mbca_couples = list(np.array([(i, j) for i in range(len(MBca)) for j in range(i+1, len(MBca))]))
-        
-        # #I(mca ; mca| cause) - I(mca ; mca) for (mca,mca) in mbca_couples
-        # # mca_mca_cau = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca]) - normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]]) for i, j in mbca_couples]
-        # #problem is here
-        mca_mca_cau = [0] if not mbca_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca], proxy=self.mutual_information_proxy) for i, j in mbca_couples]
 
-        mbef_couples = list(np.array([(i, j) for i in range(len(MBef)) for j in range(i+1, len(MBef))]))
+        if self.family['structural']:        
+            # #I(mca ; mca| cause) - I(mca ; mca) for (mca,mca) in mbca_couples
+            # # mca_mca_cau = [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca]) - normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]]) for i, j in mbca_couples]
+            # #problem is here
+            mca_mca_cau = [0] if not mbca_couples else [normalized_conditional_information(D.iloc[:, MBca[i]], D.iloc[:, MBca[j]], D.iloc[:, ca], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) for i, j in mbca_couples]
 
-        #I(mbe ; mbe| effect) - I(mbe ; mbe) for (mbe,mbe) in mbef_couples
-        # mbe_mbe_eff = [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) - normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]]) for i, j in mbef_couples]
-        mbe_mbe_eff = [0] if not mbef_couples else [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef], proxy=self.mutual_information_proxy) for i, j in mbef_couples]
-        
+            mbef_couples = list(np.array([(i, j) for i in range(len(MBef)) for j in range(i+1, len(MBef))]))
+
+            #I(mbe ; mbe| effect) - I(mbe ; mbe) for (mbe,mbe) in mbef_couples
+            # mbe_mbe_eff = [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef]) - normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]]) for i, j in mbef_couples]
+            mbe_mbe_eff = [0] if not mbef_couples else [normalized_conditional_information(D.iloc[:, MBef[i]], D.iloc[:, MBef[j]], D.iloc[:, ef], proxy=self.mutual_information_proxy, proxy_params=self.proxy_params) for i, j in mbef_couples]
+            
         # E_ef = pd.DataFrame(ecdf(D.iloc[:, ef])(D.iloc[:, ef])) 
         # E_ca = pd.DataFrame(ecdf(D.iloc[:, ca])(D.iloc[:, ca]))
 
@@ -465,40 +477,79 @@ class D2C:
 
         
         values = [DAG_index, ca, ef]
-        values.extend([coeff_cause, coeff_eff, com_cau, eff_cau_mbeff, cau_eff_mbcau])
-        values.extend(np.quantile(eff_cau_mbcau_plus, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(cau_eff_mbeff_plus, q=pq, axis=0).flatten()) 
-        values.extend([cau_eff, eff_cau])
-        values.extend(np.quantile(m_cau, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(m_eff, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(cau_m_eff, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(eff_m_cau, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(mca_mef_cau, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(mca_mef_eff, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(mca_mca_cau, q=pq, axis=0).flatten()) 
-        values.extend(np.quantile(mbe_mbe_eff, q=pq, axis=0).flatten()) 
+        if self.family['var_var']:
+            values.extend([coeff_cause, coeff_eff, com_cau, eff_cau_mbeff, cau_eff_mbcau])
+            values.extend(np.quantile(eff_cau_mbcau_plus, q=pq, axis=0).flatten()) 
+            values.extend(np.quantile(cau_eff_mbeff_plus, q=pq, axis=0).flatten()) 
+            values.extend([cau_eff, eff_cau])
+        if self.family['var_mb']:
+            values.extend(np.quantile(m_cau, q=pq, axis=0).flatten()) 
+            values.extend(np.quantile(m_eff, q=pq, axis=0).flatten()) 
+        if self.family['var_mb_given_var']:
+            values.extend(np.quantile(cau_m_eff, q=pq, axis=0).flatten()) 
+            values.extend(np.quantile(eff_m_cau, q=pq, axis=0).flatten()) 
+        if self.family['mb_mb_given_var']:
+            values.extend(np.quantile(mca_mef_cau, q=pq, axis=0).flatten()) 
+            values.extend(np.quantile(mca_mef_eff, q=pq, axis=0).flatten()) 
+        if self.family['structural']:
+            values.extend(np.quantile(mca_mca_cau, q=pq, axis=0).flatten()) 
+            values.extend(np.quantile(mbe_mbe_eff, q=pq, axis=0).flatten()) 
         # values.extend([gini_delta, gini_delta2,gini_ca_ef, gini_ef_ca])
-        values.extend([
-                n_observations,                
-                n_features,
-                n_features/n_observations,
-                kurtosis(D.iloc[:, ca]),
-                kurtosis(D.iloc[:, ef]),
-                skew(D.iloc[:, ca]),
-                skew(D.iloc[:, ef]),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 2),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 2, 1),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 3),
-                HOC(D.iloc[:, ca], D.iloc[:, ef], 3, 1),
-                # stab(D.iloc[:, ca], D.iloc[:, ef]),
-                # stab(D.iloc[:, ef], D.iloc[:, ca])
-                ]) 
-        
+        if self.family['basic']:
+            values.extend([
+                    n_observations,                
+                    n_features,
+                    n_features/n_observations,
+                    kurtosis(D.iloc[:, ca]),
+                    kurtosis(D.iloc[:, ef]),
+                    skew(D.iloc[:, ca]),
+                    skew(D.iloc[:, ef]),
+                    HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 2),
+                    HOC(D.iloc[:, ca], D.iloc[:, ef], 2, 1),
+                    HOC(D.iloc[:, ca], D.iloc[:, ef], 1, 3),
+                    HOC(D.iloc[:, ca], D.iloc[:, ef], 3, 1),
+                    # stab(D.iloc[:, ca], D.iloc[:, ef]),
+                    # stab(D.iloc[:, ef], D.iloc[:, ca])
+                    ]) 
+            
         keys = ['graph_id','edge_source','edge_dest']
-        keys = keys + [f"Feature{i}" for i in range(len(values) - len(keys))]
-        if compute_error_descriptors:
-            values.extend(eDe)
-            keys.extend(eDe_names)
+        # keys = keys + [f"Feature{i}" for i in range(len(values) - len(keys))]
+        if self.family['var_var']:
+            keys = keys + ["coefficient_ca", 
+                        "coefficient_ef", 
+                        "ca_ef_given_common_causes", 
+                        "ef_ca_given_MBef", 
+                        "ca_ef_given_MBca"]
+            keys = keys + [f"ef_ca_given_MBca_plus_MBef_{i}" for i in range(len(pq))] + [f"ca_ef_given_MBef_plus_MBca_{i}" for i in range(len(pq))]
+            keys = keys + ["ca_ef", "ef_ca"]
+
+        if self.family['var_mb']:
+            keys = keys + [f"MBef_ca_{i}" for i in range(len(pq))] + [f"MBca_ef_{i}" for i in range(len(pq))]
+
+        if self.family['var_mb_given_var']:
+            keys = keys + [f"ca_MBef_given_ef_{i}" for i in range(len(pq))] + [f"ef_MBca_given_ca_{i}" for i in range(len(pq))]
+
+        if self.family['mb_mb_given_var']:
+            keys = keys + [f"MBca_MBef_given_ca_{i}" for i in range(len(pq))] + [f"MBca_MBef_given_ef_{i}" for i in range(len(pq))]
+
+        if self.family['structural']:
+            keys = keys + [f"Structural_1_{i}" for i in range(len(pq))] + [f"Structural_2_{i}" for i in range(len(pq))]
+
+        if self.family['basic']:
+            keys = keys + ["n_observations", 
+                        "n_features", 
+                        "n_features/n_observations", 
+                        "kurtosis_ca", 
+                        "kurtosis_ef", 
+                        "skewness_ca", 
+                        "skewness_ef",
+                        "HOC_1_2",
+                        "HOC_2_1",
+                        "HOC_1_3",
+                        "HOC_3_1"]
+        # if compute_error_descriptors:
+        #     values.extend(eDe)
+        #     keys.extend(eDe_names)
 
         
         # Replace NA values with 0

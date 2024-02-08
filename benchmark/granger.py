@@ -33,7 +33,7 @@ class Granger(BaseCausalInference):
         #initialization
         pairs = [(source, effect) for source in range(n_variables, n_variables * self.maxlags + n_variables) for effect in range(n_variables)]
         multi_index = pd.MultiIndex.from_tuples(pairs, names=['source', 'target'])
-        causal_dataframe = pd.DataFrame(index=multi_index, columns=['is_causal', 'pvalue'])
+        causal_dataframe = pd.DataFrame(index=multi_index, columns=['is_causal', 'value', 'pvalue'])
 
         for lag in range(self.maxlags):
             for source in range(n_variables):
@@ -41,7 +41,7 @@ class Granger(BaseCausalInference):
                     current_pvalue = results[source][effect][lag+1]
                     
                     is_causal = 0 if current_pvalue > 0.05 else 1
-                    causal_dataframe.loc[(n_variables + source+lag*n_variables, effect)] = is_causal, current_pvalue
+                    causal_dataframe.loc[(n_variables + source+lag*n_variables, effect)] = is_causal, is_causal, current_pvalue #no 'strenght' of causal for granger
 
         return causal_dataframe
 

@@ -13,7 +13,7 @@ from d2c.utils import from_dict_of_lists_to_list, rename_dags, create_lagged_mul
 
 class DescriptorsGenerator():
     
-    def __init__(self, ts_builder = None, data_path = None, maxlags = 3, n_jobs = 1, mutual_information_proxy = 'linear'):
+    def __init__(self, ts_builder = None, data_path = None, maxlags = 3, n_jobs = 1, mutual_information_proxy = 'linear', proxy_params = None, family={'basic': True ,'var_var': True, 'var_mb':True, 'var_mb_given_var':True,'mb_mb_given_var':True,'structural':True}):
         if ts_builder is not None: 
             self.observations = from_dict_of_lists_to_list(ts_builder.get_observations())
             self.dags = from_dict_of_lists_to_list(ts_builder.get_dags())
@@ -33,7 +33,7 @@ class DescriptorsGenerator():
                 if file.startswith('data'):
                     index = file.split('_')[1].split('.')[0]
                     with open(data_path+file, 'rb') as f:
-                        loaded_observations[index], loaded_dags[index], loaded_causal_dfs[index] = pickle.load(f)
+                        loaded_observations[index], loaded_dags[index], loaded_causal_dfs[index], _ = pickle.load(f)
             
             #TODO: add the case of single data file, consider moving always to single data file
 
@@ -50,7 +50,9 @@ class DescriptorsGenerator():
         self.updated_dags = []
         self.are_testing_descriptors_unseen = False #TODO: when is this actually useful? 
         self.mutual_information_proxy = mutual_information_proxy
+        self.proxy_params = proxy_params
         self.d2c = None
+        self.family = family
 
 
     def generate(self):
@@ -58,7 +60,7 @@ class DescriptorsGenerator():
             self.lagged_observations = create_lagged_multiple_ts(self.observations, self.maxlags)
             self.updated_dags = rename_dags(self.dags, self.n_variables)
         
-        self.d2c = D2C(self.updated_dags, self.lagged_observations, n_jobs=self.n_jobs, n_variables=self.n_variables, maxlags=self.maxlags, mutual_information_proxy=self.mutual_information_proxy)
+        self.d2c = D2C(self.updated_dags, self.lagged_observations, n_jobs=self.n_jobs, n_variables=self.n_variables, maxlags=self.maxlags, mutual_information_proxy=self.mutual_information_proxy, proxy_params=self.proxy_params, family=self.family)
         self.d2c.initialize()
         # if self.are_testing_descriptors_unseen: #TODO: when is this actually useful? 
         #     causal_dataframe = d2c.compute_descriptors_no_dags()
@@ -71,7 +73,17 @@ class DescriptorsGenerator():
 
     def save(self, output_folder):
         descriptors_df = self.d2c.get_descriptors_df()
-        with open(output_folder+'descriptors_'+self.mutual_information_proxy+'.pkl', 'wb') as f:
+        if self.proxy_params is None:
+            filename = output_folder+'descriptors_'+self.mutual_information_proxy+'.pkl'
+        else:
+            filename = output_folder+'descriptors_'+self.mutual_information_proxy+'_tau'+ str(self.proxy_params['tau'])+'.pkl'
+        if self.family is not None:
+            if 'tau' not in filename: #If we are using tau, we don't need to add the family, we use all the descriptors
+                filename = filename[:-4]+'family'+filename[-4:]
+                for family_index, key in enumerate(self.family):
+                    if self.family[key]:
+                        filename = filename[:-4]+'-'+str(family_index)+filename[-4:]
+        with open(filename, 'wb') as f:
             pickle.dump(descriptors_df, f)
 
 
@@ -112,7 +124,7 @@ def generate_descriptors(name:str = 'data', maxlags:int = 3, n_jobs:int=1, for_t
         updated_dag = nx.relabel_nodes(updated_dag, mapping)
         updated_dags_renamed.append(updated_dag)
 
-    d2c = D2C(updated_dags_renamed, lagged_observations, n_jobs=n_jobs, n_variables=5, maxlags=maxlags)
+    d2c = D2C(updated_dags_renamed, lagged_observations, n_jobs=n_jobs, n_variables=5, maxlags=maxlags, family=family)
 
     if for_test:
         causal_dataframe = d2c.compute_descriptors_no_dags()

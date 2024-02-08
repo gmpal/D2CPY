@@ -91,13 +91,3 @@ class D2C(BaseCausalInference):
         results['is_causal'] = results['is_causal'].apply(lambda x: 1 if x > 0.5 else 0)
         results['pvalue'] = 0
         return results
-
-
-if __name__ == "__main__":
-    # Usage
-    with open('../data/100_known_ts_all_20_variables.pkl', 'rb') as f:
-        observations, dags, updated_dags, causal_dfs = pickle.load(f)
-
-    causal_method = D2C(observations[-4:], maxlags=3,descriptors_path='../data/100_known_ts_all_descriptors_20_variables.pkl', n_variables=20)
-    causal_method.run()
-    results = causal_method.get_causal_dfs()

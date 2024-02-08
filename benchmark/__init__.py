@@ -4,3 +4,4 @@ from benchmark.var import VAR
 from benchmark.varlingam import VARLiNGAM
 from benchmark.pcmci import PCMCI
 from benchmark.granger import Granger
+from benchmark.dynotears import DYNOTEARS

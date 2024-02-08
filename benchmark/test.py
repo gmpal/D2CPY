@@ -59,12 +59,15 @@ class BenchmarkRunner:
         # Load results if not already loaded
         df_scores = pd.read_csv(path+f'{self.name}_scores.csv')
 
-        # Plotting
         sns.set_style("whitegrid")
+        sns.set_palette("muted")  # Set the Seaborn
         plt.figure(figsize=(12, 6))
         sns.boxplot(x='Metric', y='Score', hue='Model', data=df_scores)
         plt.title("Comparison of Methods Across Different Metrics")
-        plt.legend(loc='upper right')
+        plt.legend(loc='upper right', bbox_to_anchor=(1.3, 1.0))
+        #bbox
+        plt.tight_layout()
+
         plt.savefig(path+f'{self.name}_scores.png')
         # plt.show()
 

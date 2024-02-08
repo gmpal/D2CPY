@@ -1,6 +1,7 @@
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, balanced_accuracy_score
 from multiprocessing import Pool
 import numpy as np
+import pandas as pd
 import pickle
 
 class BaseCausalInference:
@@ -12,6 +13,10 @@ class BaseCausalInference:
         self.returns_proba = False #TODO: in subclasses
         self.n_jobs = n_jobs
         self.suffix = suffix
+
+        self.causal_matrices = {}
+        self.p_value_matrices = {}
+        self.lag_matrices = {}
         
 
     def standardize(self, single_ts):
@@ -28,10 +33,10 @@ class BaseCausalInference:
 
     def process_ts(self, ts_tuple):
         ts_index, ts = ts_tuple
-        print('\rProcessing', ts_index, 'of', len(self.ts_list), end='', flush=True)
+        print('\rProcessing', ts_index, 'of', len(self.ts_list) - 1, end='', flush=True)
         results = self.infer(self.standardize(ts), ts_index=ts_index)
         causal_df = self.build_causal_df(results, len(ts.columns))
-        print('\rProcessed', ts_index, 'of', len(self.ts_list), end='', flush=True)
+        print('\rProcessed', ts_index, 'of', len(self.ts_list) - 1, end='', flush=True)
         return ts_index, causal_df
 
     def run(self):
@@ -44,8 +49,11 @@ class BaseCausalInference:
             ts_tuples = list(enumerate(self.ts_list))
 
             # Create a pool of workers
-            with Pool(processes=self.n_jobs) as pool:
-                results = pool.map(self.process_ts, ts_tuples)
+            if self.n_jobs > 1:
+                with Pool(processes=self.n_jobs) as pool:
+                    results = pool.map(self.process_ts, ts_tuples)
+            else:
+                results = map(self.process_ts, ts_tuples)
 
             # Store results in self.causal_dfs
             for ts_index, causal_df in results:
@@ -53,6 +61,47 @@ class BaseCausalInference:
 
         return self
     
+
+    def build_causeme_matrices(self, n_variables):
+        # assumes causal dfs are available
+        for ts_index, causal_df in self.causal_dfs.items():
+            causal_df_2 = causal_df.reset_index(drop=False) 
+            self.causal_matrices[ts_index] = np.zeros((n_variables, n_variables))
+            self.p_value_matrices[ts_index] = np.zeros((n_variables, n_variables))
+            self.lag_matrices[ts_index] = np.zeros((n_variables, n_variables))
+            for source_variable_index in range(n_variables):
+                #filter by source
+                source_df = causal_df_2.loc[causal_df_2['source'] % n_variables == source_variable_index]
+                for target_variable_index in range(n_variables):
+                    #filter by target
+                    target_df = source_df.loc[source_df['target'] == target_variable_index].reset_index(drop=True)
+
+                    #make 'pvalue' column numeric
+                    target_df['pvalue'] = pd.to_numeric(target_df['pvalue'], errors='coerce')
+
+                    #find line wheere column p-value is lowest
+                    lowest_p_value_index = target_df['pvalue'].idxmin()
+                    #get the corresponding row
+                    lowest_p_value_row = target_df.loc[lowest_p_value_index]
+                    #get the lag 
+                    lag = lowest_p_value_row['source'] // n_variables
+                    if lowest_p_value_row['is_causal'] == 1:
+                        self.causal_matrices[ts_index][source_variable_index, target_variable_index] = lowest_p_value_row['value']
+                        self.p_value_matrices[ts_index][source_variable_index, target_variable_index] = lowest_p_value_row['pvalue']
+                        self.lag_matrices[ts_index][source_variable_index, target_variable_index] = lag
+
+    def get_causal_matrices(self):
+        return self.causal_matrices
+
+    def get_p_value_matrices(self):
+        return self.p_value_matrices
+    
+    def get_lag_matrices(self):
+        return self.lag_matrices
+    
+    def get_causeme_matrices(self):
+        return self.causal_matrices, self.p_value_matrices, self.lag_matrices
+
     def get_causal_dfs(self):
         return self.causal_dfs
 
@@ -98,7 +147,7 @@ class BaseCausalInference:
             if self.returns_proba: 
                 y_prob = self.causal_dfs[ts_idx]['value'].values.astype(float)
                 if len(np.unique(y_test)) > 1:
-                    print('AUC', roc_auc_score(y_test, y_prob))
+                    # print('AUC', roc_auc_score(y_test, y_prob))
                     auc_test = roc_auc_score(y_test, y_prob)
                     data.append([method_name, 'auc', auc_test])
 
