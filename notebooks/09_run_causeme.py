@@ -78,6 +78,7 @@ def process_zip_file(name, _, clf, maxlags=1, n_variables=3):
 
 
 # %%
+<<<<<<< HEAD
 # n_variables_list = [3, 5, 10, 20]
 # noise_std_list = [0.01,0.1,0.3, 0.5, 0.75]
 
@@ -92,6 +93,20 @@ def process_zip_file(name, _, clf, maxlags=1, n_variables=3):
 # training_data = pd.concat(dfs, axis=0)
 
 training_data = pd.read_pickle(os.path.join('..','data','descriptors','training_data.pkl'))
+=======
+n_variables_list = [3, 5, 10, 20]
+noise_std_list = [0.01,0.1,0.3, 0.5, 0.75]
+
+dfs = []
+for i, n_variables in enumerate(n_variables_list):
+    for j, noise_std in enumerate(noise_std_list):
+        descriptors_path = os.path.join('..','data','synthetic',f'data_N{n_variables}_std{noise_std}/descriptors_var.pkl')
+
+        df = pd.read_pickle(descriptors_path)
+        dfs.append(df)
+
+training_data = pd.concat(dfs, axis=0)
+>>>>>>> 4387e2c83c05155903363b254a435ebfba64b846
 
 
 # %%
@@ -104,7 +119,11 @@ clf.fit(X_train, y_train)
 
 
 # %%
+<<<<<<< HEAD
 for file in sorted(os.listdir(os.path.join('..','data','causeme')), reverse=True)[:5]:
+=======
+for file in sorted(os.listdir(os.path.join('..','data','causeme')), reverse=True):
+>>>>>>> 4387e2c83c05155903363b254a435ebfba64b846
     if not file.endswith('.zip'):
         continue
 
