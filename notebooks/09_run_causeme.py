@@ -105,17 +105,10 @@ clf.fit(X_train, y_train)
 
 
 # %%
-<<<<<<< HEAD
-for file in sorted(os.listdir(os.path.join('..','data','causeme')), reverse=True)[:5]:
-=======
-for file in sorted(os.listdir(os.path.join('..','data','causeme')), reverse=True):
->>>>>>> 4387e2c83c05155903363b254a435ebfba64b846
+for file in sorted(os.listdir(os.path.join('..','data','causeme')), reverse=True)[:25]:
     if not file.endswith('.zip'):
         continue
 
-    if file == 'TestWEATHnoise_N-5_T-2000.zip':
-        continue #already processed TODO remove
-    
     results = {}
     results['method_sha'] = "0931a3e645e3436b89c56f5e1274dcb7"
 
@@ -152,7 +145,7 @@ for file in sorted(os.listdir(os.path.join('..','data','causeme')), reverse=True
         names = sorted(zip_ref.namelist())
     args_list = [(os.path.join(unzip_folder,name), 'd2cpy', clf, maxlags, n_variables) for name in names]
 
-    with Pool(processes=20) as pool:
+    with Pool(processes=40) as pool:
         results_from_mp = pool.starmap(process_zip_file, args_list)
 
     scores, pvalues, lags, runtimes = [], [], [], []
