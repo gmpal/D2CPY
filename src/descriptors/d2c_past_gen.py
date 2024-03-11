@@ -9,7 +9,7 @@ from src.d2c.utils import from_dict_of_lists_to_list, rename_dags, create_lagged
 
 class DescriptorsGenerator():
     
-    def __init__(self, ts_builder = None, data_path = None, maxlags = 3, n_jobs = 1, mutual_information_proxy = 'linear', proxy_params = None, family={'basic': True ,'var_var': True, 'var_mb':True, 'var_mb_given_var':True,'mb_mb_given_var':True,'structural':True}):
+    def __init__(self, ts_builder = None, data_path = None, maxlags = 3, n_jobs = 1, mutual_information_proxy = 'linear', proxy_params = None, family={'basic': True ,'var_var': True, 'var_mb':True, 'var_mb_given_var':True,'mb_mb_given_var':True,'structural':True}, couples_to_consider_per_dag = 20, MB_size =5 ):
         if ts_builder is not None: 
             self.observations = from_dict_of_lists_to_list(ts_builder.get_observations())
             self.dags = from_dict_of_lists_to_list(ts_builder.get_dags())
@@ -49,6 +49,8 @@ class DescriptorsGenerator():
         self.proxy_params = proxy_params
         self.d2c = None
         self.family = family
+        self.couples_to_consider_per_dag = couples_to_consider_per_dag
+        self.MB_size = MB_size
 
 
     def generate(self):
@@ -56,7 +58,7 @@ class DescriptorsGenerator():
             self.lagged_observations = create_lagged_multiple_ts(self.observations, self.maxlags)
             self.updated_dags = rename_dags(self.dags, self.n_variables)
         
-        self.d2c = D2C(self.updated_dags, self.lagged_observations, n_jobs=self.n_jobs, n_variables=self.n_variables, maxlags=self.maxlags, mutual_information_proxy=self.mutual_information_proxy, proxy_params=self.proxy_params, family=self.family)
+        self.d2c = D2C(self.updated_dags, self.lagged_observations, self.couples_to_consider_per_dag, self.MB_size, n_jobs=self.n_jobs, n_variables=self.n_variables, maxlags=self.maxlags, mutual_information_proxy=self.mutual_information_proxy, proxy_params=self.proxy_params, family=self.family)
         self.d2c.initialize()
         # if self.are_testing_descriptors_unseen: #TODO: when is this actually useful? 
         #     causal_dataframe = d2c.compute_descriptors_no_dags()

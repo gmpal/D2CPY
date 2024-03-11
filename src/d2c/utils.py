@@ -15,82 +15,7 @@ import statsmodels.api as sm
 
 from datetime import datetime
 
-from src.d2c.lowess import LOWESS
 
-
-COUNTER = 0
-
-#TODO: move this back to the main class D2C and remove proxy from the function arguments
-def normalized_conditional_information(y, x1, x2=None, proxy='Ridge', proxy_params=None):
-        """
-        Normalized conditional information of x1 to y given x2
-        I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
-        """
-        if (x2 is None) or (x2.empty):  # I(x1;y)= (H(y)-H(y | x1))/H(y)
-
-            entropy_y_given_x1 = normalized_prediction(x1, y, proxy, proxy_params) 
-            return max(0, 1 - entropy_y_given_x1)
-        else:  # I(x1;y| x2)= (H(y|x2)-H(y | x1,x2))/H(y|x2)
-            try:
-                if (y is None) or (y.empty) or (x1 is None) or (x1.empty):
-                    return 0
-                entropy_y_given_x2 = normalized_prediction(x2, y, proxy, proxy_params)
-                entropy_y_given_x1_x2 = normalized_prediction(pd.concat([x1, x2],axis=1), y, proxy, proxy_params)
-                
-                return max(0, entropy_y_given_x2 - entropy_y_given_x1_x2 ) / (entropy_y_given_x2 + 0.01)
-            except IndexError:
-                print(x1.ndim, x2.ndim, y.ndim)
-                print()
-                return "error"
-
-
-def normalized_prediction(X, Y, proxy='Ridge', proxy_params=None):
-    """
-    Normalized mean squared error of the dependency.
-    Replies to the question: How much information about Y is contained in X?
-    This depends on the mean squared error of the prediction of Y from X.
-    If X can predict Y perfectly, then the NMSE will be close to zero. This would indicate that X provides a lot of information about Y, or in other words, the mutual information between X and Y is high.
-    Conversely, if X is a poor predictor of Y, then the NMSE will be high, indicating that the mutual information between X and Y is low.
-    """
-    if isinstance(X, pd.Series): X = pd.DataFrame(X)
-    if isinstance(Y, pd.DataFrame): Y = Y.iloc[:,0]
-
-    #cut in half to speed up!!! #TODO: fix this
-    X = X.iloc[-int(len(X)/2):]
-    Y = Y.iloc[-int(len(Y)/2):]
-
-    X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
-    
-    try: 
-        if proxy == 'Ridge':
-            if proxy_params is not None:
-                alpha = proxy_params['alpha']
-            else:
-                alpha = 1e-3
-            numerator = max(1e-3, -np.mean(cross_val_score(Ridge(alpha=alpha), X, Y, scoring='neg_mean_squared_error', cv=2)))
-        elif proxy == 'LOWESS':
-            if proxy_params is not None:
-                tau = proxy_params['tau']
-            else:
-                tau = 1e-3
-            numerator = max(1e-3, -np.mean(cross_val_score(LOWESS(tau=tau), X, Y, scoring='neg_mean_squared_error', cv=2)))
-        elif proxy == 'RF':
-            from sklearn.ensemble import RandomForestRegressor
-            numerator = max(1e-3, -np.mean(cross_val_score(RandomForestRegressor(n_estimators=5,max_depth=5), X, Y, scoring='neg_mean_squared_error', cv=2)))
-    except ValueError as e:
-        # print(X,Y)
-        print('############')
-        print(e)
-        print(X.shape, Y.shape)
-        #print stacktrace
-        import traceback
-        traceback.print_exc()
-
-        
-        numerator = 0
-    denominator = (1e-3 + np.var(Y))
-    return numerator / denominator
-    #TODO: implement the nonlinear case
 
 ############################################################################################################
 #######   COMMENTED OUT FOR NOW because it is compacted in the above function  ############################
@@ -323,27 +248,14 @@ def rankrho(X, Y, nmax=5, regr=False, verbose=False):
         # The third column of X has the highest mutual information with Y, followed by the second column.
 
     """
-    if verbose: print(datetime.now().strftime('%H:%M:%S'),'rankrho')
     # Number of columns in X and Y
     n = X.shape[1]
-    # m = Y.shape[1] #TODO: handle the multivariate case
-    N = X.shape[0]
-
-    # if np.var(Y) < 0.01:
-    #     if verbose: print(datetime.now().strftime('%H:%M:%S'),'np.var(Y) < 0.01')
-    #     return list(range(1, nmax + 1))
     
-    # Scaling X
-    X = (X - np.mean(X, axis=0)) / np.std(X, axis=0)
-
     Iy = np.zeros(n)
 
     if not regr:
-        if verbose: print(datetime.now().strftime('%H:%M:%S'),'not regr')
         Iy = co2i(X, Y, verbose=verbose)
-        if verbose: print(datetime.now().strftime('%H:%M:%S'),Iy)
     else:
-        if verbose: print(datetime.now().strftime('%H:%M:%S'),'regr')
         for i in range(n):
             Iy[i] = abs(ridge_regression(X.iloc[:, i], Y)['beta_hat'][1])
 
