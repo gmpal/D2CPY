@@ -63,35 +63,6 @@ def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3):
     }
 
 
-def from_dict_of_lists_to_list(dict_of_lists):
-    list_of_lists = []
-    sorted_keys = sorted(dict_of_lists.keys(), key=lambda x: int(x))
-    for key in sorted_keys:
-        list_of_lists.extend(dict_of_lists[key])
-    return list_of_lists
-
-def rename_dags(dags,n_variables):
-    import networkx as nx
-    #rename the nodes of the dags to use the same convention as the descriptors
-    updated_dags = []
-    for dag in dags:
-        mapping = {node: int(node.split('_')[0]) + int(node.split('-')[1]) * n_variables for node in dag.nodes()} #from x_(t-y) to x + y*n_variables
-        dag = nx.relabel_nodes(dag, mapping)
-        updated_dags.append(dag)
-    return updated_dags
-
-
-def create_lagged_multiple_ts(observations, maxlags):
-    #create lagged observations for all the available time series
-    lagged_observations = []
-    for obs in observations:
-        lagged = obs.copy()
-        for i in range(1,maxlags+1):
-            lagged = pd.concat([lagged, obs.shift(i)], axis=1)
-        lagged.columns = [i for i in range(len(lagged.columns))]
-        lagged_observations.append(lagged.dropna())
-    return lagged_observations
-
 
 
 # def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3, verbose=True):

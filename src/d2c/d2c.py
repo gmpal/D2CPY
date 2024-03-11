@@ -69,7 +69,7 @@ class D2C:
         Initialize the D2C object by computing descriptors in parallel for all observations.
 
         """
-        num_samples = self.couples_to_consider_per_dag // 3
+        num_samples = self.couples_to_consider_per_dag // 3 # because 1/3 is causal A->B, 1/3 is B->A, 1/3 is other non-causal that respect time 
         if self.n_jobs == 1:
             results = [self.compute_descriptors_with_dag(dag, self.n_variables, self.maxlags, num_samples=num_samples) for dag in self.DAGs]
 
@@ -89,7 +89,7 @@ class D2C:
         So far it's one D2C object per synthetic dataset, so we don't need to pass the DAGs. 
         We only have one set of observations, so we place them as if the dag index was 0.
         Synthetic labeled data is handled by the compute_descriptors_with_dag method.
-        TODO: not clear, refactor
+        TODO: not clear, refactor, remove the 0
         """
 
         all_possible_links = {(i, j) for i in range(n_variables, n_variables + n_variables * maxlags) for j in range(n_variables) if i != j}
