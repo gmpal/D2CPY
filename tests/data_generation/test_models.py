@@ -1,14 +1,13 @@
-import sys
 import pytest
 import math
-
+import sys
 sys.path.append("../..")
-from src.data_generation.models import model_registry
+from d2c.data_generation.models import model_registry
 
 
 @pytest.fixture
 def test_data():
-    Y = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]  # 3 variables, 2 time steps
+    Y = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]  # 3 variables, 3 time steps
     t = 2  # at time t, to compute t+1
     j = 0  # for variable j
     N_j = [0, 1]  # neighbourhood of j

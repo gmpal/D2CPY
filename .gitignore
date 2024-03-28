@@ -1,6 +1,7 @@
 data/
 results/causeme/unzipped/
-
+__deleteme__/
+main*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
