@@ -38,6 +38,7 @@ def add_edges(G, T, N, N_j, time_from):
                         if t >= element:
                             G.add_edge(f"Y[{t-element}][{nj}]", f"Y[{t+1}][{j}]")
 
+        return G
 class ModelRegistry:
     def __init__(self):
         self.registry = {}

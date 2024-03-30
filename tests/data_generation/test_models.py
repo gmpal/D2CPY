@@ -1,8 +1,9 @@
 import pytest
 import math
 import sys
-sys.path.append("../..")
+import networkx as nx
 from d2c.data_generation.models import model_registry
+
 
 
 @pytest.fixture
@@ -282,3 +283,51 @@ def test_model20_update(test_data):
     expected_result = 0.5 * ((7 + 8) / 2) + 0.7
     # Assert that the result matches the expected result
     assert result == expected_result
+import pytest
+import math
+import sys
+sys.path.append("../..")
+from d2c.data_generation.models import model_registry
+from d2c.data_generation.models import add_edges
+
+
+@pytest.fixture
+def test_data():
+    Y = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]  # 3 variables, 3 time steps
+    t = 2  # at time t, to compute t+1
+    j = 0  # for variable j
+    N_j = [0, 1]  # neighbourhood of j
+    W = [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]]  # noise
+    return Y, t, j, N_j, W
+
+
+def test_model1_update(test_data):
+    result = model_registry.get_model(1).update(*test_data)
+
+    # Define the expected result
+    expected_result = (
+        -0.4 * (3 - ((7 + 8) / 2) ** 2) / (1 + ((7 + 8) / 2) ** 2)
+        + 0.6 * (3 - ((4 + 5) / 2 - 0.5) ** 3) / (1 + ((4 + 5) / 2 - 0.5) ** 4)
+        + 0.7
+    )
+
+    # Assert that the result matches the expected result
+    assert result == expected_result
+
+
+# Add a new test function to test the add_edges function
+def test_add_edges():
+    G = nx.DiGraph()
+    T = 3
+    N = 3
+    N_j = [[0, 1], [1, 2], [2]]
+    time_from = [1, 2]
+
+    # Call the add_edges function
+    add_edges(G, T, N, N_j, time_from)
+
+    # Assert that the nodes and edges are added correctly
+    assert len(G.nodes) == (T + 1) * N
+    assert len(G.edges) == 15
+
+

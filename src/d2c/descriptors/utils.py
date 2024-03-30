@@ -1,25 +1,21 @@
 import numpy as np
 import pandas as pd
 
-from scipy.stats import percentileofscore
 
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.feature_selection import mutual_info_regression
-
-from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import cross_val_score
-import numpy as np
+from sklearn.preprocessing import StandardScaler
 
+from scipy.stats import percentileofscore
 import statsmodels.api as sm
-
 from datetime import datetime
-
 
 
 ############################################################################################################
 #######   COMMENTED OUT FOR NOW because it is compacted in the above function  ############################
-# ############################################################################################################
+#               ############################################################################################################
 def ridge_regression(X_train, Y_train, X_test=None, lambda_val=1e-3):
     """
     Perform ridge regression and returns the trained model, predictions, and metrics.
@@ -406,9 +402,6 @@ def show_DAG(G):
     plt.title("Time Series DAG with Custom Layout")
     plt.show()
 
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn.preprocessing import StandardScaler
 
 def epred(X, Y):
     """
@@ -442,7 +435,6 @@ def epred(X, Y):
     Y_hat = reg.predict(XX)
     
     return Y_hat
-
 
 def make_name(node_idx):
     return 'v' + str(node_idx)
