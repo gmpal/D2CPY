@@ -6,6 +6,16 @@ setup(
     packages=find_packages(where='src'), 
     package_dir={'': 'src'}, 
     install_requires=[
-        # project's dependencies here
+        'jupyter-book',
+        'matplotlib',
+        'numpy',
+        'pandas',
+        'scikit-learn',
+        'scipy',
+        'statsmodels',
+        'tigramite',
+        'lingam',
+        'imblearn',
+        'cachetools',
     ],
 )
