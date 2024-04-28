@@ -1,5 +1,5 @@
 
-from src.benchmark.base import BaseCausalInference
+from d2c.benchmark.base import BaseCausalInference
 import pandas as pd
 import pickle
 from lingam import VARLiNGAM as VARLiNGAM_
@@ -12,33 +12,34 @@ class VARLiNGAM(BaseCausalInference):
         self.returns_proba = True
         
     def infer(self, single_ts,**kwargs):
-        model = VARLiNGAM_(lags=self.maxlags, criterion=None, prune=False)
-        model.fit(single_ts)
-        return model.adjacency_matrices_
+        """
+        VARLiNGAM inference method.
+        A simple wrapper around the VARLiNGAM class.
+        We use default parameters. 
+        We use the bootstrap method to estimate the causal effects.
+        """
+        model = VARLiNGAM_(lags=self.maxlags)
+        results = model.bootstrap(single_ts,n_sampling=10)
+        return results.get_total_causal_effects(min_causal_effect=None)
     
-    def build_causal_df(self, results, n_variables):
-        #initialization
-        pairs = [(source, effect) for source in range(n_variables, n_variables * self.maxlags + n_variables) for effect in range(n_variables)]
-        multi_index = pd.MultiIndex.from_tuples(pairs, names=['source', 'target'])
-        causal_dataframe = pd.DataFrame(index=multi_index, columns=['is_causal', 'value', 'pvalue'])
+    def build_causal_df(self, total_causal_effects, n_variables):
+        """
+        VARLiNGAM already returns a dictionary 
+        very similar to the causal_df convention that we adopt here.
+        It can be converted to a DataFrame.
+        N.B. It contains also contemporaneous effects, which we exclude.
         
-        for lag in range(1,self.maxlags+1):
-            for source in range(n_variables):
-                for effect in range(n_variables):
-                    current_value = results[lag][effect][source]
-                    
-                    is_causal = 0 if abs(current_value) < 0.1 else 1
-                    causal_dataframe.loc[(n_variables + source+(lag-1)*n_variables, effect)] = is_causal, abs(current_value), 0
+        '|    |   from |   to |    effect |   probability |\n
+         |---:|-------:|-----:|----------:|--------------:|\n
+         |  0 |      4 |    2 |  0.491077 |          0.98 |\n
+         |  1 |      5 |    0 |  0.370244 |          0.84 |\n
+         |  2 |     10 |    0 | -0.698416 |          0.84 |\n
+         |  3 |      9 |    2 | -0.724122 |          0.81 |\n
+         |  4 |      7 |    2 | -0.277903 |          0.81 |'
+        """
 
-        return causal_dataframe
-
-
-if __name__ == "__main__":
-    # Usage
-    with open('../data/fixed_lags.pkl', 'rb') as f:
-        observations, dags, updated_dags = pickle.load(f)
-
-    causal_method = VARLiNGAM(observations[:5], maxlags=3)
-    causal_method.run()
-    results = causal_method.get_causal_dfs()
-    print(results)
+        df = pd.DataFrame(total_causal_effects) 
+        df['is_causal'] = df['probability'] > 0.5
+        df = df.loc[df['from'] >= n_variables] #exclude contemporaneous effects
+        df['p-value'] = None
+        return df[['from', 'to', 'effect', 'p-value', 'probability', 'is_causal']]

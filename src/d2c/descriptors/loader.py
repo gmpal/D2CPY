@@ -2,6 +2,7 @@
 import pickle
 import numpy as np
 import networkx as nx
+import pandas as pd
 
 class DataLoader():
     """
@@ -51,8 +52,8 @@ class DataLoader():
         """
         list_of_arrays = [dict_of_dicts[process][ts] for process in sorted(dict_of_dicts.keys()) for ts in sorted(dict_of_dicts[process].keys())]
         return list_of_arrays
-
-    def _rename_dags(self, dags, n_variables):
+    @staticmethod
+    def _rename_dags(dags, n_variables):
         """
         Rename the nodes of the DAGs to use the same convention as the descriptors.
         Specifically, we rename the nodes from x_(t-y) to x + y*n_variables.
@@ -77,8 +78,11 @@ class DataLoader():
             dag = nx.relabel_nodes(dag, mapping)
             updated_dags.append(dag)
         return updated_dags
+    
 
-    def _create_lagged_multiple_ts(self, observations, maxlags):
+
+    @staticmethod
+    def _create_lagged_multiple_ts(observations, maxlags):
         """
         Create lagged multiple time series from the given observations.
 
@@ -97,6 +101,16 @@ class DataLoader():
             lagged_observations.append(lagged[maxlags:]) #we need to drop the first maxlags rows
         return lagged_observations
 
+    @staticmethod
+    def _create_lagged_single_ts(obs, maxlags):
+        """
+        Create lagged single time series from the given observations.
+        """
+        lagged = obs.copy()
+        for i in range(1, maxlags+1):
+            lagged = np.concatenate((lagged, np.roll(obs, i, axis=0)), axis=1) #np roll brings last values to the top
+        return lagged[maxlags:]
+
     def from_pickle(self, data_path):
         """
         Data loader from a data file.
@@ -105,7 +119,7 @@ class DataLoader():
         - data_path (str): The path to the data file.
         """
         with open(data_path, 'rb') as f:
-            loaded_observations, loaded_dags = pickle.load(f)
+            loaded_observations, loaded_dags, _ = pickle.load(f) #third element is neighbors, not used from this point on
         self.observations = self._flatten(loaded_observations)
         self.dags = self._flatten(loaded_dags)
 
@@ -131,6 +145,17 @@ class DataLoader():
         """
         return self._create_lagged_multiple_ts(self.observations, self.maxlags)
     
+    def get_original_observations(self):
+        """
+        Get the observations WITHOUT creating the lagged time series.
+        This is useful for methods that do not need the lagged time series.
+        
+        Returns:
+        - observations (list): A list of numpy arrays representing the time series observations.
+        """
+        return self.observations
+    
+
     def get_dags(self):
         """
         Get the DAGs after having renamed the nodes.
@@ -139,3 +164,21 @@ class DataLoader():
         - updated_dags (list): The list of renamed DAGs.
         """
         return self._rename_dags(self.dags, self.n_variables)
+    
+    def get_true_causal_dfs(self):
+        causal_dataframes = []
+        for dag in self._rename_dags(self.dags, self.n_variables):
+            pairs = [(source, effect) for source in range(self.n_variables, self.n_variables * self.maxlags + self.n_variables) for effect in range(self.n_variables)]
+            multi_index = pd.MultiIndex.from_tuples(pairs, names=['from', 'to'])
+            causal_dataframe = pd.DataFrame(index=multi_index, columns=['is_causal'])
+            causal_dataframe['is_causal'] = 0
+            for edge in dag.edges:
+                source = edge[0]
+                effect = edge[1]
+                causal_dataframe.loc[(source, effect), 'is_causal'] = 1
+
+            causal_dataframe.reset_index(inplace=True)   
+            causal_dataframe = causal_dataframe.loc[causal_dataframe.to < self.n_variables]
+            causal_dataframes.append(causal_dataframe)
+
+        return causal_dataframes

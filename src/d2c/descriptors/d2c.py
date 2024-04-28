@@ -18,7 +18,7 @@ class D2C:
         mutual_information_proxy (str, optional): Method to use for mutual information computation. Defaults to "Ridge".
         proxy_params (dict, optional): Parameters for the mutual information computation. Defaults to None.
         verbose (bool, optional): Whether to print verbose output. Defaults to False.
-        random_state (int, optional): Random seed for reproducibility. Defaults to 42.
+        seed (int, optional): Random seed for reproducibility. Defaults to 42.
         n_jobs (int, optional): Number of parallel jobs to run. Defaults to 1.
 
     Attributes:
@@ -33,19 +33,20 @@ class D2C:
         family (dict): Family of descriptors to compute.
         verbose (bool): Whether to print verbose output.
         n_jobs (int): Number of parallel jobs to run.
-        random_state (int): Random seed for reproducibility.
+        seed (int): Random seed for reproducibility.
     """
     def __init__(self, 
                  dags, 
                  observations, 
-                 couples_to_consider_per_dag, 
-                 MB_size, 
+                 couples_to_consider_per_dag = 20, 
+                 MB_size = 5, 
                  n_variables=3, 
                  maxlags=3, 
                  mutual_information_proxy="Ridge", 
-                 proxy_params=None, 
+                 proxy_params=None,
+                 full = False, 
                  verbose=False, 
-                 random_state=42, 
+                 seed=42, 
                  n_jobs=1) -> None:
         
         self.DAGs = dags
@@ -57,13 +58,18 @@ class D2C:
         self.proxy_params = proxy_params
         self.verbose = verbose
         self.n_jobs = n_jobs
-        self.random_state = random_state #TODO: ensure seed is used in all functions
+        self.seed = seed 
 
         self.x_y = None # Placeholder for computed descriptors, list of dictionaries
         self.test_couples = []  # List of couples for which descriptors have been computed
 
         self.markov_blanket_estimator = MarkovBlanketEstimator(size=min(MB_size, n_variables - 2))
         self.mutual_information_estimator = MutualInformationEstimator(proxy=mutual_information_proxy, proxy_params=proxy_params)
+
+        self.full = full
+
+
+        np.random.seed(seed)
 
     def initialize(self) -> None:
         """
@@ -72,10 +78,10 @@ class D2C:
         """
         num_samples = self.couples_to_consider_per_dag // 3 # because 1/3 is causal A->B, 1/3 is B->A, 1/3 is other non-causal that respect time 
         if self.n_jobs == 1:
-            results = [self.compute_descriptors_with_dag(dag, self.n_variables, self.maxlags, num_samples=num_samples) for dag in self.DAGs]
+            results = [self.compute_descriptors_with_dag(dag_idx, dag, self.n_variables, self.maxlags, num_samples=num_samples) for dag_idx, dag in enumerate(self.DAGs)]
 
         else:
-            args = [(dag, self.n_variables, self.maxlags, num_samples) for dag in self.DAGs]
+            args = [(dag_idx, dag, self.n_variables, self.maxlags, num_samples) for dag_idx, dag in enumerate(self.DAGs)]
             with Pool(processes=self.n_jobs) as pool:
                 results = pool.starmap(self.compute_descriptors_with_dag, args)
 
@@ -94,9 +100,18 @@ class D2C:
         """
 
         all_possible_links = {(i, j) for i in range(n_variables, n_variables + n_variables * maxlags) for j in range(n_variables) if i != j}
-        return [self.compute_descriptors_for_couple(dag_idx=0, ca=a, ef=b, label=np.nan) for a, b in all_possible_links]
 
-    def compute_descriptors_with_dag(self, dag, n_variables, maxlags, num_samples=20) -> list:
+        if self.n_jobs == 1:
+            results = [self.compute_descriptors_for_couple(dag_idx=0, ca=a, ef=b, label=np.nan) for a, b in all_possible_links]
+
+        else:
+            args = [(0, a, b, np.nan) for a, b in all_possible_links]
+            with Pool(processes=self.n_jobs) as pool:
+                results = pool.starmap(self.compute_descriptors_for_couple, args)
+
+        return pd.DataFrame(results)
+
+    def compute_descriptors_with_dag(self, dag_idx, dag, n_variables, maxlags, num_samples=20) -> list:
         """
         Compute all descriptors associated to a directed acyclic graph (DAG).
         This is useful for synthetic training data, but not for real testing data.
@@ -121,7 +136,7 @@ class D2C:
         subset_causal_links = np.random.permutation(causal_links)[:min(len(causal_links), num_samples)].astype(int)
         subset_non_causal_links = np.random.permutation(non_causal_links)[:min(len(non_causal_links), num_samples)].astype(int)
 
-        dag_idx = dag.graph['index']
+        # dag_idx = dag.graph['index']
 
         for parent, child in subset_causal_links:
             x_y_couples.append(self.compute_descriptors_for_couple(dag_idx, parent, child, label=1)) # causal
@@ -225,42 +240,43 @@ class D2C:
         values['edge_dest'] = ef
         values['is_causal'] = label
 
-        # I(cause; effect | common_causes)
-        values['com_cau'] = CMI(e, c, observations[:, common_causes])
+        if self.full:
+            # I(cause; effect | common_causes)
+            values['com_cau'] = CMI(e, c, observations[:, common_causes])
 
-        # b: ef = b * (ca + mbef)
-        values['coeff_cause'] = coeff(e, c, observations[:, MBef])
+            # b: ef = b * (ca + mbef)
+            values['coeff_cause'] = coeff(e, c, observations[:, MBef])
 
-        # b: ca = b * (ef + mbca)
-        values['coeff_eff'] = coeff(c, e, observations[:, MBca])
+            # b: ca = b * (ef + mbca)
+            values['coeff_eff'] = coeff(c, e, observations[:, MBca])
 
-        # I(cause; effect)
-        values['cau_eff'] = CMI(e, c)
+            # I(cause; effect)
+            values['cau_eff'] = CMI(e, c)
 
-        # I(effect; cause)
-        values['eff_cau'] = CMI(c, e)
+            # I(effect; cause)
+            values['eff_cau'] = CMI(c, e)
 
-        # I(effect; cause | MBeffect)
-        values['eff_cau_mbeff'] = CMI(c, e, observations[:, MBef])
+            # I(effect; cause | MBeffect)
+            values['eff_cau_mbeff'] = CMI(c, e, observations[:, MBef])
 
-        # I(cause; effect | MBcause)
-        values['cau_eff_mbcau'] = CMI(e, c, observations[:, MBca])
+            # I(cause; effect | MBcause)
+            values['cau_eff_mbcau'] = CMI(e, c, observations[:, MBca])
 
-        # I(effect; cause | arrays_m_plus_MBca)
-        eff_cau_mbcau_plus = [0] if not len(MBef) else [CMI(c, e, observations[:,np.unique(np.concatenate(([m], MBca)))]) for m in MBef]
-        self.update_dictionary_quantiles(values, 'eff_cau_mbcau_plus', np.quantile(eff_cau_mbcau_plus, pq))
-        
-        # I(cause; effect | arrays_m_plus_MBef)
-        cau_eff_mbeff_plus = [0] if not len(MBca) else [CMI(e, c, observations[:,np.unique(np.concatenate(([m], MBef)))]) for m in MBca]
-        self.update_dictionary_quantiles(values, 'cau_eff_mbeff_plus', np.quantile(cau_eff_mbeff_plus, pq))
+            # I(effect; cause | arrays_m_plus_MBca)
+            eff_cau_mbcau_plus = [0] if not len(MBef) else [CMI(c, e, observations[:,np.unique(np.concatenate(([m], MBca)))]) for m in MBef]
+            self.update_dictionary_quantiles(values, 'eff_cau_mbcau_plus', np.quantile(eff_cau_mbcau_plus, pq))
+            
+            # I(cause; effect | arrays_m_plus_MBef)
+            cau_eff_mbeff_plus = [0] if not len(MBca) else [CMI(e, c, observations[:,np.unique(np.concatenate(([m], MBef)))]) for m in MBca]
+            self.update_dictionary_quantiles(values, 'cau_eff_mbeff_plus', np.quantile(cau_eff_mbeff_plus, pq))
 
-        # I(m; cause) for m in MBef
-        m_cau = [0] if not len(MBef) else [CMI(c, observations[:, m]) for m in MBef]
-        self.update_dictionary_quantiles(values, 'm_cau', np.quantile(m_cau, pq))
+            # I(m; cause) for m in MBef
+            m_cau = [0] if not len(MBef) else [CMI(c, observations[:, m]) for m in MBef]
+            self.update_dictionary_quantiles(values, 'm_cau', np.quantile(m_cau, pq))
 
-        # I(m; effect) for m in MBca
-        m_eff = [0] if not len(MBca) else [CMI(e, observations[:, m]) for m in MBca]
-        self.update_dictionary_quantiles(values, 'm_eff', np.quantile(m_eff, pq))
+            # I(m; effect) for m in MBca
+            m_eff = [0] if not len(MBca) else [CMI(e, observations[:, m]) for m in MBca]
+            self.update_dictionary_quantiles(values, 'm_eff', np.quantile(m_eff, pq))
 
         # I(cause; m | effect) for m in MBef
         cau_m_eff = [0] if not len(MBef) else [CMI(c, observations[:, m], e) for m in MBef]
@@ -278,7 +294,7 @@ class D2C:
         mca_mef_eff = [0] if not len(mbca_mbef_couples) else [CMI(observations[:,i], observations[:,j], e) for i, j in mbca_mbef_couples]
         self.update_dictionary_quantiles(values, 'mca_mef_eff', np.quantile(mca_mef_eff, pq))
 
-        # #I(mca ; mca| cause) - I(mca ; mca) for (mca,mca) in mbca_couples
+        #I(mca ; mca| cause) - I(mca ; mca) for (mca,mca) in mbca_couples
         mca_mca_cau = [0] if not len(mbca_mbca_couples) else [CMI(observations[:,i], observations[:,j], c) - CMI(observations[:,i], observations[:,j]) for i, j in mbca_mbca_couples]
         self.update_dictionary_quantiles(values, 'mca_mca_cau', np.quantile(mca_mca_cau, pq))
 
@@ -286,15 +302,16 @@ class D2C:
         mbe_mbe_eff = [0] if not len(mbef_mbef_couples) else [CMI(observations[:,i], observations[:,j], e) - CMI(observations[:,i], observations[:,j]) for i, j in mbef_mbef_couples]
         self.update_dictionary_quantiles(values, 'mbe_mbe_eff', np.quantile(mbe_mbe_eff, pq))
 
-        values['n_samples'] = observations.shape[0]
-        values['n_features'] = observations.shape[1]
-        values['n_features/n_samples'] = observations.shape[1] / observations.shape[0]
-        values['kurtosis_ca'] = kurtosis(c)
-        values['kurtosis_ef'] = kurtosis(e)
-        values['skewness_ca'] = skew(c)
-        values['skewness_ef'] = skew(e)
-        values['HOC_1_2'] = HOC(c, e, 1, 2)
-        values['HOC_2_1'] = HOC(c, e, 2, 1)
+        if self.full:
+            values['n_samples'] = observations.shape[0]
+            values['n_features'] = observations.shape[1]
+            values['n_features/n_samples'] = observations.shape[1] / observations.shape[0]
+            values['kurtosis_ca'] = kurtosis(c)
+            values['kurtosis_ef'] = kurtosis(e)
+            values['skewness_ca'] = skew(c)
+            values['skewness_ef'] = skew(e)
+            values['HOC_1_2'] = HOC(c, e, 1, 2)
+            values['HOC_2_1'] = HOC(c, e, 2, 1)
         values['HOC_1_3'] = HOC(c, e, 1, 3)
         values['HOC_3_1'] = HOC(c, e, 3, 1)
 

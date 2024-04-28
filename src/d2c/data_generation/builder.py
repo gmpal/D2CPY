@@ -9,7 +9,7 @@ import networkx as nx
 from d2c.data_generation.models import model_registry
 
 class TSBuilder():
-    def __init__(self, observations_per_time_series=200, maxlags=3, n_variables=5, time_series_per_process=10, processes_to_use=list(range(1, 21)), noise_std=0.1, max_neighborhood_size = 6, seed=42, verbose=True):
+    def __init__(self, observations_per_time_series=200, maxlags=4, n_variables=5, time_series_per_process=10, processes_to_use=list(range(1, 21)), noise_std=0.1, max_neighborhood_size = 6, seed=42, max_attempts=20, verbose=True):
         """
         Initializes the TSBuilder object with the specified parameters.
 
@@ -25,21 +25,33 @@ class TSBuilder():
             verbose (bool): Whether to print verbose output.
         """
         self.observations_per_time_series = observations_per_time_series
-        self.maxlags = maxlags
+        self.maxlags = maxlags #This is only used to build the corresponding DAGs
         self.n_variables = n_variables
         self.ts_per_process = time_series_per_process
         self.noise_std = noise_std
         self.seed = seed
+        self.max_attempts = max_attempts
         self.verbose = verbose
         self.processes_to_use = processes_to_use
         self.max_neighborhood_size = min(max_neighborhood_size, n_variables)
 
         self.generated_observations = {}
-        self.generated_dags = {}     
+        self.generated_dags = {}
+        self.neighbors = {}     
 
-        np.random.seed(seed)
 
-    def build(self, max_attempts = 10):
+    # def _generate_random_excluding_zero(self, max_time_lag, n_variables, exclusion_zone=0.1):
+    #     result = np.zeros((max_time_lag, n_variables))
+    #     for i in range(max_time_lag):
+    #         for j in range(n_variables):
+    #             # Randomly choose between the two ranges
+    #             if np.random.rand() > 0.5:
+    #                 result[i, j] = np.random.uniform(-1, -exclusion_zone)
+    #             else:
+    #                 result[i, j] = np.random.uniform(exclusion_zone, 1)
+    #     return result
+
+    def build(self):
         """
         Builds the time series data.
 
@@ -50,55 +62,87 @@ class TSBuilder():
             ValueError: If a non-finite value is detected in the generated time series.
 
         """
-        warnings.filterwarnings('error', category=RuntimeWarning)
-
+        np.random.seed(self.seed)
         for process_id in self.processes_to_use:
+
             self.generated_observations[process_id] = {}
             self.generated_dags[process_id] = {}
+            self.neighbors[process_id] = {}
+
             model_instance = model_registry.get_model(process_id)()
-            max_time_lag = model_instance.get_maximum_time_lag() #each model has a different time lag
+            
+            lines_to_initialize = model_instance.get_maximum_time_lag() + 1 
+            #each model has a different time lag
+            # max_time_lag t --> t+1 is 0, t-1 --> t+1 is 1, t-2 --> t+1 is 2, etc. [CONVENTION]
+            # but if 0, we need to initialize one line, if 1, we need to initialize two lines, etc. 
+            # for this reason, we take max_time_lag + 1
+            total_ts_lines = self.observations_per_time_series + lines_to_initialize
 
             for ts_index in range(self.ts_per_process):
+                #The seeding is here because attempts can vary across executions, likely due to floating point operations
+                
+                attempted_series = []
+                attempted_neighbors = []
                 attempts = 0
-                while attempts < max_attempts:
-                    try:
-                        W = np.random.normal(0, self.noise_std, (self.observations_per_time_series + max_time_lag, self.n_variables))
-                        size_N_j = np.random.randint(1, self.max_neighborhood_size + 1, self.n_variables)
-                        N_j = [np.random.choice(range(self.n_variables), size, replace=False) for size in size_N_j]
-                        Y_n = np.empty(shape=(self.observations_per_time_series + max_time_lag, self.n_variables))
+                while attempts < self.max_attempts:
                         
-                        # Initialize the first `max_time_lag` rows with starting values if needed
-                        Y_n[:max_time_lag] = np.random.uniform(-1, 1, (max_time_lag, self.n_variables))
-                        
-                        for t in range(max_time_lag, self.observations_per_time_series + max_time_lag - 1):  # Adjusted to -1 to avoid index error
-                            for j in range(self.n_variables):
-                                Y_n[t+1, j] = model_instance.update(Y_n, t, j, N_j[j], W)
-                                if not np.isfinite(Y_n[t+1, j]):
-                                    raise ValueError("Non-finite value detected. Trying again.")
-                        
-                        if not np.any(np.isnan(Y_n)) and not np.any(np.isinf(Y_n)):
-                            # Check if the generated observations are valid (no inf no nans)
-                            self.generated_dags[process_id][ts_index] = model_instance.build_dag(T=self.maxlags, N_j=N_j, N=self.n_variables)
-                            self.generated_observations[process_id][ts_index] = Y_n[max_time_lag:]
-                            break # Valid observations generated, exit while loop
-                    except (ValueError, OverflowError, RuntimeWarning) as e:
-                        print("Non-finite value detected in the current TS. Generating a new TS...")
-                        attempts += 1
-                        if attempts == max_attempts:
-                            print(e,f"Failed to generate valid TS for model {process_id}, TS index {ts_index} after {max_attempts} attempts. Try again with a different seed.")
+                    W = np.random.normal(0, self.noise_std, (total_ts_lines, self.n_variables))
+                    # noise to zero 
+                    # W = np.zeros((total_ts_lines, self.n_variables))
+                    size_N_j = np.random.randint(1, self.max_neighborhood_size + 1, self.n_variables)
 
-                self.generated_dags[process_id][ts_index] = model_instance.build_dag(T=self.maxlags,N_j=N_j, N=self.n_variables)
-                self.generated_observations[process_id][ts_index] = Y_n[max_time_lag:]
+                                            
+                    #fill up the neighborhood of each variable, starting from the variables itself
+                    N_j = [[j] for j in range(self.n_variables)]
+                    for j in range(self.n_variables):
+                        remaining_size = size_N_j[j] - 1
+                        remaining = np.setdiff1d(range(self.n_variables), N_j[j])
+                        if remaining_size > 0:
+                            N_j[j] = np.append(N_j[j], np.random.choice(remaining, remaining_size, replace=False))
+                    Y_n = np.full((total_ts_lines, self.n_variables), np.nan)
+                    
+                    # Initialize the first `lines_to_initialize` rows with starting values if needed
+                    #Random
+                    Y_n[:lines_to_initialize] = np.random.uniform(-1, 1, (lines_to_initialize, self.n_variables))
 
-        # After the critical section, reset warnings to default behavior
-        warnings.filterwarnings('default', category=RuntimeWarning)
+                    
+                    #the update functions expect to be given the last 'available' line to compute following values
+                    #so we start from lines_to_initialize - 1 and go up to total_ts_lines - 1
+                    for t in range(lines_to_initialize-1, total_ts_lines-1): 
+                        for j in range(self.n_variables):
+                            Y_n[t+1, j] = model_instance.update(Y_n, t, j, N_j[j], W)
+                            
+
+                    # attempted_series.append(Y_n[max_time_lag:])       
+                    attempted_series.append(Y_n)
+                    attempted_neighbors.append(N_j)
+                    attempts += 1
+                               
+                chosen_series = None
+                chosen_neighbors = None
+                threshold = 1e-6  # Define a threshold for extremely small numbers in absolute value
+                for series_idx, Y_n in enumerate(attempted_series):
+                    if not np.any(np.isnan(Y_n)) and not np.any(np.isinf(Y_n)):
+                        if np.min(Y_n) > -1e6 and np.max(Y_n) < 1e6:
+                            if not np.any(np.abs(Y_n) < threshold):  # Check if all values are above the threshold
+                                chosen_series = Y_n
+                                chosen_neighbors = attempted_neighbors[series_idx]
+                                break 
+                
+                if chosen_series is None:
+                    raise ValueError(f"Failed to generate valid TS for model {process_id}, TS index {ts_index} after {self.max_attempts} attempts. Try again with a different seed.")
+
+                self.generated_dags[process_id][ts_index] = model_instance.build_dag(T=self.maxlags,N_j=chosen_neighbors, N=self.n_variables)
+                self.generated_observations[process_id][ts_index] = chosen_series[lines_to_initialize:]
+                self.neighbors[process_id][ts_index] = chosen_neighbors
+
 
     def _prepare_dags(self):
         """
         This method renames the nodes in the generated DAGs based on a different naming convention.
         Specifically, the nodes are renamed from "Y[t][j]" to "{j}_t-{maxlags-t}".
         It also assigns an index to each DAG based on the process ID and time series index.
-        TODO: handle the case when not all processes are considered! 
+        # TODO: handle the case when not all processes are considered! 
         Returns:
             None
         """
@@ -106,7 +150,7 @@ class TSBuilder():
         for process_id in self.generated_dags:
             for ts_index in self.generated_dags[process_id]:
                 self.generated_dags[process_id][ts_index] = nx.relabel_nodes(self.generated_dags[process_id][ts_index], rename_dict)
-                self.generated_dags[process_id][ts_index].graph['index'] = (process_id - 1) * self.ts_per_process + ts_index
+                # self.generated_dags[process_id][ts_index].graph['index'] = (process_id - 1) * self.ts_per_process + ts_index
 
     def get_generated_observations(self):
         """
@@ -126,6 +170,15 @@ class TSBuilder():
         """
         self._prepare_dags()
         return self.generated_dags
+    
+    def get_neighbors(self):
+        """
+        Returns the generated neighbors.
+
+        Returns:
+            dict: A dictionary containing the generated neighbors.
+        """
+        return self.neighbors
 
     def to_pickle(self, path):
         """
@@ -136,4 +189,4 @@ class TSBuilder():
         """
         self._prepare_dags()
         with open(path, 'wb') as f:
-            pickle.dump((self.generated_observations, self.generated_dags), f)
+            pickle.dump((self.generated_observations, self.generated_dags, self.neighbors), f)

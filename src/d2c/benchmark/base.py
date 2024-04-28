@@ -6,6 +6,9 @@ import pickle
 
 class BaseCausalInference:
     def __init__(self, ts_list, maxlags=3, ground_truth=None, n_jobs=1, suffix=''):
+
+        if n_jobs < 1:
+            raise ValueError('n_jobs must be at least 1')
         self.ts_list = ts_list
         self.maxlags = maxlags
         self.causal_dfs = {}
@@ -33,29 +36,20 @@ class BaseCausalInference:
 
     def process_ts(self, ts_tuple):
         ts_index, ts = ts_tuple
-        # print('\rProcessing', ts_index, 'of', len(self.ts_list) - 1, end='', flush=True)
-        results = self.infer(self.standardize(ts), ts_index=ts_index)
-        causal_df = self.build_causal_df(results, len(ts.columns))
-        # print('\rProcessed', ts_index, 'of', len(self.ts_list) - 1, end='', flush=True)
+        results = self.infer(ts, ts_index=ts_index)
+        causal_df = self.build_causal_df(results, ts.shape[1])
         return ts_index, causal_df
 
     def run(self):
+
+        ts_tuples = list(enumerate(self.ts_list))
         if self.n_jobs == 1:
-            for ts_index, ts in enumerate(self.ts_list):
-                _ , causal_df = self.process_ts((ts_index, ts))
+            for ts_index, ts in ts_tuples:
+                _, causal_df = self.process_ts((ts_index, ts)) 
                 self.causal_dfs[ts_index] = causal_df
         else:
-            # Create a list of tuples for mapping
-            ts_tuples = list(enumerate(self.ts_list))
-
-            # Create a pool of workers
-            if self.n_jobs > 1:
-                with Pool(processes=self.n_jobs) as pool:
-                    results = pool.map(self.process_ts, ts_tuples)
-            else:
-                results = map(self.process_ts, ts_tuples)
-
-            # Store results in self.causal_dfs
+            with Pool(processes=self.n_jobs) as pool:
+                results = pool.map(self.process_ts, ts_tuples)
             for ts_index, causal_df in results:
                 self.causal_dfs[ts_index] = causal_df
 
@@ -126,14 +120,14 @@ class BaseCausalInference:
 
         self.set_causal_dfs(updated_causal_dfs)
         self.set_ground_truth(updated_ground_truths)
-
+ 
     def get_predictions(self):
         """
         Returns a dictionary with the predictions of the causal relationships for each time series.
         This allows for the evaluation of the causal inference methods beyond the existing evaluate method.
         """
         predictions = {}
-        for ts_idx in range(len(self.ts_list)):
+        for ts_idx in range(len(self.ts_dict)):
             y_test = self.ground_truth[ts_idx]['is_causal'].astype(int)
             y_hat = self.causal_dfs[ts_idx]['is_causal'].astype(int)
             y_test = y_test.loc[y_hat.index] #needed because of the filtering 
@@ -147,7 +141,7 @@ class BaseCausalInference:
     def evaluate(self):
         
         metrics = []
-        for ts_idx in range(len(self.ts_list)):
+        for ts_idx in range(len(self.ts_dict)):
             # print('\revaluating', ts_idx, 'of', len(self.ts_list), end='', flush=True)
 
             method_name = self.__class__.__name__ + self.suffix

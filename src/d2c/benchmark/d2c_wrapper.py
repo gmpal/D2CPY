@@ -1,99 +1,97 @@
 import pandas as pd
-import pickle
-
-from imblearn.ensemble import BalancedRandomForestClassifier
-from sklearn.metrics import roc_auc_score
-
+from d2c.benchmark.base import BaseCausalInference
+from d2c.descriptors.loader import DataLoader
+from d2c.descriptors.d2c import D2C as D2C_
 
 
-from src.benchmark.base import BaseCausalInference
+class D2CWrapper(BaseCausalInference):
+    """
+    D2C class wrapper for causal inference using the D2C algorithm.
 
+    Parameters:
+    - n_variables (int): Number of variables in the dataset. Default is 6.
+    - model: The associated model used for prediction. Must implement the fit and predict methods.
 
+    Attributes:
+    - n_variables (int): Number of variables in the dataset.
+    - model: The associated model used for prediction.
+    - returns_proba (bool): Flag indicating whether the model returns probabilities.
 
-class D2C(BaseCausalInference):
+    Methods:
+    - infer(single_ts, **kwargs): Performs causal inference on a single time series.
+    - build_causal_df(results): Builds the causal dataframe from the results.
+
+    """
+
     def __init__(self, *args, **kwargs):
-        self.use_real_MB = kwargs.pop('use_real_MB', False)
-        self.train_ratio = kwargs.pop('train_ratio', 1)
-        self.flattening = kwargs.pop('flattening', False)
+        """
+        Initialize the D2C class.
+
+        Parameters:
+        - n_variables (int): Number of variables in the dataset. Default is 6.
+        - model: The associated model used for prediction. Must implement the fit and predict methods.
+
+        """
         self.n_variables = kwargs.pop('n_variables', 6)
-        self.n_gen_proc = kwargs.pop('n_gen_proc', 17)
-        self.recompute_descriptors = kwargs.pop('recompute_descriptors', False)
-            
-        descriptors_path = kwargs.pop('descriptors_path', None)
-        with open(descriptors_path, 'rb') as f:
-            self.descriptors = pickle.load(f)
+        
+        self.full = kwargs.pop('full', True)
+        self.model = kwargs.pop('model', None)
+        if self.model is None:
+            raise ValueError('model is required for D2C inference')
+        
         super().__init__(*args, **kwargs)
         self.returns_proba = True
 
-        n_graphs = len(self.descriptors.graph_id.unique())
-        n_graphs_per_process = n_graphs // self.n_gen_proc
-        self.descriptors['process_id'] = self.descriptors['graph_id'] // n_graphs_per_process + 1
-
-    def create_lagged(self, observations, lag):
-        lagged = observations.copy()
-        for i in range(1,lag+1):
-            lagged = pd.concat([lagged, observations.shift(i)], axis=1)
-        lagged.columns = [i for i in range(len(lagged.columns))]
-        return lagged.dropna()
-
     def infer(self, single_ts, **kwargs):
-        ts_index = kwargs.get('ts_index', None)
-        if ts_index is None:
-            raise ValueError('ts_index is required for D2C inference')
+        """
+        Perform causal inference on a single time series.
+
+        Parameters:
+        - single_ts: The input time series data.
+
+        Returns:
+        - results: The results of the causal inference in a dataframe format.
+
+        """
+        data_for_d2c = DataLoader._create_lagged_single_ts(single_ts, self.maxlags)
+
+        d2c = D2C_(dags = None, 
+                    observations = [data_for_d2c], 
+                    maxlags=self.maxlags,
+                    n_variables=self.n_variables,
+                    full=self.full)
         
-        data = self.descriptors
+        descriptors = d2c.compute_descriptors_without_dag(n_variables=self.n_variables,maxlags=self.maxlags)
 
-        testing_data = data.loc[data['graph_id'] == ts_index] #TODO: this would not work if self.recompute_descriptors!
+        descriptors = pd.DataFrame(descriptors)
+        X_test = descriptors.drop(['graph_id', 'edge_source', 'edge_dest','is_causal'], axis=1)
+
+        y_pred_proba = self.model.predict_proba(X_test)[:,1]
+        y_pred = y_pred_proba > 0.5
+
+        descriptors['probability'] = y_pred_proba
+        descriptors['is_causal'] = y_pred
+        results = descriptors[['edge_source','edge_dest','probability','is_causal']]
+
+        return results
         
-        try:
-            generative_process = testing_data.iloc[0]['process_id']
-        except IndexError:
-            print('ts_index:', ts_index)
-            print('testing_data:', testing_data.head())
-            raise
-
-        training_data = data.loc[data['process_id'] != generative_process] 
-
-        ############################
-        ########TRAINING############
-        ############################
-       
-        X_train = training_data.drop(['process_id','graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
-        y_train = training_data['is_causal']
-       
-        clf = BalancedRandomForestClassifier(n_estimators=20, n_jobs=1, sampling_strategy='all',replacement=True)
-        clf.fit(X_train, y_train)
-
-        ###########################
-        ########TESTING############
-        ###########################
-
-        if self.recompute_descriptors:
-            pass #TODO: when testing on data for which descriptors are not available
-            # Recompute descriptors for the test data
-            # lagged = self.create_lagged(single_ts, self.maxlags)
-            # d2c_test = D2C_(None,[lagged], maxlags=self.maxlags, use_real_MB=self.use_real_MB,n_variables=self.n_variables,dynamic=True)
-            # X_test = d2c_test.compute_descriptors_no_dags()
-            # X_test = X_test.drop(['graph_id', 'edge_source', 'edge_dest'], axis=1)
-            # y_pred = clf.predict_proba(X_test)[:,1]
-            # returned = pd.DataFrame(y_pred,index=X_test.index, columns=['is_causal'])
-        else:
-            # for fairness in the comparison, we test only on pairs that all methods have seen
-            testing_data = testing_data[(testing_data['edge_dest'] < self.n_variables) & (testing_data['edge_source'] >= self.n_variables)].sort_values(by=['graph_id','edge_source', 'edge_dest']).reset_index(drop=True)
-
-            X_test = testing_data.drop(['process_id','graph_id', 'edge_source', 'edge_dest', 'is_causal'], axis=1)
-            y_pred = clf.predict_proba(X_test)[:,1]
-
-            testing_data['truth'] = testing_data['is_causal']
-            testing_data['is_causal'] = y_pred
-            # returned = pd.concat([pd.DataFrame(testing_data)[['edge_source','edge_dest']], pd.DataFrame(y_pred, columns=['is_causal'])], axis=1, sort=True)
-            
-        return testing_data[['edge_source','edge_dest','truth','is_causal']]
     
     def build_causal_df(self, results, n_variables):
-        
-        results.set_index(['edge_source','edge_dest'], inplace=True) #Already set
-        results['value'] = results['is_causal']
-        results['is_causal'] = results['is_causal'].apply(lambda x: 1 if x > 0.5 else 0)
-        results['pvalue'] = 0
-        return results
+        """
+        Build the causal dataframe from the results.
+
+        Parameters:
+        - results: The results of the causal inference.
+
+        Returns:
+        - causal_df: The causal dataframe with the expected format.
+
+        """
+        results.rename(columns={'edge_source':'from', 'edge_dest':'to'}, inplace=True)
+
+        results['p_value'] = None
+        results['effect'] = None
+
+        causal_df = results[['from','to','effect','p_value','probability','is_causal']]
+
+        return causal_df

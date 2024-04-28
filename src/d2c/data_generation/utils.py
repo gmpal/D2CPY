@@ -30,17 +30,20 @@ def get_causal_dfs(dag, n_variables, maxlags):
     return causal_dataframe
 
 
-def custom_layout(G, n_nodes, t_lag):
+def custom_layout(G, n_variables, t_lag):
     """
     Create a custom layout for the graph where nodes with the same identifier
     are aligned in the same column, regardless of their connections.
     """
     pos = {}
-    width = 1.0 / (n_nodes - 1)
+    width = 1.0 / (n_variables - 1)
     height = 1.0 / (t_lag - 1)
 
     for node in G.nodes():
-        if '_t-' in node:
+        #if node is integer
+        if isinstance(node, int):
+            i, t = node%n_variables, node//n_variables
+        elif '_t-' in node:
             i, t = map(int, node.split('_t-'))
         else:
             i, t = int(node), 0
@@ -51,7 +54,7 @@ def custom_layout(G, n_nodes, t_lag):
     return pos
 
 
-def show_DAG(G, n_nodes, t_lag):
+def show_DAG(G, n_variables, t_lag):
     """
     Plot the DAG using the custom layout.
     """
@@ -60,7 +63,7 @@ def show_DAG(G, n_nodes, t_lag):
     import matplotlib.pyplot as plt
     # Using the custom layout for plotting
     plt.figure(figsize=(10, 6))
-    pos_custom = custom_layout(G, n_nodes, t_lag)
+    pos_custom = custom_layout(G, n_variables, t_lag)
     nx.draw(G, pos_custom, with_labels=True, node_size=1000, node_color="lightpink", font_size=10, arrowsize=10)
     plt.title("Time Series DAG with Custom Layout")
     plt.show()
