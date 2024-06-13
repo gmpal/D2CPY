@@ -1,4 +1,9 @@
 data/
+notebooks/*.ipynb
+!notebooks/_public/*.ipynb
+!notebooks/_public/descriptors/
+notebooks/_public/benchmark/
+!notebooks/_public/data/
 results/causeme/unzipped/
 __deleteme__/
 main*

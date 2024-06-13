@@ -13,8 +13,8 @@ from multiprocessing import Pool
 from imblearn.ensemble import BalancedRandomForestClassifier
 
 sys.path.append('..')
-from src.d2c.utils import create_lagged_multiple_ts
-from src.d2c.d2c import D2C
+from src.descriptors.utils import create_lagged_multiple_ts
+from descriptors.d2c import D2C
 
 
 

@@ -240,15 +240,41 @@ class D2C:
         values['edge_dest'] = ef
         values['is_causal'] = label
 
+        # b: ef = b * (ca + mbef)
+        values['coeff_cause'] = coeff(e, c, observations[:, MBef])
+
+        # b: ca = b * (ef + mbca)
+        values['coeff_eff'] = coeff(c, e, observations[:, MBca])
+
+        # I(m; cause) for m in MBef
+        m_cau = [0] if not len(MBef) else [CMI(c, observations[:, m]) for m in MBef]
+        if self.full:
+            self.update_dictionary_quantiles(values, 'm_cau', np.quantile(m_cau, pq))
+        else:
+            values['m_cau_q6'] = np.quantile(m_cau, pq[6])
+
+        # I(mca ; mef | cause) for (mca,mef) in mbca_mbef_couples
+        mca_mef_cau = [0] if not len(mbca_mbef_couples) else [CMI(observations[:,i], observations[:,j], c) for i, j in mbca_mbef_couples]
+        if self.full:
+            self.update_dictionary_quantiles(values, 'mca_mef_cau', np.quantile(mca_mef_cau, pq))
+        else:
+            values['mca_mef_cau_q4'] = np.quantile(mca_mef_cau, pq[4])
+
+        # I(mca ; mef| effect) for (mca,mef) in mbca_mbef_couples
+        mca_mef_eff = [0] if not len(mbca_mbef_couples) else [CMI(observations[:,i], observations[:,j], e) for i, j in mbca_mbef_couples]
+        if self.full:
+            self.update_dictionary_quantiles(values, 'mca_mef_eff', np.quantile(mca_mef_eff, pq))
+        else:
+            values['mca_mef_eff_q4'] = np.quantile(mca_mef_eff, pq[4])
+
+
+        values['HOC_3_1'] = HOC(c, e, 3, 1)
+        values['kurtosis_ca'] = kurtosis(c)
+        values['kurtosis_ef'] = kurtosis(e)
+
         if self.full:
             # I(cause; effect | common_causes)
             values['com_cau'] = CMI(e, c, observations[:, common_causes])
-
-            # b: ef = b * (ca + mbef)
-            values['coeff_cause'] = coeff(e, c, observations[:, MBef])
-
-            # b: ca = b * (ef + mbca)
-            values['coeff_eff'] = coeff(c, e, observations[:, MBca])
 
             # I(cause; effect)
             values['cau_eff'] = CMI(e, c)
@@ -270,50 +296,37 @@ class D2C:
             cau_eff_mbeff_plus = [0] if not len(MBca) else [CMI(e, c, observations[:,np.unique(np.concatenate(([m], MBef)))]) for m in MBca]
             self.update_dictionary_quantiles(values, 'cau_eff_mbeff_plus', np.quantile(cau_eff_mbeff_plus, pq))
 
-            # I(m; cause) for m in MBef
-            m_cau = [0] if not len(MBef) else [CMI(c, observations[:, m]) for m in MBef]
-            self.update_dictionary_quantiles(values, 'm_cau', np.quantile(m_cau, pq))
 
             # I(m; effect) for m in MBca
             m_eff = [0] if not len(MBca) else [CMI(e, observations[:, m]) for m in MBca]
             self.update_dictionary_quantiles(values, 'm_eff', np.quantile(m_eff, pq))
 
-        # I(cause; m | effect) for m in MBef
-        cau_m_eff = [0] if not len(MBef) else [CMI(c, observations[:, m], e) for m in MBef]
-        self.update_dictionary_quantiles(values, 'cau_m_eff', np.quantile(cau_m_eff, pq))
+            # I(cause; m | effect) for m in MBef
+            cau_m_eff = [0] if not len(MBef) else [CMI(c, observations[:, m], e) for m in MBef]
+            self.update_dictionary_quantiles(values, 'cau_m_eff', np.quantile(cau_m_eff, pq))
 
-        # I(effect; m | cause) for m in MBca
-        eff_m_cau = [0] if not len(MBca) else [CMI(e, observations[:, m], c) for m in MBca]
-        self.update_dictionary_quantiles(values, 'eff_m_cau', np.quantile(eff_m_cau, pq))
+            # I(effect; m | cause) for m in MBca
+            eff_m_cau = [0] if not len(MBca) else [CMI(e, observations[:, m], c) for m in MBca]
+            self.update_dictionary_quantiles(values, 'eff_m_cau', np.quantile(eff_m_cau, pq))
 
-        # I(mca ; mef | cause) for (mca,mef) in mbca_mbef_couples
-        mca_mef_cau = [0] if not len(mbca_mbef_couples) else [CMI(observations[:,i], observations[:,j], c) for i, j in mbca_mbef_couples]
-        self.update_dictionary_quantiles(values, 'mca_mef_cau', np.quantile(mca_mef_cau, pq))
+        
 
-        # I(mca ; mef| effect) for (mca,mef) in mbca_mbef_couples
-        mca_mef_eff = [0] if not len(mbca_mbef_couples) else [CMI(observations[:,i], observations[:,j], e) for i, j in mbca_mbef_couples]
-        self.update_dictionary_quantiles(values, 'mca_mef_eff', np.quantile(mca_mef_eff, pq))
+            #I(mca ; mca| cause) - I(mca ; mca) for (mca,mca) in mbca_couples
+            mca_mca_cau = [0] if not len(mbca_mbca_couples) else [CMI(observations[:,i], observations[:,j], c) - CMI(observations[:,i], observations[:,j]) for i, j in mbca_mbca_couples]
+            self.update_dictionary_quantiles(values, 'mca_mca_cau', np.quantile(mca_mca_cau, pq))
 
-        #I(mca ; mca| cause) - I(mca ; mca) for (mca,mca) in mbca_couples
-        mca_mca_cau = [0] if not len(mbca_mbca_couples) else [CMI(observations[:,i], observations[:,j], c) - CMI(observations[:,i], observations[:,j]) for i, j in mbca_mbca_couples]
-        self.update_dictionary_quantiles(values, 'mca_mca_cau', np.quantile(mca_mca_cau, pq))
+            # I(mbe ; mbe| effect) - I(mbe ; mbe) for (mbe,mbe) in mbef_couples
+            mbe_mbe_eff = [0] if not len(mbef_mbef_couples) else [CMI(observations[:,i], observations[:,j], e) - CMI(observations[:,i], observations[:,j]) for i, j in mbef_mbef_couples]
+            self.update_dictionary_quantiles(values, 'mbe_mbe_eff', np.quantile(mbe_mbe_eff, pq))
 
-        # I(mbe ; mbe| effect) - I(mbe ; mbe) for (mbe,mbe) in mbef_couples
-        mbe_mbe_eff = [0] if not len(mbef_mbef_couples) else [CMI(observations[:,i], observations[:,j], e) - CMI(observations[:,i], observations[:,j]) for i, j in mbef_mbef_couples]
-        self.update_dictionary_quantiles(values, 'mbe_mbe_eff', np.quantile(mbe_mbe_eff, pq))
-
-        if self.full:
             values['n_samples'] = observations.shape[0]
             values['n_features'] = observations.shape[1]
             values['n_features/n_samples'] = observations.shape[1] / observations.shape[0]
-            values['kurtosis_ca'] = kurtosis(c)
-            values['kurtosis_ef'] = kurtosis(e)
             values['skewness_ca'] = skew(c)
             values['skewness_ef'] = skew(e)
             values['HOC_1_2'] = HOC(c, e, 1, 2)
             values['HOC_2_1'] = HOC(c, e, 2, 1)
-        values['HOC_1_3'] = HOC(c, e, 1, 3)
-        values['HOC_3_1'] = HOC(c, e, 3, 1)
+            values['HOC_1_3'] = HOC(c, e, 1, 3)
 
         return values
 
